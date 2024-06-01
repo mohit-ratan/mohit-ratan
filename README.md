@@ -1,3 +1,5 @@
+[<img src="https://raw.githubusercontent.com/Mohit-Ratan/Mohit/master/intro.gif" alt="👋 Hi there! I'm (Mohit(111|nd Ratan)|https://mohit-ratan)" title="👋 Hi there! I'm (Mohit(111|nd Ratan)|https://mohit-ratan)"/>](https://mohit-ratan/)
+
 ## Hi there 👋
 
 <!--
