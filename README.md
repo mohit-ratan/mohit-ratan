@@ -1,5 +1,17 @@
-# Hello, folks! <img src="https://raw.githubusercontent.com/MartinHeinz/MartinHeinz/master/wave.gif" width="30px" height="30px" />
-My name is Mohit Ratan and I'm a software developer/Data engineer. I'm from India, living in Hyderabad.
+<p align="center"><i>“Be curious. Read widely. Try new things. What people call intelligence just boils down to curiosity.”</i></p>
+<p align="center"><i>- Aaron Swartz (2013 ~ 1986) -</i></p>
+
+<h1 align="center"> # Hello, folks! <img src="https://raw.githubusercontent.com/MartinHeinz/MartinHeinz/master/wave.gif" width="30px" height="30px" /> </h1>
+
+<h4 align="center">My name is Mohit Ratan and I'm a software developer/Data engineer. I'm from India, living in Hyderabad.</h4>
+
+<h4 align="center"> 👨‍💻 Who am I</h4>
+<p align="center">
+  <samp>A highly resourceful data engineer and well-rounded IT professional with over five years of computing experience, possessing expert knowledge of the software development lifecycle and a solid understanding of technologies required for the development and deployment of highly available and scalable applications, including their data warehouse design and development
+  </samp>
+  <br> <br>
+
+
 ### Languages
 
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
