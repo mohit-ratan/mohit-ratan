@@ -130,5 +130,8 @@ TypeScript               5 repos             ██░░░░░░░░░�
 Python                   4 repos             █░░░░░░░░░░░░░░░░░░░░░░░░   05.71 % 
 ```
 
+📈 My github stats
+<p> <img src="https://github-readme-stats.vercel.app/api?username=mohit-ratan&amp;show_icons=true" alt="GitHub Stats"></p>
+
  ## <img src="https://user-images.githubusercontent.com/74038190/216122041-518ac897-8d92-4c6b-9b3f-ca01dcaf38ee.png" width="30" /> Thanks for Visiting [🔝](#--gifs-for-readme--)
 
