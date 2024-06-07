@@ -1,7 +1,7 @@
 
 
 <p align="center"><i>“Be curious. Read widely. Try new things. What people call intelligence just boils down to curiosity.”</i></p>
-<p align="center"><i>- Aaron Swartz (2013 ~ 1986) -</i></p>
+
 
 <h1 align="center"> # Hello, folks! <img src="https://raw.githubusercontent.com/MartinHeinz/MartinHeinz/master/wave.gif" width="30px" height="30px" /> </h1>
 
