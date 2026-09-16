@@ -1,0 +1,54 @@
+export const CATEGORIES = [
+  { id: 'health', label: 'Health', emoji: '🌿' },
+  { id: 'wealth', label: 'Wealth', emoji: '💰' },
+  { id: 'relationships', label: 'Relationships', emoji: '❤️' },
+];
+
+export const CAT_MAP = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
+
+const AVATAR_COLORS = ['#1656C9', '#2B6CB0', '#0E7490', '#4C63B6', '#1D4E8F', '#3A7BD5'];
+
+export function initials(name) {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  let s = parts[0] ? parts[0][0] : '';
+  if (parts.length > 1) s += parts[parts.length - 1][0];
+  return s.toUpperCase();
+}
+
+export function colorFor(id) {
+  const str = id || 'x';
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % AVATAR_COLORS.length;
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+}
+
+export function truncate(s, n) {
+  s = s || '';
+  return s.length > n ? s.slice(0, n - 1).trim() + '…' : s;
+}
+
+export function postWord(p) {
+  if (p.tag) return `#${p.tag}`;
+  return '';
+}
+
+export function timeAgo(ts) {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return 'just now';
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d ago`;
+  const w = Math.floor(d / 7);
+  if (w < 5) return `${w}w ago`;
+  const dt = new Date(ts);
+  return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+export function parseTag(raw) {
+  if (!raw) return '';
+  return raw.replace(/^#/, '').toLowerCase().trim().split(/[,\s]+/)[0] || '';
+}
