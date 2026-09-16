@@ -1,10 +1,5 @@
-const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
-const { requireAuth } = require('../middleware/auth');
-const upload = require('../upload');
-
-const router = express.Router();
 
 function mediaTypeFromMime(mime) {
   return mime && mime.startsWith('video') ? 'video' : 'image';
@@ -29,9 +24,9 @@ function mapPost(row) {
   };
 }
 
-// Media-only feed — a post with no media is never created (see POST below),
+// Media-only feed — a post with no media is never created (see create() below),
 // so this list is inherently "photos and videos only".
-router.get('/', requireAuth, async (req, res) => {
+async function list(req, res) {
   try {
     const { category, tag, authorId } = req.query;
     let sql = `SELECT p.*, u.display_name, u.photo_url as author_photo,
@@ -59,10 +54,10 @@ router.get('/', requireAuth, async (req, res) => {
     console.error('list posts error:', err);
     res.status(500).json({ error: 'Could not load posts.' });
   }
-});
+}
 
 // Trending tags across recent posts (for the sidebar)
-router.get('/trending-tags', requireAuth, async (req, res) => {
+async function trendingTags(req, res) {
   try {
     const [rows] = await pool.query(
       `SELECT tag, COUNT(*) as count FROM posts
@@ -74,9 +69,9 @@ router.get('/trending-tags', requireAuth, async (req, res) => {
     console.error('trending tags error:', err);
     res.status(500).json({ error: 'Could not load trending tags.' });
   }
-});
+}
 
-router.get('/category-counts', requireAuth, async (req, res) => {
+async function categoryCounts(req, res) {
   try {
     const [rows] = await pool.query(`SELECT category, COUNT(*) as count FROM posts GROUP BY category`);
     const counts = { health: 0, wealth: 0, relationships: 0 };
@@ -86,41 +81,39 @@ router.get('/category-counts', requireAuth, async (req, res) => {
     console.error('category counts error:', err);
     res.status(500).json({ error: 'Could not load category counts.' });
   }
-});
+}
 
 // Create a post — media is REQUIRED, matching the product rule that
 // PackSomeWork is photos/videos only (no text-only or hashtag-only posts).
-router.post('/', requireAuth, (req, res) => {
-  upload.single('media')(req, res, async (err) => {
-    if (err) return res.status(400).json({ error: err.message || 'Could not process that file.' });
-    try {
-      if (!req.file) return res.status(400).json({ error: 'Attach a photo or video to post.' });
+// Called after upload.single('media') middleware has already run.
+async function create(req, res) {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Attach a photo or video to post.' });
 
-      const { category, vibe, tag, aiStyled } = req.body;
-      if (!['health', 'wealth', 'relationships'].includes(category)) {
-        return res.status(400).json({ error: 'Pick a category (Health, Wealth, or Relationships).' });
-      }
-
-      const id = uuidv4();
-      const mediaUrl = `/uploads/${req.file.filename}`;
-      const mediaType = mediaTypeFromMime(req.file.mimetype);
-      const cleanTag = (tag || '').replace(/^#/, '').toLowerCase().slice(0, 24);
-
-      await pool.query(
-        `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0]
-      );
-
-      res.json({ ok: true, id });
-    } catch (e) {
-      console.error('create post error:', e);
-      res.status(500).json({ error: 'Something went wrong creating your post.' });
+    const { category, vibe, tag, aiStyled } = req.body;
+    if (!['health', 'wealth', 'relationships'].includes(category)) {
+      return res.status(400).json({ error: 'Pick a category (Health, Wealth, or Relationships).' });
     }
-  });
-});
 
-router.post('/:id/like', requireAuth, async (req, res) => {
+    const id = uuidv4();
+    const mediaUrl = `/assets/uploads/${req.file.filename}`;
+    const mediaType = mediaTypeFromMime(req.file.mimetype);
+    const cleanTag = (tag || '').replace(/^#/, '').toLowerCase().slice(0, 24);
+
+    await pool.query(
+      `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0]
+    );
+
+    res.json({ ok: true, id });
+  } catch (e) {
+    console.error('create post error:', e);
+    res.status(500).json({ error: 'Something went wrong creating your post.' });
+  }
+}
+
+async function like(req, res) {
   try {
     const { id } = req.params;
     const [existing] = await pool.query(
@@ -137,9 +130,9 @@ router.post('/:id/like', requireAuth, async (req, res) => {
     console.error('like error:', err);
     res.status(500).json({ error: 'Could not update like.' });
   }
-});
+}
 
-router.get('/:id/comments', requireAuth, async (req, res) => {
+async function listComments(req, res) {
   try {
     const [rows] = await pool.query(
       `SELECT c.*, u.display_name FROM comments c JOIN users u ON u.id = c.author_id
@@ -159,9 +152,9 @@ router.get('/:id/comments', requireAuth, async (req, res) => {
     console.error('list comments error:', err);
     res.status(500).json({ error: 'Could not load comments.' });
   }
-});
+}
 
-router.post('/:id/comments', requireAuth, async (req, res) => {
+async function addComment(req, res) {
   try {
     const { text } = req.body || {};
     if (!text || !text.trim()) return res.status(400).json({ error: 'Comment cannot be empty.' });
@@ -175,6 +168,6 @@ router.post('/:id/comments', requireAuth, async (req, res) => {
     console.error('add comment error:', err);
     res.status(500).json({ error: 'Could not add comment.' });
   }
-});
+}
 
-module.exports = router;
+module.exports = { list, trendingTags, categoryCounts, create, like, listComments, addComment };

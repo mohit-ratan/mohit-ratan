@@ -3,16 +3,16 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 
-const authRoutes = require('./src/routes/auth');
-const postRoutes = require('./src/routes/posts');
-const storyRoutes = require('./src/routes/stories');
-const profileRoutes = require('./src/routes/profile');
+const authRoutes = require('./routes/auth');
+const postRoutes = require('./routes/posts');
+const storyRoutes = require('./routes/stories');
+const profileRoutes = require('./routes/profile');
 
 const app = express();
+const publicDir = path.join(__dirname, '..', 'public');
 
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
@@ -20,6 +20,16 @@ app.use('/api/stories', storyRoutes);
 app.use('/api/profile', profileRoutes);
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
+
+// Serves the built frontend (index.html + hashed JS/CSS) and, at
+// /assets/uploads, the media users upload — see public/assets/uploads.
+app.use(express.static(publicDir));
+
+// Client-side routing fallback: any non-API GET that isn't a real static
+// file falls through to the SPA's index.html.
+app.get(/^\/(?!api\/).*/, (req, res) => {
+  res.sendFile(path.join(publicDir, 'index.html'));
+});
 
 // Fallback error handler (e.g. multer file-size errors thrown outside routes)
 app.use((err, req, res, next) => {
@@ -29,7 +39,7 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-  console.log(`PackSomeWork API listening on http://localhost:${PORT}`);
+  console.log(`PackSomeWork listening on http://localhost:${PORT}`);
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'change-this-to-a-long-random-string') {
     console.warn('[warning] JWT_SECRET is not set to a real secret — set one in .env before going live.');
   }

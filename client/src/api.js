@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+// An explicitly empty VITE_API_URL means same-origin (the production build
+// served by the Node app itself), so only fall back to localhost when the
+// var is entirely unset.
+const envApiUrl = import.meta.env.VITE_API_URL;
+export const API_URL = envApiUrl !== undefined ? envApiUrl : 'http://localhost:4000';
 
 const client = axios.create({ baseURL: API_URL });
 
@@ -19,7 +23,7 @@ client.interceptors.response.use(
   }
 );
 
-// Turns a relative "/uploads/xyz.png" from the API into an absolute URL.
+// Turns a relative "/assets/uploads/xyz.png" from the API into an absolute URL.
 export function mediaUrl(path) {
   if (!path) return '';
   if (/^https?:\/\//.test(path) || path.startsWith('blob:')) return path;

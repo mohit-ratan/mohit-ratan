@@ -1,0 +1,25 @@
+# Dependencies (GoDaddy installs these automatically from package.json)
+node_modules
+client/node_modules
+
+# Secrets
+.env
+
+# User-uploaded media — persistent at runtime, not part of the repo
+public/assets/uploads/*
+!public/assets/uploads/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

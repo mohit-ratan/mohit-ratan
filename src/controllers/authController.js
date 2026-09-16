@@ -1,13 +1,9 @@
-const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const { sendMail } = require('../utils/mailer');
-const { requireAuth } = require('../middleware/auth');
-
-const router = express.Router();
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -27,7 +23,7 @@ function publicUser(u) {
 }
 
 // ---- Register (email + password) ----
-router.post('/register', async (req, res) => {
+async function register(req, res) {
   try {
     const { email, password, displayName } = req.body || {};
     if (!email || !EMAIL_RE.test(email)) {
@@ -57,7 +53,7 @@ router.post('/register', async (req, res) => {
       [id, normalizedEmail, passwordHash, displayName.trim().slice(0, 100), token, expires]
     );
 
-    const verifyUrl = `${process.env.APP_URL || 'http://localhost:5173'}/verify?token=${token}`;
+    const verifyUrl = `${process.env.APP_URL || 'http://localhost:4000'}/verify?token=${token}`;
     await sendMail({
       to: normalizedEmail,
       subject: 'Verify your PackSomeWork account',
@@ -74,10 +70,10 @@ router.post('/register', async (req, res) => {
     console.error('register error:', err);
     res.status(500).json({ error: 'Something went wrong creating your account.' });
   }
-});
+}
 
 // ---- Verify email (link from the registration email) ----
-router.get('/verify', async (req, res) => {
+async function verify(req, res) {
   try {
     const { token } = req.query;
     if (!token) return res.status(400).json({ error: 'Missing verification token.' });
@@ -103,10 +99,10 @@ router.get('/verify', async (req, res) => {
     console.error('verify error:', err);
     res.status(500).json({ error: 'Something went wrong verifying your email.' });
   }
-});
+}
 
 // ---- Login with password ----
-router.post('/login', async (req, res) => {
+async function login(req, res) {
   try {
     const { email, password } = req.body || {};
     const normalizedEmail = (email || '').trim().toLowerCase();
@@ -127,10 +123,10 @@ router.post('/login', async (req, res) => {
     console.error('login error:', err);
     res.status(500).json({ error: 'Something went wrong signing you in.' });
   }
-});
+}
 
 // ---- OTP login: step 1, request a one-time code by email ----
-router.post('/otp/request', async (req, res) => {
+async function requestOtp(req, res) {
   try {
     const { email } = req.body || {};
     const normalizedEmail = (email || '').trim().toLowerCase();
@@ -154,10 +150,10 @@ router.post('/otp/request', async (req, res) => {
     console.error('otp/request error:', err);
     res.status(500).json({ error: 'Something went wrong sending your code.' });
   }
-});
+}
 
 // ---- OTP login: step 2, verify the code and sign in ----
-router.post('/otp/verify', async (req, res) => {
+async function verifyOtp(req, res) {
   try {
     const { email, code } = req.body || {};
     const normalizedEmail = (email || '').trim().toLowerCase();
@@ -185,13 +181,13 @@ router.post('/otp/verify', async (req, res) => {
     console.error('otp/verify error:', err);
     res.status(500).json({ error: 'Something went wrong verifying your code.' });
   }
-});
+}
 
 // ---- Current signed-in user ----
-router.get('/me', requireAuth, async (req, res) => {
+async function me(req, res) {
   const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [req.userId]);
   if (!rows.length) return res.status(404).json({ error: 'User not found.' });
   res.json({ user: publicUser(rows[0]) });
-});
+}
 
-module.exports = router;
+module.exports = { register, verify, login, requestOtp, verifyOtp, me };

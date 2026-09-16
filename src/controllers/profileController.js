@@ -1,9 +1,4 @@
-const express = require('express');
 const pool = require('../db');
-const { requireAuth } = require('../middleware/auth');
-const upload = require('../upload');
-
-const router = express.Router();
 
 function dateKey(ts) {
   const d = new Date(ts);
@@ -33,7 +28,7 @@ async function computeStreak(authorId) {
   return streak;
 }
 
-router.get('/:id', requireAuth, async (req, res) => {
+async function getProfile(req, res) {
   try {
     const [rows] = await pool.query(
       'SELECT id, display_name, bio, photo_url FROM users WHERE id = ?',
@@ -51,9 +46,9 @@ router.get('/:id', requireAuth, async (req, res) => {
     console.error('get profile error:', err);
     res.status(500).json({ error: 'Could not load profile.' });
   }
-});
+}
 
-router.put('/me', requireAuth, async (req, res) => {
+async function updateProfile(req, res) {
   try {
     const { displayName, bio } = req.body || {};
     await pool.query(
@@ -65,27 +60,25 @@ router.put('/me', requireAuth, async (req, res) => {
     console.error('update profile error:', err);
     res.status(500).json({ error: 'Could not save your profile.' });
   }
-});
+}
 
-router.post('/me/photo', requireAuth, (req, res) => {
-  upload.single('photo')(req, res, async (err) => {
-    if (err) return res.status(400).json({ error: err.message || 'Could not process that image.' });
-    try {
-      if (!req.file) return res.status(400).json({ error: 'Attach an image.' });
-      if (!req.file.mimetype.startsWith('image')) {
-        return res.status(400).json({ error: 'Please choose an image file.' });
-      }
-      const url = `/uploads/${req.file.filename}`;
-      await pool.query('UPDATE users SET photo_url = ? WHERE id = ?', [url, req.userId]);
-      res.json({ ok: true, photoUrl: url });
-    } catch (e) {
-      console.error('upload photo error:', e);
-      res.status(500).json({ error: 'Could not save your photo.' });
+// Called after upload.single('photo') middleware has already run.
+async function uploadPhoto(req, res) {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Attach an image.' });
+    if (!req.file.mimetype.startsWith('image')) {
+      return res.status(400).json({ error: 'Please choose an image file.' });
     }
-  });
-});
+    const url = `/assets/uploads/${req.file.filename}`;
+    await pool.query('UPDATE users SET photo_url = ? WHERE id = ?', [url, req.userId]);
+    res.json({ ok: true, photoUrl: url });
+  } catch (e) {
+    console.error('upload photo error:', e);
+    res.status(500).json({ error: 'Could not save your photo.' });
+  }
+}
 
-router.delete('/me/photo', requireAuth, async (req, res) => {
+async function deletePhoto(req, res) {
   try {
     await pool.query('UPDATE users SET photo_url = NULL WHERE id = ?', [req.userId]);
     res.json({ ok: true });
@@ -93,6 +86,6 @@ router.delete('/me/photo', requireAuth, async (req, res) => {
     console.error('remove photo error:', err);
     res.status(500).json({ error: 'Could not remove your photo.' });
   }
-});
+}
 
-module.exports = router;
+module.exports = { getProfile, updateProfile, uploadPhoto, deletePhoto };
