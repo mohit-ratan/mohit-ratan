@@ -1,10 +1,8 @@
 -- PackSomeWork database schema (MySQL 8+)
--- Import with:  mysql -u root -p < schema.sql
-
-CREATE DATABASE IF NOT EXISTS packsomework
-  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-USE packsomework;
+-- Assumes the target database already exists and is selected — create it
+-- first (see README), then: mysql -u root -p your_db_name < schema.sql
+-- (works as-is with hosted/managed MySQL import tools too, which already
+-- run against a pre-provisioned database rather than one named here).
 
 CREATE TABLE IF NOT EXISTS users (
   id                    VARCHAR(36)  PRIMARY KEY,
