@@ -11,6 +11,20 @@ require('dotenv').config();
 // blocked on this host anyway.
 const EMAIL_GATEWAY_URL = 'http://127.0.0.1:2525/api/email/send';
 
+// Strips the small amount of markup our own email templates use so the
+// gateway always gets a plain-text body alongside the HTML one — its docs'
+// example always sends both, and it 400s ("request invalid") given html
+// alone despite documenting text/html as individually optional.
+function htmlToText(html) {
+  return html
+    .replace(/<a[^>]*href="([^"]*)"[^>]*>.*?<\/a>/gi, '$1')
+    .replace(/<\/(p|div|li|h[1-6])>/gi, '\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 async function sendViaGateway({ to, subject, html }) {
   let res;
   try {
@@ -18,7 +32,7 @@ async function sendViaGateway({ to, subject, html }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       signal: AbortSignal.timeout(3000),
-      body: JSON.stringify({ to, subject, html }),
+      body: JSON.stringify({ to, subject, html, text: htmlToText(html) }),
     });
   } catch {
     return null; // gateway not reachable — not on this platform

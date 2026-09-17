@@ -54,16 +54,24 @@ async function register(req, res) {
     );
 
     const verifyUrl = `${process.env.APP_URL || 'http://localhost:4000'}/verify?token=${token}`;
-    await sendMail({
-      to: normalizedEmail,
-      subject: 'Verify your PackSomeWork account',
-      html: `
-        <p>Welcome to PackSomeWork!</p>
-        <p>Click the link below to verify your email and finish creating your account:</p>
-        <p><a href="${verifyUrl}">${verifyUrl}</a></p>
-        <p>This link expires in 24 hours. If you didn't request this, you can ignore this email.</p>
-      `,
-    });
+    // The account row above already exists regardless of whether this send
+    // succeeds, and email verification can also happen via the OTP login
+    // flow (see verifyOtp) — so a failure here shouldn't undo registration
+    // or turn it into a 500 for the caller.
+    try {
+      await sendMail({
+        to: normalizedEmail,
+        subject: 'Verify your PackSomeWork account',
+        html: `
+          <p>Welcome to PackSomeWork!</p>
+          <p>Click the link below to verify your email and finish creating your account:</p>
+          <p><a href="${verifyUrl}">${verifyUrl}</a></p>
+          <p>This link expires in 24 hours. If you didn't request this, you can ignore this email.</p>
+        `,
+      });
+    } catch (mailErr) {
+      console.error('register: verification email failed to send:', mailErr);
+    }
 
     res.json({ ok: true, message: 'Account created. Check your email for a verification link before signing in.' });
   } catch (err) {
