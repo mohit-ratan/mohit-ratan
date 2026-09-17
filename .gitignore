@@ -5,6 +5,16 @@ client/node_modules
 # Secrets
 .env
 
+# Built frontend — GoDaddy Node.js Hosting runs `npm run build` itself on
+# every deploy, so committing this output only leaves the build container's
+# git checkout dirty and blocks the next `git pull`. Build locally with
+# `npm run build` when you need to preview the production bundle.
+public/index.html
+public/favicon.svg
+public/icons.svg
+public/assets/*.js
+public/assets/*.css
+
 # User-uploaded media — persistent at runtime, not part of the repo
 public/assets/uploads/*
 !public/assets/uploads/.gitkeep
