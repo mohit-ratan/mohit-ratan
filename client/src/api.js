@@ -1,9 +1,14 @@
 import axios from 'axios';
 
-// Unset or empty VITE_API_URL means same-origin (the production build served
-// by the Node app itself). Local dev against a separately-running backend
-// sets VITE_API_URL explicitly in .env.local (see client/.env.example).
-export const API_URL = import.meta.env.VITE_API_URL || '';
+// Every call already hardcodes its own "/api/..." path, so API_URL must be
+// an origin (protocol + host), never a path prefix like "/api" — otherwise
+// it doubles up into "/api/api/...". Some hosts inject VITE_API_URL as a
+// path rather than an origin, so only honor it when it's a full URL;
+// anything else (including a bare path) falls back to same-origin. Local
+// dev against a separately-running backend sets VITE_API_URL explicitly in
+// .env.local (see client/.env.example).
+const envApiUrl = import.meta.env.VITE_API_URL;
+export const API_URL = envApiUrl && /^https?:\/\//.test(envApiUrl) ? envApiUrl : '';
 
 const client = axios.create({ baseURL: API_URL });
 
