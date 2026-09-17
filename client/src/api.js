@@ -1,10 +1,9 @@
 import axios from 'axios';
 
-// An explicitly empty VITE_API_URL means same-origin (the production build
-// served by the Node app itself), so only fall back to localhost when the
-// var is entirely unset.
-const envApiUrl = import.meta.env.VITE_API_URL;
-export const API_URL = envApiUrl !== undefined ? envApiUrl : 'http://localhost:4000';
+// Unset or empty VITE_API_URL means same-origin (the production build served
+// by the Node app itself). Local dev against a separately-running backend
+// sets VITE_API_URL explicitly in .env.local (see client/.env.example).
+export const API_URL = import.meta.env.VITE_API_URL || '';
 
 const client = axios.create({ baseURL: API_URL });
 
