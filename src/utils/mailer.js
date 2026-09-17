@@ -12,9 +12,8 @@ require('dotenv').config();
 const EMAIL_GATEWAY_URL = 'http://127.0.0.1:2525/api/email/send';
 
 // Strips the small amount of markup our own email templates use so the
-// gateway always gets a plain-text body alongside the HTML one — its docs'
-// example always sends both, and it 400s ("request invalid") given html
-// alone despite documenting text/html as individually optional.
+// gateway always gets a plain-text body alongside the HTML one, matching
+// what GoDaddy's own reference sender always provides.
 function htmlToText(html) {
   return html
     .replace(/<a[^>]*href="([^"]*)"[^>]*>.*?<\/a>/gi, '$1')
@@ -25,23 +24,35 @@ function htmlToText(html) {
     .trim();
 }
 
+// Ported from GoDaddy's own reference implementation
+// (tests/fixtures/email-helper/email.cjs in godaddy/nodejs-hosting-agent-skill)
+// — the gateway requires to/cc/bcc as arrays even for a single address and
+// rejects a bare string with a generic "request invalid".
+function toArray(value) {
+  if (value === undefined || value === null) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
 async function sendViaGateway({ to, subject, html }) {
+  const payload = { to: toArray(to), subject, html, text: htmlToText(html) };
+
   let res;
+  let body;
   try {
     res = await fetch(EMAIL_GATEWAY_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload),
       signal: AbortSignal.timeout(3000),
-      body: JSON.stringify({ to, subject, html, text: htmlToText(html) }),
     });
+    body = await res.json().catch(() => ({}));
   } catch {
     return null; // gateway not reachable — not on this platform
   }
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new Error(`Email gateway responded ${res.status}: ${body}`);
+  if (!res.ok || !body.success) {
+    throw new Error(`Email gateway responded ${res.status}: ${body.error || 'unknown error'}`);
   }
-  return res.json();
+  return { messageId: body.messageId };
 }
 
 let transporter = null;
