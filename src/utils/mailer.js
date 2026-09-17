@@ -1,6 +1,35 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
+// GoDaddy Node.js Hosting blocks outbound SMTP entirely (nodemailer/external
+// SMTP connections fail with EACCES) and instead exposes a loopback-only
+// HTTP gateway inside the container for transactional email. Try that
+// first; a connection failure means the gateway isn't present (e.g. local
+// dev), so fall back to real SMTP or, absent that, logging to the console.
+// An actual gateway error (bad request, rate limit, etc) is a real failure
+// and is thrown rather than masked by falling back to SMTP, which is
+// blocked on this host anyway.
+const EMAIL_GATEWAY_URL = 'http://127.0.0.1:2525/api/email/send';
+
+async function sendViaGateway({ to, subject, html }) {
+  let res;
+  try {
+    res = await fetch(EMAIL_GATEWAY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(3000),
+      body: JSON.stringify({ to, subject, html }),
+    });
+  } catch {
+    return null; // gateway not reachable — not on this platform
+  }
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`Email gateway responded ${res.status}: ${body}`);
+  }
+  return res.json();
+}
+
 let transporter = null;
 function getTransporter() {
   if (!process.env.SMTP_HOST) return null;
@@ -23,6 +52,9 @@ function getTransporter() {
 // for your users. See .env.example for options (GoDaddy email, Gmail App
 // Password, SendGrid, Mailgun, Resend, Postmark, etc).
 async function sendMail({ to, subject, html }) {
+  const gatewayResult = await sendViaGateway({ to, subject, html });
+  if (gatewayResult) return gatewayResult;
+
   const t = getTransporter();
   if (!t) {
     console.warn(`[mailer] SMTP not configured — email NOT actually sent to ${to}.`);
