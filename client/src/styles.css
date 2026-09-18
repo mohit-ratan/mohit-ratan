@@ -1015,3 +1015,13 @@
 @media(max-height:550px) and (min-width:761px){.composer-workspace-header{padding:10px 20px;}.composer-panel-heading{padding:12px 26px;}.composer-panel-heading p{display:none;}}
 .story-load-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#111b;color:#fff;font-size:14px;z-index:3;pointer-events:none;}
 .story-load-state button{pointer-events:auto;border:1px solid #ffffff70;border-radius:8px;padding:9px 16px;background:#fff;color:#25382f;cursor:pointer;}
+.post-goal-panel{background:#f7f9f3;border:1px solid #e0e7da;border-radius:12px;padding:15px;}
+.post-goal-panel h3{font-size:14px;margin:0;}
+.post-goal-panel .goal-task-summary{margin-top:12px;}
+.post-goal-panel progress{display:block;width:100%;height:6px;margin:8px 0 0;accent-color:var(--floor-color,#355a43);}
+.post-goal-tasks{list-style:none;padding:0;margin:16px 0;display:flex;flex-direction:column;gap:13px;}
+.post-goal-tasks li>div{display:flex;justify-content:space-between;gap:12px;font-size:12px;}
+.post-goal-tasks strong{font-weight:500;overflow-wrap:anywhere;min-width:0;}
+.post-goal-tasks li span{font-size:10px;color:#74816d;white-space:nowrap;}
+.post-goal-link{font-size:11px;color:#355a43;font-weight:600;text-decoration:none;}
+.post-goal-link:hover{text-decoration:underline;}

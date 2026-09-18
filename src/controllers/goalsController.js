@@ -2,6 +2,28 @@ const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const { targetDays, normalizeTasks } = require('../lib/goalProgress');
 
+// Goals belong to an author's tag, so every post in that journey shows the same progress.
+async function get(req, res) {
+  try {
+    const authorId = req.query.authorId || req.userId;
+    const [rows] = await pool.query(
+      'SELECT target_date, subtasks FROM goals WHERE author_id = ? AND tag = ?',
+      [authorId, req.params.tag]
+    );
+    if (!rows.length) return res.json({ goal: null });
+    const subtasks = normalizeTasks(rows[0].subtasks);
+    const date = rows[0].target_date;
+    // DATE columns represent calendar dates, independent of UTC offsets.
+    const targetDate = date instanceof Date
+      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+      : date ? String(date).slice(0, 10) : null;
+    res.json({ goal: { targetDate, subtasks, completed: subtasks.length > 0 && subtasks.every((task) => task.done) } });
+  } catch (err) {
+    console.error('get goal error:', err);
+    res.status(500).json({ error: 'Could not load this goal.' });
+  }
+}
+
 // Legacy checkbox endpoint cannot bypass photo-based progress.
 async function toggleSubtask(req, res) {
   return res.status(400).json({ error: 'Upload a photo for this task to record another day of progress.' });
@@ -72,4 +94,4 @@ async function remove(req, res) {
   }
 }
 
-module.exports = { toggleSubtask, upsert, remove };
+module.exports = { get, toggleSubtask, upsert, remove };

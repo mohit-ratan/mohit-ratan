@@ -6,6 +6,7 @@ import { CAT_MAP, timeAgo, truncate } from '../lib/format';
 import { pickLookRecipe } from '../lib/looks';
 import Avatar from './Avatar';
 import EditPostModal from './EditPostModal';
+import PostGoalPanel from './PostGoalPanel';
 import { HeartIcon, SparkleIcon } from '../lib/icons';
 
 export default function PostDetailModal({ post, onClose, onChanged, onDeleted, onOpenAuthor, onOpenTag }) {
@@ -122,6 +123,7 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
                 <span className="tag-chip" onClick={() => onOpenTag(post.tag)}>#{post.tag}</span>
               </div>
             )}
+            {post.tag && <PostGoalPanel key={`${post.authorId}:${post.tag}`} post={post} />}
             {loadingComments ? (
               <div className="about-text">Loading comments…</div>
             ) : comments.length ? (
