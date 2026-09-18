@@ -16,6 +16,19 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
   const { user } = useAuth();
   const showToast = useToast();
   const fileInputRef = useRef(null);
+  const lookRequest = useRef(0);
+  const previewUrlRef = useRef(null);
+
+  useEffect(() => () => {
+    lookRequest.current += 1;
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+  }, []);
+
+  function updatePreview(next) {
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    previewUrlRef.current = next?.previewUrl || null;
+    setMedia(next);
+  }
 
   const [media, setMedia] = useState(null); // { file, originalFile, previewUrl, kind: 'image'|'video', styled }
   const [chosenCat, setChosenCat] = useState(initialGoalTask?.category || CATEGORIES[0].id);
@@ -66,19 +79,21 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
       return;
     }
     const fileKind = file.type.startsWith('video') ? 'video' : 'image';
-    if (media?.previewUrl) URL.revokeObjectURL(media.previewUrl);
-    setMedia({
+    const nextMedia = {
       file,
       originalFile: file,
       kind: fileKind,
       previewUrl: URL.createObjectURL(file),
       styled: false,
-    });
+    };
+    updatePreview(nextMedia);
+    applySelectedLook(nextMedia, chosenVibeId);
   }
 
   function removeMedia() {
-    if (media?.previewUrl) URL.revokeObjectURL(media.previewUrl);
-    setMedia(null);
+    lookRequest.current += 1;
+    setGenerating(false);
+    updatePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
@@ -86,39 +101,38 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
     setChosenVibeId(id);
     const recipe = id ? getRecipeById(id) : null;
     setVibeLabel(recipe ? recipe.label : '');
+    applySelectedLook(media, id);
   }
 
-  async function handleGenerateLook() {
-    if (!chosenVibeId) {
-      showToast('Pick a look first — tap one of the icons beside your photo.', true);
+  async function applySelectedLook(source, id) {
+    const request = ++lookRequest.current;
+    const recipe = id ? getRecipeById(id) : null;
+    if (!source || source.kind !== 'image') {
+      setGenerating(false);
       return;
     }
-    const recipe = getRecipeById(chosenVibeId);
+    const originalFile = source.originalFile || source.file;
+    if (!recipe) {
+      updatePreview({ ...source, file: originalFile, previewUrl: URL.createObjectURL(originalFile), styled: false });
+      setGenerating(false);
+      return;
+    }
     setGenerating(true);
     try {
-      const sourceFile = media.originalFile || media.file;
-      const blob = await applyLookToImage(sourceFile, recipe);
+      const blob = await applyLookToImage(originalFile, recipe);
+      // Rapid filter changes, photo removal, and closing cannot restore stale renders.
+      if (request !== lookRequest.current) return;
       const styledFile = new File([blob], 'styled.jpg', { type: 'image/jpeg' });
-      if (media.previewUrl) URL.revokeObjectURL(media.previewUrl);
-      setMedia({
-        ...media,
-        originalFile: sourceFile,
-        file: styledFile,
-        previewUrl: URL.createObjectURL(styledFile),
-        styled: true,
-      });
-      showToast('Look applied!');
+      updatePreview({ ...source, originalFile, file: styledFile, previewUrl: URL.createObjectURL(styledFile), styled: true });
     } catch (err) {
-      showToast(`Couldn't style that photo: ${err.message || 'please try again'}`, true);
+      if (request !== lookRequest.current) return;
+      setChosenVibeId('');
+      setVibeLabel('');
+      updatePreview({ ...source, file: originalFile, previewUrl: URL.createObjectURL(originalFile), styled: false });
+      showToast(`Couldn't apply that filter: ${err.message || 'please try again'}`, true);
     } finally {
-      setGenerating(false);
+      if (request === lookRequest.current) setGenerating(false);
     }
-  }
-
-  function resetLook() {
-    if (!media.originalFile) return;
-    if (media.previewUrl) URL.revokeObjectURL(media.previewUrl);
-    setMedia({ ...media, file: media.originalFile, previewUrl: URL.createObjectURL(media.originalFile), styled: false });
   }
 
   async function handleSubmit() {
@@ -127,7 +141,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
       return;
     }
     if (generating) {
-      showToast('Hang on — your AI look is still being applied.', true);
+      showToast('Your filter is still being applied. Please wait a moment.', true);
       return;
     }
     if (isPost && !chosenCat) {
@@ -188,24 +202,11 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
           {media ? (
             <div className="modal-media-pane">
               {media.kind === 'video' ? (
-                <video src={media.previewUrl} controls />
+                <video src={media.previewUrl} controls style={{ filter: getRecipeById(chosenVibeId)?.filter }} />
               ) : (
                 <img src={media.previewUrl} alt="Selected media" />
               )}
-              {media.kind === 'image' && (
-                generating ? (
-                  <div className="generate-bar"><span className="generate-status">Applying your look…</span></div>
-                ) : (
-                  <div className="generate-bar">
-                    <button type="button" className="generate-btn" onClick={handleGenerateLook}>
-                      ✨ {media.styled ? 'Re-apply look' : 'Generate AI look'}
-                    </button>
-                    {media.styled && (
-                      <button type="button" className="link-btn" onClick={resetLook}>Use original photo</button>
-                    )}
-                  </div>
-                )
-              )}
+              {generating && <div className="generate-bar"><span className="generate-status" role="status">Applying filter…</span></div>}
               <button className="remove-media" type="button" aria-label="Remove photo or video" onClick={removeMedia}>✕</button>
             </div>
           ) : (
@@ -234,6 +235,9 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                 type="button"
                 className={`vibe-choice${chosenVibeId === it.id ? ' chosen' : ''}`}
                 title={it.label}
+                aria-label={it.label}
+                aria-pressed={chosenVibeId === it.id}
+                disabled={submitting}
                 onClick={() => chooseVibe(it.id)}
               >
                 {it.emoji}
@@ -263,8 +267,8 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
             )}
             <div className="composer-note">
               {media?.kind === 'image'
-                ? 'Pick a look from the icons beside your photo, then tap "Generate AI look" to apply it.'
-                : 'Pick a look from the icons beside your media — it shows as a glowing tag and styles video previews live.'}
+                ? 'Tap a filter to apply it automatically. Choose No look to restore your original photo.'
+                : 'Tap a filter to preview it on your video.'}
             </div>
             <div className="tag-input-row">
               <label className="composer-field-label" htmlFor="composer-tag">Post tag</label>
@@ -331,7 +335,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
               className="pill-btn primary"
               type="button"
               style={{ width: '100%', justifyContent: 'center' }}
-              disabled={submitting}
+              disabled={submitting || generating}
               onClick={handleSubmit}
             >
               {submitting ? 'Sharing…' : selectedTask ? 'Share photo & update progress →' : isPost ? 'Share post →' : 'Share to story →'}
