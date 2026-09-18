@@ -57,17 +57,24 @@ export function Lamp({ color }) {
 
 export function HouseFacade({ wallColor, roofColor, doorColor }) {
   return (
-    <svg viewBox="0 0 320 260" preserveAspectRatio="none" aria-hidden="true">
-      <polygon points="10,120 160,20 310,120" fill={roofColor} />
-      <rect x="30" y="120" width="260" height="130" fill={wallColor} />
-      <rect x="52" y="148" width="54" height="54" rx="4" fill="#EAF4FC" stroke="#fff" strokeWidth="3" />
-      <line x1="79" y1="148" x2="79" y2="202" stroke="#fff" strokeWidth="2" />
-      <line x1="52" y1="175" x2="106" y2="175" stroke="#fff" strokeWidth="2" />
-      <rect x="214" y="148" width="54" height="54" rx="4" fill="#EAF4FC" stroke="#fff" strokeWidth="3" />
-      <line x1="241" y1="148" x2="241" y2="202" stroke="#fff" strokeWidth="2" />
-      <line x1="214" y1="175" x2="268" y2="175" stroke="#fff" strokeWidth="2" />
-      <rect x="134" y="162" width="52" height="88" rx="4" fill={doorColor} />
-      <circle cx="173" cy="208" r="3.5" fill="#fff" opacity="0.9" />
+    <svg viewBox="0 0 320 280" preserveAspectRatio="none" aria-hidden="true">
+      <rect x="224" y="34" width="24" height="56" fill={roofColor} />
+      <rect x="224" y="34" width="24" height="10" fill="rgba(0,0,0,.12)" />
+      <polygon points="14,138 160,32 306,138" fill={roofColor} />
+      <polygon points="6,146 160,40 314,146 314,154 160,50 6,154" fill="rgba(0,0,0,.10)" />
+      <rect x="40" y="138" width="240" height="112" fill={wallColor} />
+      <rect x="40" y="138" width="240" height="6" fill="rgba(0,0,0,.06)" />
+      <rect x="60" y="158" width="52" height="52" rx="4" fill="#EAF4FC" stroke="#fff" strokeWidth="3" />
+      <line x1="86" y1="158" x2="86" y2="210" stroke="#fff" strokeWidth="2" />
+      <line x1="60" y1="184" x2="112" y2="184" stroke="#fff" strokeWidth="2" />
+      <rect x="208" y="158" width="52" height="52" rx="4" fill="#EAF4FC" stroke="#fff" strokeWidth="3" />
+      <line x1="234" y1="158" x2="234" y2="210" stroke="#fff" strokeWidth="2" />
+      <line x1="208" y1="184" x2="260" y2="184" stroke="#fff" strokeWidth="2" />
+      <rect x="134" y="172" width="52" height="78" rx="4" fill={doorColor} />
+      <rect x="134" y="172" width="52" height="78" rx="4" fill="rgba(255,255,255,.08)" />
+      <circle cx="173" cy="212" r="3.5" fill="#fff" opacity="0.9" />
+      <rect x="124" y="248" width="72" height="7" rx="2" fill={roofColor} opacity=".35" />
+      <rect x="0" y="252" width="320" height="6" fill={roofColor} opacity=".2" />
     </svg>
   );
 }

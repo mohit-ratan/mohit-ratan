@@ -514,11 +514,11 @@
   .house-entry-art{width:200px;position:relative;}
   .house-entry-art svg{width:100%;height:auto;display:block;}
   .house-window-preview{
-    position:absolute;left:16.25%;top:56.9%;width:16.9%;height:20.8%;
+    position:absolute;left:18.75%;top:56.4%;width:16.25%;height:18.6%;
     border-radius:2px;overflow:hidden;pointer-events:none;
   }
   .house-window-preview img,.house-window-preview video{width:100%;height:100%;object-fit:cover;display:block;}
-  .house-window-preview-1{left:66.9%;}
+  .house-window-preview-1{left:65%;}
   .house-entry-label{font-family:var(--font-display);font-size:16px;font-weight:600;}
   .house-entry-summary{font-size:12.5px;color:var(--text-faint);}
 
@@ -537,6 +537,10 @@
   .house-door-art svg{width:100%;height:auto;display:block;}
   .house-door-label{font-family:var(--font-display);font-size:15px;font-weight:600;}
   .house-door-count{font-size:12px;color:var(--text-faint);}
+  .house-door-goal-stats{display:flex;gap:6px;}
+  .house-door-stat{font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;color:#fff;}
+  .house-door-stat-done{background:var(--health);}
+  .house-door-stat-active{background:var(--accent);}
   @media (max-width:560px){ .house-hallway{flex-direction:column;} }
 
   /* ---------- achievements room ---------- */

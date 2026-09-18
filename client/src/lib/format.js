@@ -58,6 +58,18 @@ export function goalStatusLabel(goal) {
   return { text: `${days}d left`, tone: 'active' };
 }
 
+// Aggregate goal status across a set of achievements — used on the house
+// entry (all categories) and each hallway door (one category).
+export function goalStats(achievements) {
+  let trophies = 0;
+  let active = 0;
+  for (const a of achievements) {
+    if (a.goal?.completed) trophies += 1;
+    else if (a.goal) active += 1;
+  }
+  return { total: achievements.length, trophies, active };
+}
+
 export function parseTag(raw) {
   if (!raw) return '';
   return raw.replace(/^#/, '').toLowerCase().trim().split(/[,\s]+/)[0] || '';

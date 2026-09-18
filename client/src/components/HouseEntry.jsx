@@ -1,19 +1,20 @@
 import { mediaUrl } from '../api';
+import { goalStats } from '../lib/format';
 import { HouseFacade } from '../lib/roomArt';
 
 // The first thing you see on the Achievements Room page — a house exterior
 // you click into, leading to HouseHallway (the 3-door hub). Shows a peek
 // of what's inside: recent achievement photos in the windows, plus a
-// one-line summary.
+// one-line summary and aggregate goal status across the whole house.
 export default function HouseEntry({ displayName, achievements, onEnter }) {
   const previews = [...achievements]
     .sort((a, b) => (b.coverPost?.createdAt || 0) - (a.coverPost?.createdAt || 0))
     .slice(0, 2);
 
-  const total = achievements.length;
-  const summary = total === 0
+  const stats = goalStats(achievements);
+  const summary = stats.total === 0
     ? 'Nothing inside yet — post something to start filling it up.'
-    : `${total} achievement${total === 1 ? '' : 's'} waiting inside.`;
+    : `${stats.total} achievement${stats.total === 1 ? '' : 's'} waiting inside.`;
 
   return (
     <button type="button" className="house-entry" onClick={onEnter}>
@@ -35,6 +36,12 @@ export default function HouseEntry({ displayName, achievements, onEnter }) {
       </div>
       <div className="house-entry-label">🚪 Enter {displayName}’s house</div>
       <div className="house-entry-summary">{summary}</div>
+      {(stats.trophies > 0 || stats.active > 0) && (
+        <div className="house-door-goal-stats">
+          {stats.trophies > 0 && <span className="house-door-stat house-door-stat-done">🏆 {stats.trophies} earned</span>}
+          {stats.active > 0 && <span className="house-door-stat house-door-stat-active">🎯 {stats.active} in progress</span>}
+        </div>
+      )}
     </button>
   );
 }
