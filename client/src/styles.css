@@ -486,6 +486,56 @@
   }
   .back-link:hover{color:var(--text);}
 
+  /* ---------- achievements room ---------- */
+  .achievements-room{display:flex;gap:16px;margin-bottom:18px;}
+  @media (max-width:760px){ .achievements-room{flex-direction:column;} }
+
+  .room-zone{
+    flex:1;min-width:0;background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius-m);box-shadow:var(--shadow-s);overflow:hidden;
+  }
+  .room-shell-wrap{position:relative;width:100%;padding-top:56%;}
+  .room-shell{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  .room-zone-label{
+    position:absolute;top:8px;left:10px;font-weight:700;font-size:13px;
+    font-family:var(--font-display);text-shadow:0 1px 2px rgba(255,255,255,.6);
+  }
+  .room-deco{position:absolute;pointer-events:none;}
+  .room-deco svg{width:100%;height:100%;display:block;}
+  .room-deco-plant{left:6%;bottom:4%;width:15%;height:26%;}
+  .room-deco-rug{left:30%;bottom:2%;width:44%;height:16%;}
+  .room-deco-shelf{right:6%;top:16%;width:26%;height:9%;}
+  .room-deco-lamp{left:6%;top:20%;width:9%;height:32%;}
+  .room-deco-table{right:6%;bottom:4%;width:20%;height:12%;}
+
+  .room-frames{
+    display:flex;flex-wrap:wrap;gap:10px;padding:14px;min-height:76px;align-content:flex-start;
+  }
+  .room-empty-caption{margin:0;font-size:13px;color:var(--text-faint);padding:6px 2px;}
+  .room-frame{
+    position:relative;width:84px;height:84px;padding:0;border:none;border-radius:var(--radius-s);
+    overflow:hidden;cursor:pointer;background:var(--surface-2);
+    box-shadow:0 0 0 3px var(--surface),0 0 0 4px var(--border);
+    transition:transform .15s ease,box-shadow .15s ease;
+  }
+  .room-frame img,.room-frame video{width:100%;height:100%;object-fit:cover;display:block;}
+  .room-frame:hover,.room-frame:focus-visible{
+    transform:scale(1.08);
+    box-shadow:0 0 0 3px var(--surface),0 0 0 4px var(--frame-glow,var(--accent)),0 6px 16px rgba(20,22,26,.28);
+    outline:none;z-index:1;
+  }
+  .room-frame-badge{
+    position:absolute;top:5px;right:5px;color:#fff;background:rgba(10,14,20,.55);
+    border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;
+  }
+  .room-caption{
+    position:absolute;left:0;right:0;bottom:0;padding:3px 6px;font-size:10.5px;font-weight:600;
+    color:#fff;background:linear-gradient(0deg,rgba(10,14,20,.75),transparent);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .modal-box.modal-box-gallery{max-width:640px;}
+  .modal-box-gallery .modal-detail-pane{max-width:none;}
+
   /* ---------- modal (post detail + create post) ---------- */
   .modal-backdrop{
     position:fixed;inset:0;background:rgba(10,14,20,0.7);

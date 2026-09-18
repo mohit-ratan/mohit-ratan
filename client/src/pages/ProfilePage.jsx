@@ -153,6 +153,14 @@ export default function ProfilePage() {
                 ) : profile.bio ? (
                   <div className="profile-bio">{profile.bio}</div>
                 ) : null}
+                <button
+                  type="button"
+                  className="pill-btn"
+                  style={{ marginTop: 10 }}
+                  onClick={() => navigate(`/profile/${authorId}/achievements`)}
+                >
+                  🏆 Achievements Room
+                </button>
               </div>
             </div>
             <PostGrid

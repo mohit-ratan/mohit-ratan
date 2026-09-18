@@ -5,6 +5,7 @@ import RegisterPage from './pages/RegisterPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import HomePage from './pages/HomePage';
 import ProfilePage from './pages/ProfilePage';
+import AchievementsPage from './pages/AchievementsPage';
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -38,6 +39,14 @@ export default function App() {
         element={
           <RequireAuth>
             <ProfilePage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/profile/:id/achievements"
+        element={
+          <RequireAuth>
+            <AchievementsPage />
           </RequireAuth>
         }
       />

@@ -83,6 +83,51 @@ async function categoryCounts(req, res) {
   }
 }
 
+// Groups one user's tagged posts into "achievements" — one entry per
+// distinct tag, most-recent post as cover, full post list for the gallery.
+async function achievements(req, res) {
+  try {
+    const { authorId } = req.query;
+    if (!authorId) return res.status(400).json({ error: 'authorId is required.' });
+
+    const [rows] = await pool.query(
+      `SELECT p.*, u.display_name, u.photo_url as author_photo,
+              (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) as like_count,
+              (SELECT COUNT(*) FROM comments cm WHERE cm.post_id = p.id) as comment_count,
+              EXISTS(SELECT 1 FROM post_likes pl2 WHERE pl2.post_id = p.id AND pl2.user_id = ?) as liked_by_me
+       FROM posts p JOIN users u ON u.id = p.author_id
+       WHERE p.author_id = ? AND p.tag IS NOT NULL AND p.tag <> ''
+       ORDER BY p.created_at ASC`,
+      [req.userId, authorId]
+    );
+
+    const byTag = new Map();
+    for (const row of rows) {
+      const post = mapPost(row);
+      if (!byTag.has(post.tag)) byTag.set(post.tag, []);
+      byTag.get(post.tag).push(post);
+    }
+
+    const achievementList = [...byTag.entries()].map(([tag, posts]) => {
+      const counts = {};
+      posts.forEach((p) => { counts[p.category] = (counts[p.category] || 0) + 1; });
+      const category = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+      return {
+        tag,
+        category,
+        count: posts.length,
+        coverPost: posts[posts.length - 1],
+        posts,
+      };
+    });
+
+    res.json({ achievements: achievementList });
+  } catch (err) {
+    console.error('achievements error:', err);
+    res.status(500).json({ error: 'Could not load achievements.' });
+  }
+}
+
 // Create a post — media is REQUIRED, matching the product rule that
 // PackSomeWork is photos/videos only (no text-only or hashtag-only posts).
 // Called after upload.single('media') middleware has already run.
@@ -170,4 +215,4 @@ async function addComment(req, res) {
   }
 }
 
-module.exports = { list, trendingTags, categoryCounts, create, like, listComments, addComment };
+module.exports = { list, trendingTags, categoryCounts, achievements, create, like, listComments, addComment };
