@@ -486,6 +486,23 @@
   }
   .back-link:hover{color:var(--text);}
 
+  .trophy-case{padding:16px 18px;margin-bottom:18px;}
+  .trophy-case-title{font-family:var(--font-display);font-size:15px;font-weight:700;margin-bottom:12px;}
+  .trophy-grid{display:flex;flex-wrap:wrap;gap:10px;}
+  .trophy-badge{
+    display:flex;flex-direction:column;align-items:center;gap:4px;width:76px;
+    padding:8px 4px;border-radius:var(--radius-s);text-decoration:none;color:var(--text);
+    transition:transform .15s ease,box-shadow .15s ease;
+  }
+  .trophy-badge:hover,.trophy-badge:focus-visible{
+    transform:scale(1.08);box-shadow:0 0 0 2px var(--frame-glow,var(--accent));outline:none;
+  }
+  .trophy-badge-icon{font-size:26px;}
+  .trophy-badge-tag{
+    font-size:10.5px;font-weight:600;color:var(--text-muted);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+  }
+
   /* ---------- house entry + hallway ---------- */
   .house-entry{
     display:flex;flex-direction:column;align-items:center;gap:14px;
@@ -528,9 +545,12 @@
 
   .room-zone{
     flex:1;min-width:0;background:var(--surface);border:1px solid var(--border);
-    border-radius:var(--radius-m);box-shadow:var(--shadow-s);overflow:hidden;
+    border-radius:var(--radius-m);box-shadow:var(--shadow-s);
   }
-  .room-shell-wrap{position:relative;width:100%;padding-top:56%;}
+  .room-shell-wrap{
+    position:relative;width:100%;padding-top:56%;overflow:hidden;
+    border-radius:var(--radius-m) var(--radius-m) 0 0;
+  }
   .room-shell{position:absolute;inset:0;width:100%;height:100%;display:block;}
   .room-zone-label{
     position:absolute;top:8px;left:10px;font-weight:700;font-size:13px;
@@ -729,7 +749,23 @@
   .room-goal-badge-done{background:var(--health);}
   .room-goal-badge-overdue{background:var(--relationships-deep);}
 
-  .achievement-cluster{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .achievement-cluster{display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;}
+
+  .room-frame-popover{
+    position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(4px);
+    width:190px;padding:10px 12px;background:var(--text);color:#fff;border-radius:var(--radius-s);
+    box-shadow:var(--shadow-m);opacity:0;pointer-events:none;
+    transition:opacity .15s ease,transform .15s ease;z-index:5;
+  }
+  .achievement-cluster:hover .room-frame-popover,.achievement-cluster:focus-within .room-frame-popover{
+    opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;
+  }
+  .room-frame-popover-bar{height:5px;border-radius:999px;background:rgba(255,255,255,.25);overflow:hidden;margin-bottom:5px;}
+  .room-frame-popover-bar-fill{height:100%;background:var(--frame-glow,var(--accent));border-radius:999px;}
+  .room-frame-popover-summary{font-size:11px;font-weight:700;opacity:.85;margin-bottom:6px;}
+  .room-frame-popover-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;max-height:130px;overflow-y:auto;}
+  .room-frame-popover-list li{font-size:11.5px;opacity:.65;}
+  .room-frame-popover-list li.done{opacity:1;text-decoration:line-through;}
   .subtask-icons{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;max-width:84px;}
   .subtask-icon{
     width:24px;height:24px;border-radius:50%;border:1px solid var(--border);

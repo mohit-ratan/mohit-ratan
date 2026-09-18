@@ -23,9 +23,14 @@ export default function AchievementDetailModal({ achievement, isMe, onChanged, o
 
   async function toggleSubtask(index) {
     if (!isMe) return;
+    const wasCompleted = !!goal?.completed;
     try {
       const { data } = await api.patch(`/api/goals/${achievement.tag}/subtasks/${index}`);
       setGoal((g) => ({ ...g, subtasks: data.subtasks, completed: data.completed }));
+      if (!wasCompleted && data.completed) {
+        showToast(`🏆 Trophy earned: #${achievement.tag}!`);
+      }
+      onChanged?.();
     } catch (err) {
       showToast(err.message, true);
     }

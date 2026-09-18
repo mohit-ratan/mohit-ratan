@@ -7,6 +7,7 @@ import Header from '../components/Header';
 import Avatar from '../components/Avatar';
 import PostGrid from '../components/PostGrid';
 import PostDetailModal from '../components/PostDetailModal';
+import TrophyCase from '../components/TrophyCase';
 import { CameraIcon } from '../lib/icons';
 
 export default function ProfilePage() {
@@ -21,6 +22,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState(null);
   const [streak, setStreak] = useState(0);
   const [posts, setPosts] = useState([]);
+  const [trophies, setTrophies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewPost, setViewPost] = useState(null);
 
@@ -32,15 +34,17 @@ export default function ProfilePage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [profileRes, postsRes] = await Promise.all([
+      const [profileRes, postsRes, achievementsRes] = await Promise.all([
         api.get(`/api/profile/${authorId}`),
         api.get('/api/posts', { params: { authorId } }),
+        api.get('/api/posts/achievements', { params: { authorId } }),
       ]);
       setProfile(profileRes.data.user);
       setStreak(profileRes.data.streak);
       setNameDraft(profileRes.data.user.displayName || '');
       setBioDraft(profileRes.data.user.bio || '');
       setPosts(postsRes.data.posts);
+      setTrophies(achievementsRes.data.achievements.filter((a) => a.goal?.completed));
     } catch (err) {
       showToast(err.message, true);
     } finally {
@@ -163,6 +167,7 @@ export default function ProfilePage() {
                 </button>
               </div>
             </div>
+            <TrophyCase trophies={trophies} authorId={authorId} />
             <PostGrid
               posts={posts}
               onOpen={setViewPost}

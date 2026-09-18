@@ -75,6 +75,26 @@ export function RoomZone({ category, achievements, authorId, onOpen, size = 'sma
                     ))}
                   </div>
                 )}
+                {subtasks.length > 0 && (
+                  <div className="room-frame-popover">
+                    <div className="room-frame-popover-bar">
+                      <div
+                        className="room-frame-popover-bar-fill"
+                        style={{ width: `${Math.round((subtasks.filter((t) => t.done).length / subtasks.length) * 100)}%` }}
+                      />
+                    </div>
+                    <div className="room-frame-popover-summary">
+                      {subtasks.filter((t) => t.done).length}/{subtasks.length} done
+                    </div>
+                    <ul className="room-frame-popover-list">
+                      {subtasks.map((t, i) => (
+                        <li key={i} className={t.done ? 'done' : ''}>
+                          {iconForSubtask(t.text)} {t.text}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             );
           })
