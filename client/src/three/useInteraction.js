@@ -1,54 +1,55 @@
 import { useEffect, useRef, useState } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
-import * as THREE from 'three';
+import { useFrame } from '@react-three/fiber';
 
-const MAX_DISTANCE = 3.5;
+const DEFAULT_MAX_DISTANCE = 2.4;
 
-// A mutable registry of { ref, label, onInteract } entries that interactable
-// meshes add themselves to on mount and remove on unmount — scene-agnostic,
-// shared by RoomScene's achievement frames and HallwayScene's doorways.
+// A mutable registry of { position: {x,z}, label, onInteract } entries —
+// achievement plinths and zone markers register themselves once (their
+// position is fixed) and unregister on unmount.
 export function useInteractionRegistry() {
   return useRef([]);
 }
 
-export function useRegisterInteractable(registryRef, { label, onInteract }) {
-  const ref = useRef(null);
+export function useRegisterInteractable(registryRef, { position, label, onInteract }) {
   useEffect(() => {
-    const entry = { ref, label, onInteract };
+    const entry = { position, label, onInteract };
     registryRef.current.push(entry);
     return () => {
       registryRef.current = registryRef.current.filter((e) => e !== entry);
     };
-  }, [registryRef, label, onInteract]);
-  return ref;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [registryRef, position.x, position.z, label, onInteract]);
 }
 
-// Casts a ray from the camera's forward direction each frame against the
-// registry, tracks the closest hit within MAX_DISTANCE as "focused," and
-// fires its onInteract when E is pressed. Returns the focused label (or
-// null) so the crosshair overlay can show "Press E to open #tag."
-export function useInteractionRaycaster(registryRef, { enabled }) {
-  const { camera } = useThree();
-  const raycaster = useRef(new THREE.Raycaster());
-  const direction = useRef(new THREE.Vector3());
+// Each frame, finds the closest registered entry within maxDistance of the
+// car's current position (read from carPosRef, updated by CarController) —
+// proximity fits a chase-camera car much better than a raycast crosshair,
+// which assumes you're looking directly at what you want. E interacts with
+// whatever's currently focused. Returns the focused label for the overlay.
+export function useProximityInteraction(registryRef, carPosRef, { enabled, maxDistance = DEFAULT_MAX_DISTANCE }) {
   const [focusedLabel, setFocusedLabel] = useState(null);
   const focusedInteract = useRef(null);
 
   useFrame(() => {
-    if (!enabled) {
+    if (!enabled || !carPosRef.current) {
       focusedInteract.current = null;
       if (focusedLabel) setFocusedLabel(null);
       return;
     }
-    camera.getWorldDirection(direction.current);
-    raycaster.current.set(camera.position, direction.current);
-    const objects = registryRef.current.map((e) => e.ref.current).filter(Boolean);
-    const hits = raycaster.current.intersectObjects(objects, false);
-    const hit = hits.find((h) => h.distance <= MAX_DISTANCE);
-    const entry = hit ? registryRef.current.find((e) => e.ref.current === hit.object) : null;
-
-    focusedInteract.current = entry?.onInteract || null;
-    const nextLabel = entry?.label || null;
+    const { x, z } = carPosRef.current;
+    let closest = null;
+    let closestDist = maxDistance;
+    for (const entry of registryRef.current) {
+      const dx = entry.position.x - x;
+      const dz = entry.position.z - z;
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist <= closestDist) {
+        closest = entry;
+        closestDist = dist;
+      }
+    }
+    focusedInteract.current = closest?.onInteract || null;
+    const nextLabel = closest?.label || null;
     if (nextLabel !== focusedLabel) setFocusedLabel(nextLabel);
   });
 

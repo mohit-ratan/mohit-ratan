@@ -9,10 +9,9 @@ import Crosshair from '../three/Crosshair';
 import AchievementDetailModal from '../components/AchievementDetailModal';
 import { CAT_MAP } from '../lib/format';
 
-// Full-viewport 3D view of a single category room — walk around with WASD
-// (click to lock the mouse first), look at achievement frames, press E to
-// open one. AchievementDetailModal is a normal DOM overlay and needs no
-// changes to work on top of the canvas.
+// Full-viewport 3D view of a single category's open drivable yard — WASD to
+// drive, press E near an achievement plinth to open it. AchievementDetailModal
+// is a normal DOM overlay and needs no changes to work on top of the canvas.
 export default function RoomPage() {
   const { id: authorId, category } = useParams();
   const navigate = useNavigate();
@@ -24,7 +23,6 @@ export default function RoomPage() {
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeAchievement, setActiveAchievement] = useState(null);
-  const [locked, setLocked] = useState(false);
   const [focusedLabel, setFocusedLabel] = useState(null);
 
   const refresh = useCallback(async () => {
@@ -47,11 +45,6 @@ export default function RoomPage() {
 
   const cat = CAT_MAP[category];
 
-  function openAchievement(a) {
-    document.exitPointerLock?.();
-    setActiveAchievement(a);
-  }
-
   if (loading || !profile || !cat) {
     return <div className="three-loading-shell"><p>Loading room…</p></div>;
   }
@@ -64,21 +57,19 @@ export default function RoomPage() {
         <button type="button" className="three-back-btn" onClick={() => navigate(`/profile/${authorId}/achievements`)}>
           ← Achievements Room
         </button>
-        <div className="three-room-label">{cat.emoji} {profile.displayName}’s {cat.label} Room</div>
+        <div className="three-room-label">{cat.emoji} {profile.displayName}’s {cat.label} Yard</div>
       </div>
-      <Canvas camera={{ position: [0, 1.6, 3], fov: 70 }}>
+      <Canvas camera={{ position: [0, 3.2, 13.5], fov: 60 }}>
         <Suspense fallback={null}>
           <RoomScene
             category={category}
             achievements={filtered}
-            onOpen={openAchievement}
-            locked={locked}
-            onLockChange={setLocked}
+            onOpen={setActiveAchievement}
             onFocusChange={setFocusedLabel}
           />
         </Suspense>
       </Canvas>
-      <Crosshair locked={locked} focusedLabel={focusedLabel} />
+      <Crosshair focusedLabel={focusedLabel} />
       {activeAchievement && (
         <AchievementDetailModal
           achievement={activeAchievement}
