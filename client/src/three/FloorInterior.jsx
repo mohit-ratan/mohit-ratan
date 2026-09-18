@@ -77,6 +77,75 @@ function SubtaskSticker({ subtask, position, rotationY }) {
   );
 }
 
+// Simple primitives-only decor — deliberately not loading external models
+// (that reliability trade-off is why the open-world approach kept
+// breaking), just boxes/cylinders/cones that always render.
+function FloorLamp({ position }) {
+  return (
+    <group position={position}>
+      <mesh position={[0, 0.02, 0]}>
+        <cylinderGeometry args={[0.18, 0.18, 0.04, 16]} />
+        <meshStandardMaterial color="#5C564C" />
+      </mesh>
+      <mesh position={[0, 0.9, 0]}>
+        <cylinderGeometry args={[0.03, 0.03, 1.8, 8]} />
+        <meshStandardMaterial color="#7A7264" />
+      </mesh>
+      <mesh position={[0, 1.85, 0]}>
+        <coneGeometry args={[0.28, 0.4, 16, 1, true]} />
+        <meshStandardMaterial color="#F2E9D0" emissive="#F2E9D0" emissiveIntensity={0.6} side={THREE.DoubleSide} />
+      </mesh>
+      <pointLight position={[0, 1.8, 0]} intensity={0.7} distance={5.5} color="#FFE7B0" />
+    </group>
+  );
+}
+
+function Stool({ position, accent }) {
+  return (
+    <group position={position}>
+      <mesh position={[0, 0.17, 0]}>
+        <cylinderGeometry args={[0.05, 0.05, 0.34, 8]} />
+        <meshStandardMaterial color="#6B5842" />
+      </mesh>
+      <mesh position={[0, 0.35, 0]}>
+        <cylinderGeometry args={[0.28, 0.28, 0.08, 16]} />
+        <meshStandardMaterial color={accent} />
+      </mesh>
+    </group>
+  );
+}
+
+function PottedPlant({ position }) {
+  return (
+    <group position={position}>
+      <mesh position={[0, 0.18, 0]}>
+        <cylinderGeometry args={[0.2, 0.16, 0.36, 10]} />
+        <meshStandardMaterial color="#9C6B45" />
+      </mesh>
+      <mesh position={[0, 0.62, 0]}>
+        <coneGeometry args={[0.28, 0.68, 8]} />
+        <meshStandardMaterial color="#4F8A56" />
+      </mesh>
+    </group>
+  );
+}
+
+function FloorDecor({ accent }) {
+  const halfW = ROOM_WIDTH / 2;
+  const halfD = ROOM_DEPTH / 2;
+  return (
+    <>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.011, 0.2]}>
+        <circleGeometry args={[1.5, 28]} />
+        <meshStandardMaterial color={accent} transparent opacity={0.35} />
+      </mesh>
+      <FloorLamp position={[-halfW + 0.9, 0, halfD - 1.3]} />
+      <PottedPlant position={[halfW - 0.9, 0, halfD - 1.3]} />
+      <Stool position={[-halfW + 1, 0, -halfD + 1.5]} accent={accent} />
+    </>
+  );
+}
+
 function wallStickerPositions(count, side) {
   const halfW = ROOM_WIDTH / 2;
   const x = side === 'left' ? -halfW + 0.05 : halfW - 0.05;
@@ -106,9 +175,13 @@ export default function FloorInterior({ achievement, floorIndex, registryRef, on
 
   return (
     <>
-      <ambientLight intensity={0.65} />
-      <pointLight position={[0, ROOM_HEIGHT - 0.3, 0]} intensity={1} distance={14} />
+      <ambientLight intensity={0.6} />
+      <pointLight position={[0, ROOM_HEIGHT - 0.3, 0]} intensity={0.9} distance={14} />
       <directionalLight position={[3, 5, 4]} intensity={0.3} />
+      <mesh position={[0, ROOM_HEIGHT - 0.1, 0]}>
+        <boxGeometry args={[1.1, 0.08, 1.1]} />
+        <meshStandardMaterial color="#FDF6E3" emissive="#FDF6E3" emissiveIntensity={0.5} />
+      </mesh>
 
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[ROOM_WIDTH, ROOM_DEPTH]} />
@@ -136,6 +209,7 @@ export default function FloorInterior({ achievement, floorIndex, registryRef, on
       </Text>
 
       <AchievementSticker achievement={achievement} accent={accent} registryRef={registryRef} onOpen={onOpen} />
+      <FloorDecor accent={accent} />
 
       {subtasks.length === 0 && (
         <Text position={[0, 1, halfD - 1.2]} fontSize={0.16} color="#8A8272" anchorX="center" anchorY="middle" maxWidth={4} textAlign="center">

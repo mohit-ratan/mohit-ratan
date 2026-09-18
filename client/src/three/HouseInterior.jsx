@@ -25,7 +25,7 @@ export default function HouseInterior({ achievements, floorIndex, onOpen, onFocu
   // deliberately kept as a dependency so switching floors still produces a
   // new reference and re-triggers that reset (not a lint mistake).
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const spawn = useMemo(() => ({ x: 0, z: ROOM_DEPTH / 2 - 1, yaw: Math.PI }), [floorIndex]);
+  const spawn = useMemo(() => ({ x: 0, z: ROOM_DEPTH / 2 - 1, yaw: 0 }), [floorIndex]);
   const bounds = useMemo(() => ({
     minX: -ROOM_WIDTH / 2 + 0.4,
     maxX: ROOM_WIDTH / 2 - 0.4,

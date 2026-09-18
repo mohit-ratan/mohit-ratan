@@ -59,10 +59,15 @@ export default function WalkController({ bounds, spawn, playerPosRef }) {
     if (m.turnLeft) yaw.current += TURN_SPEED * delta;
     if (m.turnRight) yaw.current -= TURN_SPEED * delta;
 
-    const forwardX = Math.sin(yaw.current);
-    const forwardZ = Math.cos(yaw.current);
-    const rightX = Math.sin(yaw.current + Math.PI / 2);
-    const rightZ = Math.cos(yaw.current + Math.PI / 2);
+    // three.js's camera looks down local -Z by default, so with
+    // camera.rotation.y = yaw, its actual world-space forward is
+    // (-sin(yaw), -cos(yaw)) — NOT (sin(yaw), cos(yaw)). Using the wrong
+    // sign here (an earlier bug) made "forward" walk you away from
+    // whatever you were looking at instead of toward it.
+    const forwardX = -Math.sin(yaw.current);
+    const forwardZ = -Math.cos(yaw.current);
+    const rightX = Math.cos(yaw.current);
+    const rightZ = -Math.sin(yaw.current);
 
     let dx = 0;
     let dz = 0;

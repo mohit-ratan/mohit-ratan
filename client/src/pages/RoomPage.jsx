@@ -9,6 +9,12 @@ import Crosshair from '../three/Crosshair';
 import AchievementDetailModal from '../components/AchievementDetailModal';
 import { CAT_MAP } from '../lib/format';
 
+// Defined outside the component so its identity never changes across
+// re-renders — @react-three/fiber re-applies the `camera` prop whenever
+// its reference changes, which would otherwise fight with WalkController
+// for control of the camera on every re-render.
+const CAMERA_CONFIG = { position: [0, 1.6, 2.5], fov: 62 };
+
 // One category's house — a small walkable room per achievement ("floor"),
 // switched via the floor selector overlay rather than physically climbing
 // stairs. Walk up to the achievement sticker on the back wall and press E
@@ -73,7 +79,7 @@ export default function RoomPage() {
         </div>
       ) : (
         <>
-          <Canvas camera={{ position: [0, 1.6, 2.5], fov: 62 }}>
+          <Canvas camera={CAMERA_CONFIG}>
             <Suspense fallback={null}>
               <HouseInterior
                 achievements={filtered}
