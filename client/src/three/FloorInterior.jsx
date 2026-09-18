@@ -3,7 +3,6 @@ import * as THREE from 'three';
 import { Text, useTexture } from '@react-three/drei';
 import { mediaUrl } from '../api';
 import { useRegisterInteractable } from './useInteraction';
-import { iconForSubtask } from '../lib/subtaskIcons';
 import { CAT_MAP } from '../lib/format';
 
 export const ROOM_WIDTH = 9;
@@ -20,29 +19,46 @@ function StickerTexture({ url }) {
   return <meshStandardMaterial map={texture} />;
 }
 
-// The main achievement "sticker" — mounted on the back wall, shows the
-// achievement's cover photo. Walk up and press E to open the full detail
-// modal (unchanged from the previous scene).
-function AchievementSticker({ achievement, accent, registryRef, onOpen }) {
+// Lays achievement stickers out in a centered grid (up to 3 per row) on
+// the back wall — a floor now holds every achievement in its category,
+// not just one, so this needs to be a gallery rather than a single
+// centerpiece.
+function gridOffset(index, total) {
+  const columns = Math.min(3, total);
+  const rows = Math.ceil(total / columns);
+  const col = index % columns;
+  const row = Math.floor(index / columns);
+  const spacingX = 2.1;
+  const spacingY = 1.9;
+  return {
+    x: (col - (columns - 1) / 2) * spacingX,
+    y: 1.8 - (row - (rows - 1) / 2) * spacingY,
+  };
+}
+
+// One achievement's "sticker" — mounted on the back wall, shows its cover
+// photo. Walk up and press E to open the full detail modal (unchanged).
+function AchievementSticker({ achievement, accent, index, total, registryRef, onOpen }) {
   const cover = achievement.coverPost;
   const isVideo = cover?.mediaType === 'video';
   const halfD = ROOM_DEPTH / 2;
+  const { x, y } = gridOffset(index, total);
 
   useRegisterInteractable(registryRef, {
-    position: { x: 0, z: -halfD + 0.3 },
-    radius: 1.6,
+    position: { x, z: -halfD + 0.3 },
+    radius: 1,
     label: `#${achievement.tag}`,
     onInteract: () => onOpen(achievement),
   });
 
   return (
-    <group position={[0, 1.75, -halfD + 0.05]}>
+    <group position={[x, y, -halfD + 0.05]}>
       <mesh position={[0, 0, -0.03]}>
-        <boxGeometry args={[1.7, 1.7, 0.06]} />
+        <boxGeometry args={[1.35, 1.35, 0.06]} />
         <meshStandardMaterial color={accent} />
       </mesh>
       <mesh>
-        <planeGeometry args={[1.5, 1.5]} />
+        <planeGeometry args={[1.18, 1.18]} />
         {isVideo || !cover ? (
           <meshStandardMaterial color={accent} />
         ) : (
@@ -51,27 +67,8 @@ function AchievementSticker({ achievement, accent, registryRef, onOpen }) {
           </Suspense>
         )}
       </mesh>
-      <Text position={[0, -1.05, 0.04]} fontSize={0.22} color="#33302A" anchorX="center" anchorY="middle">
-        {`#${achievement.tag} · ${achievement.count} post${achievement.count === 1 ? '' : 's'}`}
-      </Text>
-    </group>
-  );
-}
-
-// A small wall-mounted badge for one subtask — green when done, muted
-// otherwise. Purely informational (subtask editing already lives on the
-// 2D goal UI, no need to duplicate it here).
-function SubtaskSticker({ subtask, position, rotationY }) {
-  const done = !!subtask.done;
-  const color = done ? '#3E8E52' : '#B7AE9C';
-  return (
-    <group position={position} rotation={[0, rotationY, 0]}>
-      <mesh>
-        <boxGeometry args={[1.5, 0.55, 0.05]} />
-        <meshStandardMaterial color={color} />
-      </mesh>
-      <Text position={[0, 0, 0.03]} fontSize={0.14} color="#ffffff" anchorX="center" anchorY="middle" maxWidth={1.3} textAlign="center">
-        {`${iconForSubtask(subtask.text)} ${subtask.text}`}
+      <Text position={[0, -0.82, 0.04]} fontSize={0.17} color="#33302A" anchorX="center" anchorY="middle">
+        {`#${achievement.tag} · ${achievement.count}`}
       </Text>
     </group>
   );
@@ -146,32 +143,15 @@ function FloorDecor({ accent }) {
   );
 }
 
-function wallStickerPositions(count, side) {
-  const halfW = ROOM_WIDTH / 2;
-  const x = side === 'left' ? -halfW + 0.05 : halfW - 0.05;
-  const rotationY = side === 'left' ? Math.PI / 2 : -Math.PI / 2;
-  return Array.from({ length: count }, (_, i) => ({
-    position: [x, 1.5, -ROOM_DEPTH / 2 + ((i + 1) / (count + 1)) * ROOM_DEPTH],
-    rotationY,
-  }));
-}
-
 // One floor: a plain enclosed room (floor/ceiling/three walls, front left
 // open — floors are switched via the DOM floor selector, not walked
-// between, so no doorway/staircase is needed) holding one achievement's
-// cover sticker on the back wall and its subtasks as stickers along the
-// side walls.
-export default function FloorInterior({ achievement, floorIndex, registryRef, onOpen }) {
-  const cat = CAT_MAP[achievement.category] || CAT_MAP.health;
-  const accent = ACCENT[achievement.category] || ACCENT.health;
-  const subtasks = achievement.goal?.subtasks || [];
+// between, so no doorway/staircase is needed) representing one category,
+// holding every achievement in it as a sticker gallery on the back wall.
+export default function FloorInterior({ category, achievements, floorIndex, registryRef, onOpen }) {
+  const cat = CAT_MAP[category] || CAT_MAP.health;
+  const accent = ACCENT[category] || ACCENT.health;
   const halfW = ROOM_WIDTH / 2;
   const halfD = ROOM_DEPTH / 2;
-
-  const leftItems = subtasks.filter((_, i) => i % 2 === 0);
-  const rightItems = subtasks.filter((_, i) => i % 2 === 1);
-  const leftPositions = wallStickerPositions(leftItems.length, 'left');
-  const rightPositions = wallStickerPositions(rightItems.length, 'right');
 
   return (
     <>
@@ -208,21 +188,25 @@ export default function FloorInterior({ achievement, floorIndex, registryRef, on
         {`Floor ${floorIndex + 1} — ${cat.emoji} ${cat.label}`}
       </Text>
 
-      <AchievementSticker achievement={achievement} accent={accent} registryRef={registryRef} onOpen={onOpen} />
-      <FloorDecor accent={accent} />
-
-      {subtasks.length === 0 && (
-        <Text position={[0, 1, halfD - 1.2]} fontSize={0.16} color="#8A8272" anchorX="center" anchorY="middle" maxWidth={4} textAlign="center">
-          No goal tracked for this achievement yet.
+      {achievements.length === 0 ? (
+        <Text position={[0, 1.6, -halfD + 0.3]} fontSize={0.18} color="#8A8272" anchorX="center" anchorY="middle" maxWidth={5} textAlign="center">
+          {`No ${cat.label.toLowerCase()} achievements yet.`}
         </Text>
+      ) : (
+        achievements.map((a, i) => (
+          <AchievementSticker
+            key={a.tag}
+            achievement={a}
+            accent={accent}
+            index={i}
+            total={achievements.length}
+            registryRef={registryRef}
+            onOpen={onOpen}
+          />
+        ))
       )}
 
-      {leftItems.map((s, i) => (
-        <SubtaskSticker key={`l-${i}`} subtask={s} position={leftPositions[i].position} rotationY={leftPositions[i].rotationY} />
-      ))}
-      {rightItems.map((s, i) => (
-        <SubtaskSticker key={`r-${i}`} subtask={s} position={rightPositions[i].position} rotationY={rightPositions[i].rotationY} />
-      ))}
+      <FloorDecor accent={accent} />
     </>
   );
 }

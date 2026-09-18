@@ -1,65 +1,175 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import api from '../api';
+import { Suspense, useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Canvas } from '@react-three/fiber';
+import api, { mediaUrl } from '../api';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import HouseInterior from '../three/HouseInterior';
+import Crosshair from '../three/Crosshair';
+import AchievementDetailModal from '../components/AchievementDetailModal';
 import { CATEGORIES } from '../lib/format';
 
-// A plain 2D hub — one card per category "house." Picking one opens
-// RoomPage, the actual 3D walkable house for that category. No Canvas
-// here: this page doesn't need to carry any WebGL risk just to pick a
-// house.
+// Defined outside the component so its identity never changes across
+// re-renders — @react-three/fiber re-applies the `camera` prop whenever
+// its reference changes, which would otherwise fight with WalkController
+// for control of the camera on every re-render.
+const CAMERA_CONFIG = { position: [0, 1.6, 2.5], fov: 62 };
+
+// One house, three fixed floors (Health/Wealth/Relationships) — walk up to
+// an achievement sticker on the back wall and press E to open its full
+// detail; AchievementDetailModal is unchanged. `?floor=<category>` deep
+// links to a specific floor (used by the profile's Trophy Case).
 export default function AchievementsPage() {
   const { id: authorId } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { user } = useAuth();
   const showToast = useToast();
+  const isMe = user?.id === authorId;
 
+  const [view, setView] = useState('house');
+  const [error, setError] = useState(null);
   const [profile, setProfile] = useState(null);
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeAchievement, setActiveAchievement] = useState(null);
+  const [focusedLabel, setFocusedLabel] = useState(null);
+
+  const requestedCategory = searchParams.get('floor');
+  const initialFloor = Math.max(0, CATEGORIES.findIndex((c) => c.id === requestedCategory));
+  const floorIndex = initialFloor;
+  const category = CATEGORIES[floorIndex];
+  const floorAchievements = achievements.filter((a) => a.category === category.id);
+  function selectFloor(index) {
+    setFocusedLabel(null);
+    setSearchParams((params) => {
+      params.set('floor', CATEGORIES[index].id);
+      return params;
+    }, { replace: true });
+  }
+
+  const refresh = useCallback(async () => {
+    setError(null);
+    try {
+      const [profileRes, achievementsRes] = await Promise.all([
+        api.get(`/api/profile/${authorId}`),
+        api.get('/api/posts/achievements', { params: { authorId } }),
+      ]);
+      setProfile(profileRes.data.user);
+      setAchievements(achievementsRes.data.achievements);
+    } catch (err) {
+      setError(err.message);
+      showToast(err.message, true);
+    }
+  }, [authorId, showToast]);
 
   useEffect(() => {
-    let cancelled = false;
     setLoading(true);
-    Promise.all([
-      api.get(`/api/profile/${authorId}`),
-      api.get('/api/posts/achievements', { params: { authorId } }),
-    ])
-      .then(([profileRes, achievementsRes]) => {
-        if (cancelled) return;
-        setProfile(profileRes.data.user);
-        setAchievements(achievementsRes.data.achievements);
-      })
-      .catch((err) => showToast(err.message, true))
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, [authorId]);
+    refresh().finally(() => setLoading(false));
+  }, [refresh]);
+
+  if (error && !loading) {
+    return <div className="three-loading-shell"><div role="alert"><p>{error}</p><button onClick={() => { setLoading(true); refresh().finally(() => setLoading(false)); }}>Try again</button></div></div>;
+  }
 
   if (loading || !profile) {
-    return <div className="three-loading-shell"><p>Loading houses…</p></div>;
+    return <div className="three-loading-shell"><p>Loading house…</p></div>;
   }
 
   return (
-    <div className="wrap achievements-hub">
-      <div className="back-link" onClick={() => navigate(`/profile/${authorId}`)}>← Back to profile</div>
-      <h1 className="achievements-hub-title">{profile.displayName}’s Achievement Houses</h1>
-      <p className="achievements-hub-sub">Each house has one floor per completed goal, with your task stickers on the walls.</p>
-      <div className="achievements-hub-grid">
-        {CATEGORIES.map((c) => {
-          const count = achievements.filter((a) => a.category === c.id).length;
-          return (
-            <button
-              key={c.id}
-              type="button"
-              className="achievement-house-card"
-              onClick={() => navigate(`/profile/${authorId}/room/${c.id}`)}
-            >
-              <span className="achievement-house-emoji">{c.emoji}</span>
-              <span className="achievement-house-label">{c.label} House</span>
-              <span className="achievement-house-count">{count} floor{count === 1 ? '' : 's'}</span>
-            </button>
-          );
-        })}
+    <div className={view === 'house' ? 'achievement-house-page' : 'three-page'}>
+      <div className="three-header-overlay">
+        <button type="button" className="three-back-btn" onClick={() => navigate(`/profile/${authorId}`)}>
+          ← Back to profile
+        </button>
+        <div className="three-room-label">{profile.displayName}’s Achievement House</div>
       </div>
+
+      {view === 'house' ? (
+        <main className="achievement-house-main">
+          <header className="achievement-house-intro">
+            <span className="house-eyebrow">A LITTLE PROGRESS, EVERY DAY</span>
+            <h1>A home for your achievements.</h1>
+            <p>Three floors. Three parts of life. Every milestone belongs here.</p>
+          </header>
+          <div className="achievement-house-layout">
+            <div className="house-scene" aria-label="Achievement house with three floors">
+              <div className="house-roof" aria-hidden="true"><span>PSW</span></div>
+              <div className="house-building">
+                {[...CATEGORIES].reverse().map((c) => {
+                  const index = CATEGORIES.findIndex((item) => item.id === c.id);
+                  const items = achievements.filter((a) => a.category === c.id);
+                  return (
+                    <button key={c.id} type="button" className={`house-floor house-floor-${c.id}${index === floorIndex ? ' selected' : ''}`}
+                      aria-pressed={index === floorIndex} aria-controls="house-floor-gallery" onClick={() => selectFloor(index)}>
+                      <span className="house-window" aria-hidden="true"><span>{c.emoji}</span></span>
+                      <span className="house-floor-copy"><small>FLOOR 0{index + 1}</small><strong>{c.label}</strong><span>{items.length} {items.length === 1 ? 'achievement' : 'achievements'} · {items.filter((a) => a.goal?.completed).length} trophies</span></span>
+                      <span className="house-floor-arrow" aria-hidden="true">↗</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="house-foundation" aria-hidden="true" />
+              <p className="house-caption">Built by you, one milestone at a time.</p>
+            </div>
+            <section id="house-floor-gallery" className={`house-gallery house-floor-${category.id}`} aria-labelledby="house-gallery-title">
+              <span className="house-eyebrow">FLOOR 0{floorIndex + 1}</span>
+              <h2 id="house-gallery-title">{category.emoji} {category.label}</h2>
+              <p>{({ health: 'Grow stronger, feel better, and celebrate taking care of yourself.', wealth: 'Make room for your work, learning, and financial milestones.', relationships: 'Celebrate the connections and shared moments that matter.' })[category.id]}</p>
+              <button type="button" className="house-enter-btn" onClick={() => setView('room')}>Explore this floor in 3D →</button>
+              <div className="house-achievements">
+                {floorAchievements.length ? floorAchievements.map((a) => (
+                  <button type="button" key={a.tag} className="house-achievement" onClick={() => setActiveAchievement(a)}>
+                    <span className="house-achievement-cover">
+                      {a.coverPost?.mediaType === 'image' && a.coverPost?.mediaUrl ? <img src={mediaUrl(a.coverPost.mediaUrl)} alt="" loading="lazy" /> : <span aria-hidden="true">{a.goal?.completed ? '🏆' : category.emoji}</span>}
+                    </span>
+                    <span><strong>#{a.tag}</strong><small>{a.count} posts{a.goal?.completed ? ' · Trophy earned' : a.goal ? ' · Goal in progress' : ''}</small></span>
+                    <span aria-hidden="true">→</span>
+                  </button>
+                )) : <div className="house-empty"><span aria-hidden="true">{category.emoji}</span><h3>Your next chapter starts here.</h3><p>{isMe ? `Share a post in ${category.label.toLowerCase()} with a tag to add your first achievement to this floor.` : 'No achievements on this floor yet.'}</p>{isMe && <button type="button" className="house-enter-btn" onClick={() => navigate('/')}>Go to feed →</button>}</div>}
+              </div>
+            </section>
+          </div>
+        </main>
+      ) : <>
+      <Canvas camera={CAMERA_CONFIG}>
+        <Suspense fallback={null}>
+          {!activeAchievement && <HouseInterior
+            achievements={achievements}
+            floorIndex={floorIndex}
+            onOpen={setActiveAchievement}
+            onFocusChange={setFocusedLabel}
+          />}
+        </Suspense>
+      </Canvas>
+      <Crosshair focusedLabel={focusedLabel} />
+      <div className="three-floor-selector">
+        <button type="button" className="three-floor-btn" onClick={() => setView('house')}>← Whole house</button>
+        {CATEGORIES.map((c, i) => (
+          <button
+            key={c.id}
+            type="button"
+            className={`three-floor-btn${i === floorIndex ? ' active' : ''}`}
+            aria-pressed={i === floorIndex}
+            onClick={() => selectFloor(i)}
+          >
+            Floor {i + 1} · {c.emoji} {c.label}
+          </button>
+        ))}
+      </div>
+
+      </>}
+
+      {activeAchievement && (
+        <AchievementDetailModal
+          achievement={activeAchievement}
+          isMe={isMe}
+          onChanged={refresh}
+          onClose={() => setActiveAchievement(null)}
+          onOpenAuthor={(id) => navigate(`/profile/${id}`)}
+          onOpenTag={(tag) => navigate(`/?tag=${encodeURIComponent(tag)}`)}
+        />
+      )}
     </div>
   );
 }

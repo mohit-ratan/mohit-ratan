@@ -15,7 +15,7 @@ export default function TrophyCase({ trophies, authorId }) {
           return (
             <Link
               key={a.tag}
-              to={`/profile/${authorId}/room/${a.category}`}
+              to={`/profile/${authorId}/achievements?floor=${a.category}`}
               className="trophy-badge"
               style={{ '--frame-glow': `var(--${a.category})` }}
               title={`#${a.tag} — ${cat.label}`}

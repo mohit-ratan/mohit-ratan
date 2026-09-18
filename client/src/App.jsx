@@ -10,7 +10,6 @@ import ProfilePage from './pages/ProfilePage';
 // The three.js/r3f/drei stack is ~1MB — code-split so only the 3D routes
 // pay that cost instead of it loading on every page (feed, login, etc).
 const AchievementsPage = lazy(() => import('./pages/AchievementsPage'));
-const RoomPage = lazy(() => import('./pages/RoomPage'));
 
 function ThreeDLoading() {
   return <div className="three-loading-shell"><p>Loading…</p></div>;
@@ -57,16 +56,6 @@ export default function App() {
           <RequireAuth>
             <Suspense fallback={<ThreeDLoading />}>
               <AchievementsPage />
-            </Suspense>
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/profile/:id/room/:category"
-        element={
-          <RequireAuth>
-            <Suspense fallback={<ThreeDLoading />}>
-              <RoomPage />
             </Suspense>
           </RequireAuth>
         }

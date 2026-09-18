@@ -544,21 +544,6 @@
   .three-floor-btn:hover{background:rgba(10,14,20,.75);}
   .three-floor-btn.active{background:var(--accent);}
 
-  /* ---------- achievement houses hub (2D) ---------- */
-  .achievements-hub{padding-top:22px;padding-bottom:40px;}
-  .achievements-hub-title{font-family:var(--font-display);font-size:26px;margin:0 0 6px;}
-  .achievements-hub-sub{color:var(--text-muted);font-size:14px;margin:0 0 22px;}
-  .achievements-hub-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;}
-  .achievement-house-card{
-    display:flex;flex-direction:column;align-items:center;gap:6px;
-    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);
-    box-shadow:var(--shadow-s);padding:26px 16px;cursor:pointer;text-align:center;
-  }
-  .achievement-house-card:hover{box-shadow:var(--shadow-m);transform:translateY(-1px);}
-  .achievement-house-emoji{font-size:34px;}
-  .achievement-house-label{font-family:var(--font-display);font-size:16px;font-weight:600;}
-  .achievement-house-count{font-size:12.5px;color:var(--text-muted);}
-
   .modal-box.modal-box-gallery{max-width:640px;}
   .modal-box-gallery .modal-detail-pane{max-width:none;}
 
@@ -826,3 +811,63 @@
   .auth-mode-tab.active{background:var(--surface);color:var(--accent);box-shadow:var(--shadow-s);}
   .auth-note{font-size:11.5px;color:var(--text-faint);line-height:1.5;margin-top:4px;}
   .auth-loading-shell{min-height:100vh;display:flex;align-items:center;justify-content:center;color:var(--text-muted);}
+
+/* The house overview keeps all three life categories visible together. */
+.achievement-house-page{min-height:100vh;background:#f7f8f4;color:#25382f;}
+.achievement-house-page .three-header-overlay{background:transparent;position:static;display:flex;align-items:center;justify-content:space-between;padding:22px 5%;gap:16px;}
+.achievement-house-page .three-room-label{color:#53655b;background:transparent;box-shadow:none;text-shadow:none;}
+.achievement-house-main{max-width:1100px;margin:auto;padding:25px 28px 60px;}
+.achievement-house-intro{text-align:center;margin-bottom:38px;}
+.house-eyebrow{font-size:10px;letter-spacing:2px;font-weight:700;color:#63766b;}
+.achievement-house-intro h1{font-family:var(--font-display);font-size:clamp(30px,4vw,46px);font-weight:500;letter-spacing:-1.4px;margin:12px 0;}
+.achievement-house-intro p,.house-gallery>p{color:#6c7971;font-size:14px;line-height:1.7;}
+.achievement-house-layout{display:grid;grid-template-columns:1.1fr 1fr;gap:65px;align-items:center;}
+.house-scene{padding:8px 12px 0;}
+.house-roof{height:105px;background:#39594a;clip-path:polygon(50% 0,100% 89%,100% 100%,0 100%,0 89%);display:flex;align-items:flex-end;justify-content:center;padding-bottom:17px;}
+.house-roof span{color:#e4ecdf;font-family:var(--font-display);font-size:21px;letter-spacing:5px;}
+.house-building{border:9px solid #e6decd;border-top:0;background:#e6decd;box-shadow:12px 15px 0 #263e3010;}
+.house-floor{--floor-color:#317350;--floor-bg:#e5efdf;}
+.house-floor-health{--floor-color:#317350;--floor-bg:#e5efdf;}
+.house-floor-wealth{--floor-color:#386b96;--floor-bg:#e5edf5;}
+.house-floor-relationships{--floor-color:#a15470;--floor-bg:#f3e5e9;}
+.house-floor{width:100%;min-height:122px;border:0;border-bottom:8px solid #e6decd;padding:18px;display:flex;gap:18px;align-items:center;text-align:left;background:#fbfaf5;color:#354638;cursor:pointer;transition:background .2s;position:relative;}
+.house-floor:last-child{border-bottom:0;}
+.house-floor:hover,.house-floor.selected{background:var(--floor-bg);}
+.house-floor.selected:after{content:'';position:absolute;right:0;top:0;bottom:0;width:4px;background:var(--floor-color);}
+.house-window{flex-shrink:0;width:64px;height:73px;border:5px solid #fff;border-radius:28px 28px 2px 2px;background:linear-gradient(90deg,transparent 46%,#fff 46%,#fff 54%,transparent 54%),linear-gradient(transparent 47%,#fff 47%,#fff 53%,transparent 53%),#d7e7e4;box-shadow:0 2px 0 #b7c6b5;display:grid;place-items:center;}
+.house-window span{font-size:24px;filter:drop-shadow(0 2px 3px #fff);}
+.house-floor-copy{display:flex;flex-direction:column;gap:3px;flex:1;}
+.house-floor-copy small{font-size:9px;letter-spacing:1.8px;color:var(--floor-color);font-weight:700;}
+.house-floor-copy strong{font-family:var(--font-display);font-size:24px;font-weight:500;}
+.house-floor-copy>span{font-size:11px;color:#65716a;}
+.house-floor-arrow{color:var(--floor-color);font-size:22px;}
+.house-foundation{height:14px;margin:0 -12px;background:#cdc5b3;border-radius:2px;box-shadow:0 8px 0 #e5e9dd;}
+.house-caption{text-align:center;font-size:11px;color:#7d897e;margin:26px 0 0;}
+.house-gallery{padding:28px 0;min-width:0;}
+.house-gallery h2{font-family:var(--font-display);font-size:34px;font-weight:500;margin:9px 0;}
+.house-enter-btn{border:1px solid #ced8cd;background:#fff;color:#355c45;border-radius:8px;padding:11px 16px;font-size:12px;font-weight:600;cursor:pointer;}
+.house-enter-btn:hover{background:#eef3eb;}
+.house-achievements{margin-top:24px;display:flex;flex-direction:column;gap:10px;max-height:410px;overflow:auto;}
+.house-achievement{display:flex;align-items:center;gap:13px;background:white;border:1px solid #e1e6dc;border-radius:12px;padding:10px;text-align:left;cursor:pointer;color:inherit;}
+.house-achievement:hover{border-color:var(--floor-color);}
+.house-achievement-cover{width:52px;height:56px;border-radius:6px;background:var(--floor-bg);flex-shrink:0;overflow:hidden;display:grid;place-items:center;font-size:25px;}
+.house-achievement-cover img{width:100%;height:100%;object-fit:cover;}
+.house-achievement>span:nth-child(2){flex:1;min-width:0;}
+.house-achievement strong{display:block;font-size:14px;overflow-wrap:anywhere;}
+.house-achievement small{display:block;font-size:11px;color:#748077;margin-top:5px;}
+.house-empty{padding:28px 22px;background:#fff9;border:1px dashed #cbd6c6;border-radius:14px;text-align:center;}
+.house-empty>span{font-size:30px;}
+.house-empty h3{font-family:var(--font-display);font-size:21px;font-weight:500;margin:10px 0;}
+.house-empty p{font-size:13px;color:#748077;line-height:1.7;}
+.achievement-house-page button:focus-visible{outline:3px solid #1656c9;outline-offset:3px;}
+@media(max-width:760px){
+  .achievement-house-layout{grid-template-columns:1fr;gap:15px;max-width:470px;margin:auto;}
+  .achievement-house-main{padding:15px 20px 40px;}
+  .achievement-house-intro{margin-bottom:22px;}
+  .achievement-house-page .three-header-overlay{align-items:flex-start;flex-direction:column;padding:16px 20px;}
+  .house-gallery{padding:20px 0;}
+  .house-floor{padding:14px 12px;gap:12px;}
+  .house-floor-copy strong{font-size:22px;}
+  .house-window{width:53px;}
+  .house-achievements{max-height:none;}
+}

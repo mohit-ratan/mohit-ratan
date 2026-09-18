@@ -2,12 +2,14 @@ import { useEffect, useMemo, useRef } from 'react';
 import FloorInterior, { ROOM_WIDTH, ROOM_DEPTH } from './FloorInterior';
 import WalkController from './WalkController';
 import { useInteractionRegistry, useProximityInteraction } from './useInteraction';
+import { CATEGORIES } from '../lib/format';
 
-// One category's house — only the currently-selected floor is rendered
-// (floors are switched via the DOM floor selector, not by physically
-// climbing stairs), keeping the scene simple: one small room, one sticker
-// board, a handful of subtask badges. `floorIndex` selects which
-// achievement's floor is active.
+// One house, three fixed floors — Health, Wealth, Relationships (in that
+// order) — each holding every achievement in that category. Only the
+// currently-selected floor is rendered (floors are switched via the DOM
+// floor selector, not by physically climbing stairs), keeping the scene
+// itself to one small room at a time. `floorIndex` selects which category
+// (0/1/2 into CATEGORIES) is active.
 export default function HouseInterior({ achievements, floorIndex, onOpen, onFocusChange }) {
   const registryRef = useInteractionRegistry();
   const playerPosRef = useRef({ x: 0, z: ROOM_DEPTH / 2 - 1 });
@@ -17,7 +19,12 @@ export default function HouseInterior({ achievements, floorIndex, onOpen, onFocu
     onFocusChange?.(focusedLabel);
   }, [focusedLabel, onFocusChange]);
 
-  const achievement = achievements[floorIndex];
+  const category = CATEGORIES[floorIndex]?.id || CATEGORIES[0].id;
+  const floorAchievements = useMemo(
+    () => achievements.filter((a) => a.category === category),
+    [achievements, category]
+  );
+
   // Memoized so identity only changes when the floor actually changes —
   // WalkController resets the player position on every new `spawn`
   // reference, so a fresh object every render would reset it every frame.
@@ -36,15 +43,14 @@ export default function HouseInterior({ achievements, floorIndex, onOpen, onFocu
   return (
     <>
       <color attach="background" args={['#DDE6E0']} />
-      {achievement && (
-        <FloorInterior
-          key={achievement.tag}
-          achievement={achievement}
-          floorIndex={floorIndex}
-          registryRef={registryRef}
-          onOpen={onOpen}
-        />
-      )}
+      <FloorInterior
+        key={category}
+        category={category}
+        achievements={floorAchievements}
+        floorIndex={floorIndex}
+        registryRef={registryRef}
+        onOpen={onOpen}
+      />
       <WalkController bounds={bounds} spawn={spawn} playerPosRef={playerPosRef} />
     </>
   );
