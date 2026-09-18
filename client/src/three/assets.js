@@ -3,10 +3,10 @@
 // furniture pieces 6-18KB each). Loaded at runtime via useGLTF, not bundled.
 const KENNEY_BASE = 'https://cdn.jsdelivr.net/gh/shorepine/kenney@main/3d';
 
-// Kenney's kart has a chunkier, big-wheeled toy-car stance closer to the
-// whimsical feel of Bruno Simon's car than a realistic sedan — easy to
-// swap back to sedan-sports.glb if this doesn't read well.
-export const CAR_MODEL_URL = `${KENNEY_BASE}/car/kart-oobi.glb`;
+// Bruno Simon's own car is a chunky, boxy off-roader with roof-mounted
+// lights — not sourceable (bespoke model), but Kenney's SUV is the closest
+// boxy/aggressive stance available. Easy one-line swap if it reads wrong.
+export const CAR_MODEL_URL = `${KENNEY_BASE}/car/suv.glb`;
 
 export const FURNITURE_URLS = {
   plant: `${KENNEY_BASE}/furniture/pottedPlant.glb`,

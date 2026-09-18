@@ -5,13 +5,13 @@ import CarController from './CarController';
 import FurnitureProp from './FurnitureProp';
 import AchievementPlinth from './AchievementPlinth';
 import { FURNITURE_URLS } from './assets';
-import { SkyDome, Mountains, TreeRing, BirdFlock, GrassField, GroundDebris, NaturalGround, CheckeredEdge, isNightNow } from './Environment';
+import { SkyDome, TreeRing, BirdFlock, GrassField, GroundDebris, NaturalGround, CheckeredEdge, isNightNow } from './Environment';
 import WaterFeature from './WaterFeature';
 import { useInteractionRegistry, useProximityInteraction } from './useInteraction';
 import { CATEGORIES, CAT_MAP } from '../lib/format';
 
 const CATEGORY_COLORS = { health: '#2F9E5B', wealth: '#2B6CB0', relationships: '#B0527A' };
-const ROAD_COLOR = '#6B6B70';
+const ROAD_COLOR = '#D9A868';
 const FOG_COLOR_DAY = '#BFE3F5';
 const FOG_COLOR_NIGHT = '#0B1330';
 
@@ -147,9 +147,8 @@ export default function HouseScene({ achievements, onOpen, onFocusChange }) {
       <ambientLight intensity={night ? 0.35 : 0.85} />
       <directionalLight position={[14, 20, 10]} intensity={night ? 0.25 : 0.9} />
 
-      <Mountains radius={68} />
       <TreeRing innerRadius={32} outerRadius={44} count={30} />
-      <GrassField innerRadius={26} outerRadius={40} count={600} />
+      <GrassField innerRadius={26} outerRadius={40} count={750} />
       <BirdFlock count={6} />
       <WaterFeature position={[34, 0, 26]} size={8} registryRef={registryRef} />
 

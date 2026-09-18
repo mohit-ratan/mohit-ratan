@@ -81,30 +81,6 @@ export function SkyDome({ night }) {
   return <Sky sunPosition={[20, 25, 10]} turbidity={2} rayleigh={0.8} />;
 }
 
-// Large flattened cones on the horizon read as distant mountains without
-// needing real terrain assets — cheap and always reliable.
-export function Mountains({ radius = 55, color = '#8A96A8' }) {
-  const peaks = useMemo(() => {
-    const count = 10;
-    return Array.from({ length: count }, (_, i) => {
-      const angle = (i / count) * Math.PI * 2 + (i % 2) * 0.15;
-      const r = radius + (i % 3) * 6;
-      const height = 12 + (i % 4) * 5;
-      return { x: Math.cos(angle) * r, z: Math.sin(angle) * r, height, radius: 9 + (i % 3) * 3 };
-    });
-  }, [radius]);
-  return (
-    <>
-      {peaks.map((p, i) => (
-        <mesh key={i} position={[p.x, p.height / 2 - 1, p.z]}>
-          <coneGeometry args={[p.radius, p.height, 5]} />
-          <meshStandardMaterial color={color} fog={false} />
-        </mesh>
-      ))}
-    </>
-  );
-}
-
 // Scattered real tree models around a ring outside the drivable area —
 // decorative only (no collision registration, they're out of the car's
 // reach by design).
@@ -128,29 +104,51 @@ export function TreeRing({ innerRadius = 24, outerRadius = 34, count = 22 }) {
   );
 }
 
-// Dense spiky grass blades (instanced for performance) scattered in a ring
-// between the drivable area and the tree line — stylized rather than a
-// flat green plane, closer to the reference's spiky-grass look.
-export function GrassField({ innerRadius = 20, outerRadius = 32, count = 500, color = '#8FBF5A' }) {
+const GRASS_PALETTE = ['#8FBF5A', '#79A84D', '#A3D06B', '#6E9C48', '#98C862'];
+
+// Dense spiky grass blades (instanced for performance), varied in color and
+// swaying in a wind-like sine motion — a flat static field reads as fake;
+// even a subtle sway sells "alive" far more than any amount of density.
+export function GrassField({ innerRadius = 20, outerRadius = 32, count = 700 }) {
   const blades = useMemo(() => {
     return Array.from({ length: count }, (_, i) => {
-      const angle = ((i * 2.4) % (Math.PI * 2));
+      const angle = (i * 2.4) % (Math.PI * 2);
       const r = innerRadius + ((i * 53) % Math.round((outerRadius - innerRadius) * 10)) / 10;
-      const scale = 0.7 + ((i * 17) % 6) * 0.12;
+      const scale = 0.8 + ((i * 17) % 7) * 0.15;
       return {
-        position: [Math.cos(angle) * r, 0.18 * scale, Math.sin(angle) * r],
-        rotation: [0, (i * 2.1) % (Math.PI * 2), 0],
+        position: [Math.cos(angle) * r, 0.2 * scale, Math.sin(angle) * r],
+        baseRotY: (i * 2.1) % (Math.PI * 2),
         scale,
+        color: GRASS_PALETTE[i % GRASS_PALETTE.length],
+        phase: (i * 0.37) % (Math.PI * 2),
       };
     });
   }, [innerRadius, outerRadius, count]);
 
+  const instanceRefs = useRef([]);
+
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+    for (let i = 0; i < blades.length; i++) {
+      const inst = instanceRefs.current[i];
+      if (!inst) continue;
+      const sway = Math.sin(t * 1.6 + blades[i].phase) * 0.18;
+      inst.rotation.set(sway, blades[i].baseRotY, sway * 0.6);
+    }
+  });
+
   return (
     <Instances limit={count}>
-      <coneGeometry args={[0.06, 0.36, 4]} />
-      <meshStandardMaterial color={color} />
+      <coneGeometry args={[0.06, 0.42, 4]} />
+      <meshStandardMaterial />
       {blades.map((b, i) => (
-        <Instance key={i} position={b.position} rotation={b.rotation} scale={b.scale} />
+        <Instance
+          key={i}
+          ref={(el) => { instanceRefs.current[i] = el; }}
+          position={b.position}
+          scale={b.scale}
+          color={b.color}
+        />
       ))}
     </Instances>
   );

@@ -3,7 +3,7 @@ import CarController from './CarController';
 import FurnitureProp from './FurnitureProp';
 import AchievementPlinth from './AchievementPlinth';
 import { FURNITURE_URLS } from './assets';
-import { SkyDome, Mountains, TreeRing, BirdFlock, GrassField, GroundDebris, NaturalGround, CheckeredEdge, isNightNow } from './Environment';
+import { SkyDome, TreeRing, BirdFlock, GrassField, GroundDebris, NaturalGround, CheckeredEdge, isNightNow } from './Environment';
 import WaterFeature from './WaterFeature';
 import { useInteractionRegistry, useProximityInteraction } from './useInteraction';
 
@@ -16,7 +16,7 @@ const CATEGORY_COLORS = {
   wealth: { accent: '#2B6CB0' },
   relationships: { accent: '#B0527A' },
 };
-const ROAD_COLOR = '#6B6B70';
+const ROAD_COLOR = '#D9A868';
 const FOG_COLOR_DAY = '#BFE3F5';
 const FOG_COLOR_NIGHT = '#0B1330';
 
@@ -77,9 +77,8 @@ export default function RoomScene({ category, achievements, onOpen, onFocusChang
       <ambientLight intensity={night ? 0.35 : 0.85} />
       <directionalLight position={[10, 16, 8]} intensity={night ? 0.25 : 0.9} />
 
-      <Mountains />
       <TreeRing />
-      <GrassField innerRadius={12} outerRadius={20} count={350} />
+      <GrassField innerRadius={12} outerRadius={20} count={450} />
       <BirdFlock />
       <WaterFeature position={[-13, 0, -10]} size={4.5} registryRef={registryRef} />
 
