@@ -59,7 +59,7 @@ async function register(req, res) {
     // flow (see verifyOtp) — so a failure here shouldn't undo registration
     // or turn it into a 500 for the caller.
     try {
-      await sendMail({
+      const mailResult = await sendMail({
         to: normalizedEmail,
         subject: 'Verify your PackSomeWork account',
         html: `
@@ -69,6 +69,7 @@ async function register(req, res) {
           <p>This link expires in 24 hours. If you didn't request this, you can ignore this email.</p>
         `,
       });
+      console.log('register: verification mail sent:', mailResult);
     } catch (mailErr) {
       console.error('register: verification email failed to send:', mailErr);
     }
@@ -147,11 +148,12 @@ async function requestOtp(req, res) {
 
     await pool.query('UPDATE users SET otp_code = ?, otp_expires = ? WHERE id = ?', [code, expires, user.id]);
 
-    await sendMail({
+    const mailResult = await sendMail({
       to: normalizedEmail,
       subject: 'Your PackSomeWork sign-in code',
       html: `<p>Your one-time sign-in code is:</p><h2 style="letter-spacing:4px;">${code}</h2><p>It expires in 10 minutes. If you didn't request this, you can ignore this email.</p>`,
     });
+    console.log('otp/request: mail sent:', mailResult);
 
     res.json({ ok: true, message: 'A code has been emailed to you.' });
   } catch (err) {
