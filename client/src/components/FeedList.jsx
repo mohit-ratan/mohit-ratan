@@ -5,6 +5,8 @@ import { pickLookRecipe } from '../lib/looks';
 import { HeartIcon, CommentIcon, VideoIcon, SparkleIcon } from '../lib/icons';
 import Avatar from './Avatar';
 
+const ASPECT_RATIOS = { square: '1 / 1', portrait: '4 / 5', landscape: '16 / 9' };
+
 function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
   const cat = CAT_MAP[post.category] || CAT_MAP.health;
   const isVideo = post.mediaUrl && post.mediaType === 'video';
@@ -45,7 +47,7 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
           </div>
         </div>
       </header>
-      <button type="button" className="feed-card-media" aria-label={`Open ${post.tag ? `#${post.tag}` : cat.label} post`} onClick={() => onOpen(post)}>
+      <button type="button" className="feed-card-media" style={{ aspectRatio: ASPECT_RATIOS[post.aspectRatio] || ASPECT_RATIOS.square }} aria-label={`Open ${post.tag ? `#${post.tag}` : cat.label} post`} onClick={() => onOpen(post)}>
         {isVideo ? (
           <video src={mediaUrl(post.mediaUrl)} style={filter ? { filter } : undefined} muted playsInline preload="metadata" />
         ) : isImage ? (

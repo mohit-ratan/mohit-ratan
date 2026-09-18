@@ -36,6 +36,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
   const [media, setMedia] = useState(null); // { file, originalFile, previewUrl, kind: 'image'|'video', styled }
   const [chosenCat, setChosenCat] = useState(initialGoalTask?.category || CATEGORIES[0].id);
   const [visibility, setVisibility] = useState('friends');
+  const [aspectRatio, setAspectRatio] = useState('square');
   const [chosenVibeId, setChosenVibeId] = useState('');
   const [vibeLabel, setVibeLabel] = useState('');
   const [tagRaw, setTagRaw] = useState(initialGoalTask?.tag || '');
@@ -180,6 +181,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
       form.append('aiStyled', String(!!(media.kind === 'image' && media.styled)));
       if (isPost) form.append('category', selectedTask ? linkedGoal.category : chosenCat);
       if (isPost) form.append('visibility', visibility);
+      if (isPost) form.append('aspectRatio', aspectRatio);
       if (isPost && selectedTask) {
         form.append('goalTaskIndex', taskIndex);
         form.append('goalTaskText', selectedTask.text);
@@ -305,6 +307,16 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                   </button>
                 </div>
                 <span className="tag-hint">{visibility === 'public' ? 'Anyone can see this post, even people who don’t follow you.' : 'Only people you’ve accepted as followers can see this post.'}</span>
+              </div>
+            )}
+            {isPost && (
+              <div className="visibility-choice-row">
+                <label className="composer-field-label">Photo shape</label>
+                <div className="visibility-choice-options">
+                  <button type="button" className={`visibility-choice${aspectRatio === 'square' ? ' chosen' : ''}`} onClick={() => setAspectRatio('square')}>⬜ Square</button>
+                  <button type="button" className={`visibility-choice${aspectRatio === 'portrait' ? ' chosen' : ''}`} onClick={() => setAspectRatio('portrait')}>📱 Portrait</button>
+                  <button type="button" className={`visibility-choice${aspectRatio === 'landscape' ? ' chosen' : ''}`} onClick={() => setAspectRatio('landscape')}>🖼️ Landscape</button>
+                </div>
               </div>
             )}
             <div className="composer-note">

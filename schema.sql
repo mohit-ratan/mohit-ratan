@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS posts (
   media_type   ENUM('image','video') NOT NULL,
   ai_styled    TINYINT(1)   NOT NULL DEFAULT 0,
   visibility   ENUM('public','friends') NOT NULL DEFAULT 'friends',
+  aspect_ratio ENUM('square','portrait','landscape') NOT NULL DEFAULT 'square',
   created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_posts_category (category),
@@ -105,4 +106,29 @@ CREATE TABLE IF NOT EXISTS follows (
   FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (followee_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_follows_followee_status (followee_id, status)
+) ENGINE=InnoDB;
+
+-- A block is one-directional to record who initiated it, but visibility
+-- and follow checks treat it as mutual (see src/lib/blocks.js).
+CREATE TABLE IF NOT EXISTS blocks (
+  blocker_id  VARCHAR(36) NOT NULL,
+  blocked_id  VARCHAR(36) NOT NULL,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (blocker_id, blocked_id),
+  FOREIGN KEY (blocker_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (blocked_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id            VARCHAR(36) PRIMARY KEY,
+  recipient_id  VARCHAR(36) NOT NULL,
+  actor_id      VARCHAR(36) NOT NULL,
+  type          ENUM('like','comment','follow_accepted') NOT NULL,
+  post_id       VARCHAR(36) DEFAULT NULL,
+  read_at       DATETIME DEFAULT NULL,
+  created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  INDEX idx_notifications_recipient (recipient_id, created_at)
 ) ENGINE=InnoDB;

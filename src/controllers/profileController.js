@@ -39,11 +39,20 @@ async function getProfile(req, res) {
     const u = rows[0];
     const streak = await computeStreak(req.params.id);
     const followStatus = await getFollowStatus(req.userId, req.params.id);
+    let blockedByMe = false;
+    if (req.userId !== req.params.id) {
+      const [blockRows] = await pool.query(
+        'SELECT 1 FROM blocks WHERE blocker_id = ? AND blocked_id = ?',
+        [req.userId, req.params.id]
+      );
+      blockedByMe = blockRows.length > 0;
+    }
 
     res.json({
       user: { id: u.id, displayName: u.display_name, bio: u.bio, photoUrl: u.photo_url, isPrivate: !!u.is_private },
       streak,
       followStatus,
+      blockedByMe,
     });
   } catch (err) {
     console.error('get profile error:', err);

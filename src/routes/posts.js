@@ -15,5 +15,7 @@ router.delete('/:id', requireAuth, postsController.remove);
 router.post('/:id/like', requireAuth, postsController.like);
 router.get('/:id/comments', requireAuth, postsController.listComments);
 router.post('/:id/comments', requireAuth, postsController.addComment);
+router.put('/:id/comments/:commentId', requireAuth, postsController.updateComment);
+router.delete('/:id/comments/:commentId', requireAuth, postsController.deleteComment);
 
 module.exports = router;

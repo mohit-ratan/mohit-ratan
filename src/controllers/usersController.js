@@ -11,8 +11,11 @@ async function search(req, res) {
     const [rows] = await pool.query(
       `SELECT id, display_name, photo_url FROM users
        WHERE id != ? AND display_name LIKE ?
+       AND NOT EXISTS (
+         SELECT 1 FROM blocks b WHERE (b.blocker_id = ? AND b.blocked_id = users.id) OR (b.blocker_id = users.id AND b.blocked_id = ?)
+       )
        ORDER BY display_name ASC LIMIT 20`,
-      [req.userId, `%${q}%`]
+      [req.userId, `%${q}%`, req.userId, req.userId]
     );
 
     const users = await Promise.all(rows.map(async (u) => ({

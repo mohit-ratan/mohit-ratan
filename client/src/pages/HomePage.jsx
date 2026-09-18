@@ -43,6 +43,8 @@ export default function HomePage() {
   const feedRequest = useRef(0);
   const [feedError, setFeedError] = useState(null);
   const [storyError, setStoryError] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [posts, setPosts] = useState([]);
   const [stories, setStories] = useState([]);
   const [counts, setCounts] = useState({});
@@ -53,20 +55,21 @@ export default function HomePage() {
   // modal is one of: null | {type:'create'} | {type:'addStory'} | {type:'view', post} | {type:'viewStory', authorId, index}
   const [modal, setModal] = useState(null);
 
-  const loadPosts = useCallback(async () => {
+  const loadPosts = useCallback(async (offset = 0) => {
     const request = ++feedRequest.current;
-    setLoading(true);
-    setFeedError(null);
+    if (offset === 0) { setLoading(true); setFeedError(null); } else { setLoadingMore(true); }
     try {
-      const params = {};
+      const params = { offset };
       if (category !== 'all') params.category = category;
       if (tagFilter) params.tag = tagFilter;
       const { data } = await api.get('/api/posts', { params });
-      if (request === feedRequest.current) setPosts(data.posts);
+      if (request !== feedRequest.current) return;
+      setPosts((current) => (offset === 0 ? data.posts : [...current, ...data.posts]));
+      setHasMore(data.hasMore);
     } catch (error) {
-      if (request === feedRequest.current) setFeedError(error.message);
+      if (request === feedRequest.current && offset === 0) setFeedError(error.message);
     } finally {
-      if (request === feedRequest.current) setLoading(false);
+      if (request === feedRequest.current) { setLoading(false); setLoadingMore(false); }
     }
   }, [category, tagFilter]);
 
@@ -199,6 +202,13 @@ export default function HomePage() {
                 emptyTitle={searchQuery || tagFilter ? "No matching moments" : "Your next chapter starts here"}
                 emptyText={searchQuery || tagFilter ? "Try another search or clear your filters." : `Share your first moment in ${catLabel} using Create post above.`}
               />
+            )}
+            {!loading && !feedError && hasMore && (
+              <div className="feed-load-more">
+                <button type="button" className="house-enter-btn" disabled={loadingMore} onClick={() => loadPosts(posts.length)}>
+                  {loadingMore ? 'Loading…' : 'Load more'}
+                </button>
+              </div>
             )}
           </section>
           <aside className="side-col">

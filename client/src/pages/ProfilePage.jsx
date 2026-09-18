@@ -10,6 +10,7 @@ import PostDetailModal from '../components/PostDetailModal';
 import TrophyCase from '../components/TrophyCase';
 import FollowRequests from '../components/FollowRequests';
 import FollowListPanel from '../components/FollowListPanel';
+import BlockedAccounts from '../components/BlockedAccounts';
 import { CameraIcon } from '../lib/icons';
 
 export default function ProfilePage() {
@@ -30,6 +31,8 @@ export default function ProfilePage() {
   const [viewPost, setViewPost] = useState(null);
   const [followStatus, setFollowStatus] = useState('none');
   const [followLoading, setFollowLoading] = useState(false);
+  const [blockedByMe, setBlockedByMe] = useState(false);
+  const [blockLoading, setBlockLoading] = useState(false);
 
   const [nameDraft, setNameDraft] = useState('');
   const [bioDraft, setBioDraft] = useState('');
@@ -38,7 +41,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
-  const canView = isMe || !profile?.isPrivate || followStatus === 'accepted';
+  const canView = isMe || (!blockedByMe && (!profile?.isPrivate || followStatus === 'accepted'));
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -48,6 +51,7 @@ export default function ProfilePage() {
       setProfile(profileRes.data.user);
       setStreak(profileRes.data.streak);
       setFollowStatus(profileRes.data.followStatus);
+      setBlockedByMe(!!profileRes.data.blockedByMe);
       setNameDraft(profileRes.data.user.displayName || '');
       setBioDraft(profileRes.data.user.bio || '');
       setPrivateDraft(profileRes.data.user.isPrivate !== false);
@@ -97,6 +101,36 @@ export default function ProfilePage() {
       showToast(err.message, true);
     } finally {
       setFollowLoading(false);
+    }
+  }
+
+  async function handleBlock() {
+    if (!window.confirm(`Block ${profile.displayName}? They won't be able to see your posts or follow you, and you won't see theirs.`)) return;
+    setBlockLoading(true);
+    try {
+      await api.post(`/api/blocks/${authorId}`);
+      setBlockedByMe(true);
+      setFollowStatus('none');
+      setPosts([]);
+      setTrophies([]);
+      showToast(`${profile.displayName} has been blocked.`);
+    } catch (err) {
+      showToast(err.message, true);
+    } finally {
+      setBlockLoading(false);
+    }
+  }
+
+  async function handleUnblock() {
+    setBlockLoading(true);
+    try {
+      await api.delete(`/api/blocks/${authorId}`);
+      setBlockedByMe(false);
+      showToast(`${profile.displayName} has been unblocked.`);
+    } catch (err) {
+      showToast(err.message, true);
+    } finally {
+      setBlockLoading(false);
     }
   }
 
@@ -185,14 +219,21 @@ export default function ProfilePage() {
                     </>}
                   </div>
                   {isMe && <button type="button" className="profile-edit-toggle" aria-expanded={editing} aria-controls="profile-editor" onClick={() => { setNameDraft(profile.displayName || ''); setBioDraft(profile.bio || ''); setPrivateDraft(profile.isPrivate !== false); setEditing(!editing); }} disabled={saving}>{editing ? 'Cancel editing' : 'Edit profile'}</button>}
-                  {!isMe && followStatus === 'none' && (
-                    <button type="button" className="pill-btn primary" onClick={sendFollowRequest} disabled={followLoading}>Follow</button>
-                  )}
-                  {!isMe && followStatus === 'pending' && (
-                    <button type="button" className="pill-btn" onClick={removeFollow} disabled={followLoading}>Requested</button>
-                  )}
-                  {!isMe && followStatus === 'accepted' && (
-                    <button type="button" className="pill-btn" onClick={removeFollow} disabled={followLoading}>Following</button>
+                  {!isMe && (
+                    <div className="profile-follow-actions">
+                      {!blockedByMe && followStatus === 'none' && (
+                        <button type="button" className="pill-btn primary" onClick={sendFollowRequest} disabled={followLoading}>Follow</button>
+                      )}
+                      {!blockedByMe && followStatus === 'pending' && (
+                        <button type="button" className="pill-btn" onClick={removeFollow} disabled={followLoading}>Requested</button>
+                      )}
+                      {!blockedByMe && followStatus === 'accepted' && (
+                        <button type="button" className="pill-btn" onClick={removeFollow} disabled={followLoading}>Following</button>
+                      )}
+                      <button type="button" className="pill-btn danger-outline" onClick={blockedByMe ? handleUnblock : handleBlock} disabled={blockLoading}>
+                        {blockedByMe ? 'Unblock' : 'Block'}
+                      </button>
+                    </div>
                   )}
                 </div>
                 <div className="profile-identity-copy">
@@ -228,6 +269,7 @@ export default function ProfilePage() {
               </div>
             </div>
             {isMe && <FollowRequests />}
+            {isMe && <BlockedAccounts />}
             {canView ? (
               <>
                 <div className="profile-posts-heading"><h2>{isMe ? 'Your moments' : 'Moments'}</h2><span>{posts.length} {posts.length === 1 ? 'post' : 'posts'}</span></div>

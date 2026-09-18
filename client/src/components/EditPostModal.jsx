@@ -23,6 +23,7 @@ export default function EditPostModal({ post, onClose, onSaved }) {
   const [vibeLabel, setVibeLabel] = useState(post.vibe || '');
   const [tagRaw, setTagRaw] = useState(post.tag || '');
   const [visibility, setVisibility] = useState(post.visibility === 'public' ? 'public' : 'friends');
+  const [aspectRatio, setAspectRatio] = useState(post.aspectRatio || 'square');
   const [submitting, setSubmitting] = useState(false);
   const dialogRef = useDialog(onClose, submitting);
   const [existingTags, setExistingTags] = useState(null);
@@ -65,7 +66,7 @@ export default function EditPostModal({ post, onClose, onSaved }) {
     }
     setSubmitting(true);
     try {
-      const body = { category: chosenCat, vibe: vibeLabel.slice(0, 60), tag: normalizedTag, visibility };
+      const body = { category: chosenCat, vibe: vibeLabel.slice(0, 60), tag: normalizedTag, visibility, aspectRatio };
       if (isNewTag) {
         const cleanSubtasks = goalSubtasks.filter((t) => t.text.trim());
         if (goalTargetDate || cleanSubtasks.length) {
@@ -159,6 +160,14 @@ export default function EditPostModal({ post, onClose, onSaved }) {
                 >
                   🌐 Public
                 </button>
+              </div>
+            </div>
+            <div className="visibility-choice-row">
+              <label className="composer-field-label">Photo shape</label>
+              <div className="visibility-choice-options">
+                <button type="button" className={`visibility-choice${aspectRatio === 'square' ? ' chosen' : ''}`} onClick={() => setAspectRatio('square')}>⬜ Square</button>
+                <button type="button" className={`visibility-choice${aspectRatio === 'portrait' ? ' chosen' : ''}`} onClick={() => setAspectRatio('portrait')}>📱 Portrait</button>
+                <button type="button" className={`visibility-choice${aspectRatio === 'landscape' ? ' chosen' : ''}`} onClick={() => setAspectRatio('landscape')}>🖼️ Landscape</button>
               </div>
             </div>
             {isNewTag && (

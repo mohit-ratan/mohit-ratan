@@ -12,8 +12,11 @@ async function list(req, res) {
        AND (s.author_id = ? OR u.is_private = 0 OR EXISTS(
          SELECT 1 FROM follows f WHERE f.follower_id = ? AND f.followee_id = s.author_id AND f.status = 'accepted'
        ))
+       AND NOT EXISTS (
+         SELECT 1 FROM blocks b WHERE (b.blocker_id = ? AND b.blocked_id = s.author_id) OR (b.blocker_id = s.author_id AND b.blocked_id = ?)
+       )
        ORDER BY s.created_at ASC`,
-      [req.userId, req.userId, req.userId]
+      [req.userId, req.userId, req.userId, req.userId, req.userId]
     );
     res.json({
       stories: rows.map(r => ({

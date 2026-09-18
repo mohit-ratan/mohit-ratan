@@ -1,5 +1,7 @@
 const pool = require('../db');
 const { canView } = require('../lib/follows');
+const { isBlocked } = require('../lib/blocks');
+const { notify } = require('../lib/notifications');
 
 // Sends a follow request (or is a no-op if one already exists in either
 // state — the caller just gets back whatever the current status now is).
@@ -8,6 +10,9 @@ async function follow(req, res) {
     const followeeId = req.params.id;
     if (followeeId === req.userId) {
       return res.status(400).json({ error: "You can't follow yourself." });
+    }
+    if (await isBlocked(req.userId, followeeId)) {
+      return res.status(403).json({ error: 'You cannot follow this account.' });
     }
     const [target] = await pool.query('SELECT is_private FROM users WHERE id = ?', [followeeId]);
     if (!target.length) return res.status(404).json({ error: 'User not found.' });
@@ -76,6 +81,7 @@ async function respond(req, res) {
         "UPDATE follows SET status = 'accepted' WHERE follower_id = ? AND followee_id = ?",
         [followerId, req.userId]
       );
+      await notify(followerId, req.userId, 'follow_accepted');
     } else {
       await pool.query(
         'DELETE FROM follows WHERE follower_id = ? AND followee_id = ?',

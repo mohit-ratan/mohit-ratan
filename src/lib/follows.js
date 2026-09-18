@@ -1,4 +1,5 @@
 const pool = require('../db');
+const { isBlocked } = require('./blocks');
 
 // 'me' | 'accepted' | 'pending' | 'none' — from viewerId's perspective looking at targetId.
 async function getFollowStatus(viewerId, targetId) {
@@ -12,6 +13,7 @@ async function getFollowStatus(viewerId, targetId) {
 
 async function canView(viewerId, authorId) {
   if (viewerId === authorId) return true;
+  if (await isBlocked(viewerId, authorId)) return false;
   const [rows] = await pool.query('SELECT is_private FROM users WHERE id = ?', [authorId]);
   if (rows.length && !rows[0].is_private) return true;
   const status = await getFollowStatus(viewerId, authorId);

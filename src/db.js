@@ -60,4 +60,40 @@ pool.query(`
   ) ENGINE=InnoDB
 `).catch((err) => console.error('Could not ensure follows table exists:', err));
 
+pool.query(`
+  SELECT COUNT(*) as cnt FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'posts' AND COLUMN_NAME = 'aspect_ratio'
+`).then(([rows]) => {
+  if (!rows[0].cnt) {
+    return pool.query("ALTER TABLE posts ADD COLUMN aspect_ratio ENUM('square','portrait','landscape') NOT NULL DEFAULT 'square'");
+  }
+}).catch((err) => console.error('Could not ensure posts.aspect_ratio column exists:', err));
+
+pool.query(`
+  CREATE TABLE IF NOT EXISTS blocks (
+    blocker_id VARCHAR(36) NOT NULL,
+    blocked_id VARCHAR(36) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (blocker_id, blocked_id),
+    FOREIGN KEY (blocker_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (blocked_id) REFERENCES users(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB
+`).catch((err) => console.error('Could not ensure blocks table exists:', err));
+
+pool.query(`
+  CREATE TABLE IF NOT EXISTS notifications (
+    id VARCHAR(36) PRIMARY KEY,
+    recipient_id VARCHAR(36) NOT NULL,
+    actor_id VARCHAR(36) NOT NULL,
+    type ENUM('like','comment','follow_accepted') NOT NULL,
+    post_id VARCHAR(36) DEFAULT NULL,
+    read_at DATETIME DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+    INDEX idx_notifications_recipient (recipient_id, created_at)
+  ) ENGINE=InnoDB
+`).catch((err) => console.error('Could not ensure notifications table exists:', err));
+
 module.exports = pool;

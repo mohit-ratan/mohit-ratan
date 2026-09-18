@@ -10,6 +10,8 @@ const profileRoutes = require('./routes/profile');
 const goalRoutes = require('./routes/goals');
 const followRoutes = require('./routes/follows');
 const userRoutes = require('./routes/users');
+const blockRoutes = require('./routes/blocks');
+const notificationRoutes = require('./routes/notifications');
 
 const app = express();
 const publicDir = path.join(__dirname, '..', 'public');
@@ -24,6 +26,8 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/goals', goalRoutes);
 app.use('/api/follows', followRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/blocks', blockRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 

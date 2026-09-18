@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import BrandLogo from './BrandLogo';
 import Avatar from './Avatar';
 import api from '../api';
-import { CATEGORIES } from '../lib/format';
+import { CATEGORIES, timeAgo } from '../lib/format';
 import { SearchIcon, BellIcon } from '../lib/icons';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
@@ -28,6 +28,7 @@ export default function Header({
   const [peopleOpen, setPeopleOpen] = useState(false);
   const [peopleLoading, setPeopleLoading] = useState(false);
   const [requests, setRequests] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [requestsOpen, setRequestsOpen] = useState(false);
   const requestsRef = useRef(null);
 
@@ -50,12 +51,18 @@ export default function Header({
   }, [requestsOpen]);
 
   // Polls rather than pushing, since there's no websocket/SSE layer in this
-  // app — good enough for a personal-scale follow-request inbox.
+  // app — good enough for a personal-scale notification inbox.
   useEffect(() => {
     let cancelled = false;
     function load() {
-      api.get('/api/follows/requests').then(({ data }) => {
-        if (!cancelled) setRequests(data.requests);
+      Promise.all([
+        api.get('/api/follows/requests'),
+        api.get('/api/notifications'),
+      ]).then(([reqRes, notifRes]) => {
+        if (!cancelled) {
+          setRequests(reqRes.data.requests);
+          setNotifications(notifRes.data.notifications);
+        }
       }).catch(() => {});
     }
     load();
@@ -68,6 +75,27 @@ export default function Header({
       await api.patch(`/api/follows/${id}`, { action });
       setRequests((current) => current.filter((r) => r.id !== id));
     } catch { showToast('Could not update this follow request. Please try again.', true); }
+  }
+
+  const unreadNotifCount = notifications.filter((n) => !n.read).length;
+
+  function toggleBell() {
+    setRequestsOpen((open) => {
+      const next = !open;
+      if (next && unreadNotifCount > 0) {
+        api.post('/api/notifications/read')
+          .then(() => setNotifications((current) => current.map((n) => ({ ...n, read: true }))))
+          .catch(() => {});
+      }
+      return next;
+    });
+  }
+
+  function notificationText(n) {
+    if (n.type === 'like') return `${n.actorName} liked your post`;
+    if (n.type === 'comment') return `${n.actorName} commented on your post`;
+    if (n.type === 'follow_accepted') return `${n.actorName} accepted your follow request`;
+    return `${n.actorName} interacted with you`;
   }
 
   useEffect(() => {
@@ -178,28 +206,50 @@ export default function Header({
             <button
               className="bell-btn"
               type="button"
-              title="Follow requests"
-              aria-label="Follow requests"
-              onClick={() => setRequestsOpen((v) => !v)}
+              title="Notifications"
+              aria-label="Notifications"
+              onClick={toggleBell}
             >
               <BellIcon />
-              {requests.length > 0 && <span className="bell-badge">{requests.length}</span>}
+              {(requests.length + unreadNotifCount) > 0 && <span className="bell-badge">{requests.length + unreadNotifCount}</span>}
             </button>
             {requestsOpen && (
               <div className="me-menu bell-menu">
-                {requests.length ? requests.map((r) => (
-                  <div key={r.id} className="bell-request-row">
-                    <button type="button" className="people-search-person" onClick={() => { setRequestsOpen(false); navigate(`/profile/${r.id}`); }}>
-                      <Avatar id={r.id} name={r.displayName} photoUrl={r.photoUrl} size={32} />
-                      <span>{r.displayName}</span>
-                    </button>
-                    <div className="follow-request-actions">
-                      <button type="button" className="pill-btn primary" onClick={() => respondRequest(r.id, 'accept')}>Accept</button>
-                      <button type="button" className="pill-btn" onClick={() => respondRequest(r.id, 'reject')}>Decline</button>
-                    </div>
+                {requests.length > 0 && (
+                  <div className="bell-section">
+                    <span className="bell-section-label">Follow requests</span>
+                    {requests.map((r) => (
+                      <div key={r.id} className="bell-request-row">
+                        <button type="button" className="people-search-person" onClick={() => { setRequestsOpen(false); navigate(`/profile/${r.id}`); }}>
+                          <Avatar id={r.id} name={r.displayName} photoUrl={r.photoUrl} size={32} />
+                          <span>{r.displayName}</span>
+                        </button>
+                        <div className="follow-request-actions">
+                          <button type="button" className="pill-btn primary" onClick={() => respondRequest(r.id, 'accept')}>Accept</button>
+                          <button type="button" className="pill-btn" onClick={() => respondRequest(r.id, 'reject')}>Decline</button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                )) : (
-                  <div className="people-search-empty">No follow requests</div>
+                )}
+                {notifications.length > 0 && (
+                  <div className="bell-section">
+                    <span className="bell-section-label">Activity</span>
+                    {notifications.map((n) => (
+                      <button
+                        type="button"
+                        key={n.id}
+                        className={`bell-notif-row${n.read ? '' : ' unread'}`}
+                        onClick={() => { setRequestsOpen(false); navigate(`/profile/${n.actorId}`); }}
+                      >
+                        <Avatar id={n.actorId} name={n.actorName} photoUrl={n.actorPhotoUrl} size={32} />
+                        <span className="bell-notif-text">{notificationText(n)}<small>{timeAgo(n.createdAt)}</small></span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {!requests.length && !notifications.length && (
+                  <div className="people-search-empty">Nothing new yet</div>
                 )}
               </div>
             )}

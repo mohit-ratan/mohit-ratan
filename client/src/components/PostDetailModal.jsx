@@ -28,6 +28,9 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
   const [loadingComments, setLoadingComments] = useState(true);
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editCommentText, setEditCommentText] = useState('');
+  const [commentActionPending, setCommentActionPending] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -69,6 +72,45 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
     } catch (err) {
       showToast(err.message, true);
     } finally { commenting.current = false; setCommentPending(false); }
+  }
+
+  function startEditComment(c) {
+    setEditingCommentId(c.id);
+    setEditCommentText(c.text);
+  }
+
+  function cancelEditComment() {
+    setEditingCommentId(null);
+    setEditCommentText('');
+  }
+
+  async function saveEditComment(id) {
+    const text = editCommentText.trim();
+    if (!text || commentActionPending) return;
+    setCommentActionPending(true);
+    try {
+      await api.put(`/api/posts/${post.id}/comments/${id}`, { text });
+      setComments((cs) => cs.map((c) => (c.id === id ? { ...c, text } : c)));
+      cancelEditComment();
+    } catch (err) {
+      showToast(err.message, true);
+    } finally {
+      setCommentActionPending(false);
+    }
+  }
+
+  async function deleteComment(id) {
+    if (commentActionPending || !window.confirm("Delete this comment? This can't be undone.")) return;
+    setCommentActionPending(true);
+    try {
+      await api.delete(`/api/posts/${post.id}/comments/${id}`);
+      setComments((cs) => cs.filter((c) => c.id !== id));
+      onChanged?.();
+    } catch (err) {
+      showToast(err.message, true);
+    } finally {
+      setCommentActionPending(false);
+    }
   }
 
   async function deletePost() {
@@ -150,10 +192,32 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
               <div className="modal-comments">
                 {comments.map((c) => (
                   <div key={c.id}>
-                    <div className="comment-row">
-                      <Avatar id={c.authorId} name={c.authorName} size={26} />
-                      <div className="comment-bubble"><span className="c-author">{c.authorName}</span>{c.text}</div>
-                    </div>
+                    {editingCommentId === c.id ? (
+                      <div className="comment-edit-row">
+                        <input
+                          type="text"
+                          className="comment-input"
+                          aria-label="Edit comment"
+                          value={editCommentText}
+                          disabled={commentActionPending}
+                          onChange={(e) => setEditCommentText(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') saveEditComment(c.id); if (e.key === 'Escape') cancelEditComment(); }}
+                        />
+                        <button type="button" className="goal-remove-btn" disabled={commentActionPending || !editCommentText.trim()} onClick={() => saveEditComment(c.id)}>Save</button>
+                        <button type="button" className="goal-remove-btn" disabled={commentActionPending} onClick={cancelEditComment}>Cancel</button>
+                      </div>
+                    ) : (
+                      <div className="comment-row">
+                        <Avatar id={c.authorId} name={c.authorName} size={26} />
+                        <div className="comment-bubble"><span className="c-author">{c.authorName}</span>{c.text}</div>
+                        {c.authorId === user?.id && (
+                          <div className="comment-actions">
+                            <button type="button" className="comment-action-btn" onClick={() => startEditComment(c)}>Edit</button>
+                            <button type="button" className="comment-action-btn" disabled={commentActionPending} onClick={() => deleteComment(c.id)}>Delete</button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <div className="comment-time">{timeAgo(c.createdAt)}</div>
                   </div>
                 ))}

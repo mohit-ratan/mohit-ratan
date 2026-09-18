@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const { targetDays, normalizeTasks } = require('../lib/goalProgress');
 const { canView } = require('../lib/follows');
+const { notify } = require('../lib/notifications');
 
 function mediaTypeFromMime(mime) {
   return mime && mime.startsWith('video') ? 'video' : 'image';
@@ -36,6 +37,7 @@ function mapPost(row) {
     mediaType: row.media_type,
     aiStyled: !!row.ai_styled,
     visibility: row.visibility,
+    aspectRatio: row.aspect_ratio,
     createdAt: new Date(row.created_at).getTime(),
     likeCount: Number(row.like_count || 0),
     likedByMe: !!row.liked_by_me,
@@ -69,11 +71,14 @@ async function attachGoalProgress(posts) {
   });
 }
 
+const PAGE_SIZE = 30;
+
 // Media-only feed — a post with no media is never created (see create() below),
 // so this list is inherently "photos and videos only".
 async function list(req, res) {
   try {
     const { category, tag, authorId } = req.query;
+    const offset = Math.max(0, parseInt(req.query.offset, 10) || 0);
     let sql = `SELECT p.*, u.display_name, u.photo_url as author_photo,
                (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) as like_count,
                (SELECT COUNT(*) FROM comments cm WHERE cm.post_id = p.id) as comment_count,
@@ -81,8 +86,11 @@ async function list(req, res) {
                FROM posts p JOIN users u ON u.id = p.author_id
                WHERE (p.visibility = 'public' OR p.author_id = ? OR u.is_private = 0 OR EXISTS(
                  SELECT 1 FROM follows f WHERE f.follower_id = ? AND f.followee_id = p.author_id AND f.status = 'accepted'
-               ))`;
-    const params = [req.userId, req.userId, req.userId];
+               ))
+               AND NOT EXISTS (
+                 SELECT 1 FROM blocks b WHERE (b.blocker_id = ? AND b.blocked_id = p.author_id) OR (b.blocker_id = p.author_id AND b.blocked_id = ?)
+               )`;
+    const params = [req.userId, req.userId, req.userId, req.userId, req.userId];
     if (category && category !== 'all') {
       sql += ' AND p.category = ?';
       params.push(category);
@@ -95,10 +103,12 @@ async function list(req, res) {
       sql += ' AND p.author_id = ?';
       params.push(authorId);
     }
-    sql += ' ORDER BY p.created_at DESC LIMIT 300';
+    sql += ' ORDER BY p.created_at DESC, p.id DESC LIMIT ? OFFSET ?';
+    params.push(PAGE_SIZE + 1, offset);
     const [rows] = await pool.query(sql, params);
-    const posts = await attachGoalProgress(rows.map(mapPost));
-    res.json({ posts });
+    const hasMore = rows.length > PAGE_SIZE;
+    const posts = await attachGoalProgress(rows.slice(0, PAGE_SIZE).map(mapPost));
+    res.json({ posts, hasMore });
   } catch (err) {
     console.error('list posts error:', err);
     res.status(500).json({ error: 'Could not load posts.' });
@@ -213,6 +223,7 @@ async function create(req, res) {
     const mediaType = mediaTypeFromMime(req.file.mimetype);
     const cleanTag = (tag || '').replace(/^#/, '').toLowerCase().slice(0, 24);
     const visibility = req.body.visibility === 'public' ? 'public' : 'friends';
+    const aspectRatio = ['square', 'portrait', 'landscape'].includes(req.body.aspectRatio) ? req.body.aspectRatio : 'square';
 
     if (req.body.goalTaskIndex !== undefined) {
       if (mediaType !== 'image') return res.status(400).json({ error: 'Upload a photo to complete a task.' });
@@ -230,9 +241,9 @@ async function create(req, res) {
           return res.status(409).json({ error: 'This goal task has changed. Reopen the uploader and choose it again.' });
         }
         await connection.query(
-          `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled, visibility)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0, visibility]
+          `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled, visibility, aspect_ratio)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0, visibility, aspectRatio]
         );
         const wasDone = subtasks[index].done;
         subtasks[index].completedDays = Math.min(subtasks[index].targetDays, subtasks[index].completedDays + 1);
@@ -251,9 +262,9 @@ async function create(req, res) {
     }
 
     await pool.query(
-      `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled, visibility)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0, visibility]
+      `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled, visibility, aspect_ratio)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0, visibility, aspectRatio]
     );
 
     // Optional goal metadata, only ever set the first time a tag is used
@@ -304,10 +315,11 @@ async function update(req, res) {
     const cleanTag = (tag || '').replace(/^#/, '').toLowerCase().slice(0, 24);
     const oldTag = post.tag;
     const visibility = req.body.visibility === 'public' ? 'public' : 'friends';
+    const aspectRatio = ['square', 'portrait', 'landscape'].includes(req.body.aspectRatio) ? req.body.aspectRatio : 'square';
 
     await pool.query(
-      'UPDATE posts SET category = ?, vibe = ?, tag = ?, visibility = ? WHERE id = ?',
-      [category, (vibe || '').slice(0, 60), cleanTag, visibility, post.id]
+      'UPDATE posts SET category = ?, vibe = ?, tag = ?, visibility = ?, aspect_ratio = ? WHERE id = ?',
+      [category, (vibe || '').slice(0, 60), cleanTag, visibility, aspectRatio, post.id]
     );
 
     if (cleanTag !== oldTag) {
@@ -358,6 +370,8 @@ async function like(req, res) {
       return res.json({ liked: false });
     }
     await pool.query('INSERT INTO post_likes (post_id, user_id) VALUES (?, ?)', [id, req.userId]);
+    const [postRows] = await pool.query('SELECT author_id FROM posts WHERE id = ?', [id]);
+    if (postRows[0]) await notify(postRows[0].author_id, req.userId, 'like', id);
     res.json({ liked: true });
   } catch (err) {
     console.error('like error:', err);
@@ -396,6 +410,8 @@ async function addComment(req, res) {
       'INSERT INTO comments (id, post_id, author_id, text) VALUES (?, ?, ?, ?)',
       [id, req.params.id, req.userId, text.trim().slice(0, 500)]
     );
+    const [postRows] = await pool.query('SELECT author_id FROM posts WHERE id = ?', [req.params.id]);
+    if (postRows[0]) await notify(postRows[0].author_id, req.userId, 'comment', req.params.id);
     res.json({ ok: true, id });
   } catch (err) {
     console.error('add comment error:', err);
@@ -403,4 +419,32 @@ async function addComment(req, res) {
   }
 }
 
-module.exports = { list, trendingTags, categoryCounts, achievements, create, update, remove, like, listComments, addComment };
+async function updateComment(req, res) {
+  try {
+    const { text } = req.body || {};
+    if (!text || !text.trim()) return res.status(400).json({ error: 'Comment cannot be empty.' });
+    const [rows] = await pool.query('SELECT author_id FROM comments WHERE id = ?', [req.params.commentId]);
+    if (!rows.length) return res.status(404).json({ error: 'Comment not found.' });
+    if (rows[0].author_id !== req.userId) return res.status(403).json({ error: 'You can only edit your own comments.' });
+    await pool.query('UPDATE comments SET text = ? WHERE id = ?', [text.trim().slice(0, 500), req.params.commentId]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('update comment error:', err);
+    res.status(500).json({ error: 'Could not update comment.' });
+  }
+}
+
+async function deleteComment(req, res) {
+  try {
+    const [rows] = await pool.query('SELECT author_id FROM comments WHERE id = ?', [req.params.commentId]);
+    if (!rows.length) return res.status(404).json({ error: 'Comment not found.' });
+    if (rows[0].author_id !== req.userId) return res.status(403).json({ error: 'You can only delete your own comments.' });
+    await pool.query('DELETE FROM comments WHERE id = ?', [req.params.commentId]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('delete comment error:', err);
+    res.status(500).json({ error: 'Could not delete comment.' });
+  }
+}
+
+module.exports = { list, trendingTags, categoryCounts, achievements, create, update, remove, like, listComments, addComment, updateComment, deleteComment };
