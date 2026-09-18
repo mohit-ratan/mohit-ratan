@@ -47,7 +47,7 @@ function ExteriorSign({ category, position, count, accent }) {
         <meshStandardMaterial color={accent} />
       </mesh>
       <Text position={[0, 1, 0.08]} fontSize={0.22} color="#ffffff" anchorX="center" anchorY="middle" maxWidth={1.4} textAlign="center">
-        {`${cat.emoji} ${cat.label}\n${count} achievement${count === 1 ? '' : 's'}`}
+        {`${cat.label}\n${count} achievement${count === 1 ? '' : 's'}`}
       </Text>
     </group>
   );
@@ -74,7 +74,7 @@ function GlassZone({ category, achievements, registryRef, onOpen }) {
           <meshStandardMaterial color={accent} transparent opacity={0.12} />
         </mesh>
         <Text position={[0, WALL_HEIGHT + 0.5, -halfD + 0.1]} fontSize={0.5} color={accent} anchorX="center" anchorY="middle" outlineWidth={0.02} outlineColor="#ffffff">
-          {`${cat.emoji} ${cat.label}`}
+          {cat.label}
         </Text>
       </group>
 
