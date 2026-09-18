@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BrandLogo from './BrandLogo';
 import Avatar from './Avatar';
+import api from '../api';
 import { CATEGORIES } from '../lib/format';
 import { SearchIcon } from '../lib/icons';
 import { useAuth } from '../context/AuthContext';
@@ -19,6 +20,10 @@ export default function Header({
   const { user, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const searchBoxRef = useRef(null);
+  const [people, setPeople] = useState([]);
+  const [peopleOpen, setPeopleOpen] = useState(false);
+  const [peopleLoading, setPeopleLoading] = useState(false);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -28,6 +33,43 @@ export default function Header({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [menuOpen]);
+
+  useEffect(() => {
+    if (!peopleOpen) return;
+    function handleClickOutside(e) {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(e.target)) setPeopleOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [peopleOpen]);
+
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (!q) { setPeople([]); setPeopleLoading(false); return; }
+    setPeopleLoading(true);
+    const timer = setTimeout(() => {
+      api.get('/api/users/search', { params: { q } })
+        .then(({ data }) => setPeople(data.users))
+        .catch(() => setPeople([]))
+        .finally(() => setPeopleLoading(false));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  async function sendFollowRequest(id) {
+    try {
+      const { data } = await api.post(`/api/follows/${id}`);
+      setPeople((current) => current.map((p) => (p.id === id ? { ...p, followStatus: data.status } : p)));
+    } catch {
+      // Surfacing this inline would need a toast wired into Header; a silent
+      // no-op leaves the button in its prior state, which the user can retry.
+    }
+  }
+
+  function openPerson(id) {
+    setPeopleOpen(false);
+    navigate(`/profile/${id}`);
+  }
 
   function handleCategoryClick(id) {
     if (onCategoryChange) onCategoryChange(id);
@@ -48,14 +90,15 @@ export default function Header({
           <span className="brand-mark">PackSomeWork</span>
         </div>
         <span className="brand-tag">health · wealth · relationships</span>
-        <div className={`search-box${searchQuery ? ' has-value' : ''}`}>
+        <div className={`search-box${searchQuery ? ' has-value' : ''}`} ref={searchBoxRef}>
           <SearchIcon />
           <input
             type="text"
             placeholder="Search posts, people, #tags"
             autoComplete="off"
             value={searchQuery}
-            onChange={(e) => onSearchChange?.(e.target.value)}
+            onChange={(e) => { onSearchChange?.(e.target.value); setPeopleOpen(true); }}
+            onFocus={() => setPeopleOpen(true)}
           />
           <button
             className="clear-btn"
@@ -65,6 +108,33 @@ export default function Header({
           >
             ✕
           </button>
+          {peopleOpen && searchQuery.trim() && (
+            <div className="people-search-dropdown">
+              {peopleLoading ? (
+                <div className="people-search-empty">Searching…</div>
+              ) : people.length ? (
+                people.map((p) => (
+                  <div key={p.id} className="people-search-row">
+                    <button type="button" className="people-search-person" onClick={() => openPerson(p.id)}>
+                      <Avatar id={p.id} name={p.displayName} photoUrl={p.photoUrl} size={32} />
+                      <span>{p.displayName}</span>
+                    </button>
+                    {p.followStatus === 'none' && (
+                      <button type="button" className="pill-btn primary" onClick={() => sendFollowRequest(p.id)}>Follow</button>
+                    )}
+                    {p.followStatus === 'pending' && (
+                      <button type="button" className="pill-btn" disabled>Requested</button>
+                    )}
+                    {p.followStatus === 'accepted' && (
+                      <button type="button" className="pill-btn" disabled>Following</button>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="people-search-empty">No people found for "{searchQuery.trim()}"</div>
+              )}
+            </div>
+          )}
         </div>
         <div className="header-actions">
           <button className="pill-btn" type="button" onClick={onCompose}>+ Post</button>
