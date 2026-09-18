@@ -77,3 +77,17 @@ CREATE TABLE IF NOT EXISTS story_views (
   FOREIGN KEY (story_id) REFERENCES stories(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+-- Optional deadline + subtask checklist attached to an achievement (a
+-- user's tag), set only when that tag is first used. "Completed" is
+-- derived (all subtasks done), never stored.
+CREATE TABLE IF NOT EXISTS goals (
+  id            VARCHAR(36) PRIMARY KEY,
+  author_id     VARCHAR(36) NOT NULL,
+  tag           VARCHAR(24) NOT NULL,
+  target_date   DATE DEFAULT NULL,
+  subtasks      JSON DEFAULT NULL,
+  created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_author_tag (author_id, tag),
+  FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;

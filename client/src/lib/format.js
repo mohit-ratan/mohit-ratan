@@ -48,6 +48,16 @@ export function timeAgo(ts) {
   return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
+export function goalStatusLabel(goal) {
+  if (!goal) return null;
+  if (goal.completed) return { text: '✅ Completed', tone: 'done' };
+  if (!goal.targetDate) return null;
+  const days = Math.ceil((new Date(goal.targetDate) - new Date()) / 86400000);
+  if (days < 0) return { text: `${-days}d overdue`, tone: 'overdue' };
+  if (days === 0) return { text: 'Due today', tone: 'soon' };
+  return { text: `${days}d left`, tone: 'active' };
+}
+
 export function parseTag(raw) {
   if (!raw) return '';
   return raw.replace(/^#/, '').toLowerCase().trim().split(/[,\s]+/)[0] || '';

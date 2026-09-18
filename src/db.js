@@ -12,4 +12,21 @@ const pool = mysql.createPool({
   dateStrings: false,
 });
 
+// GoDaddy Node.js Hosting's database import tool drops every existing table
+// before running any uploaded .sql file, so schema.sql can't be safely
+// re-imported once there's real user data. New tables are instead created
+// here, idempotently, on every app start.
+pool.query(`
+  CREATE TABLE IF NOT EXISTS goals (
+    id VARCHAR(36) PRIMARY KEY,
+    author_id VARCHAR(36) NOT NULL,
+    tag VARCHAR(24) NOT NULL,
+    target_date DATE DEFAULT NULL,
+    subtasks JSON DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_author_tag (author_id, tag),
+    FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB
+`).catch((err) => console.error('Could not ensure goals table exists:', err));
+
 module.exports = pool;

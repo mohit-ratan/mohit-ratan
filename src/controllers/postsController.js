@@ -108,6 +108,16 @@ async function achievements(req, res) {
       byTag.get(post.tag).push(post);
     }
 
+    const [goalRows] = await pool.query(
+      'SELECT tag, target_date, subtasks FROM goals WHERE author_id = ?',
+      [authorId]
+    );
+    const goalByTag = new Map(goalRows.map((g) => [g.tag, {
+      targetDate: g.target_date ? new Date(g.target_date).toISOString().slice(0, 10) : null,
+      subtasks: g.subtasks || [],
+      completed: Array.isArray(g.subtasks) && g.subtasks.length > 0 && g.subtasks.every((t) => t.done),
+    }]));
+
     const achievementList = [...byTag.entries()].map(([tag, posts]) => {
       const counts = {};
       posts.forEach((p) => { counts[p.category] = (counts[p.category] || 0) + 1; });
@@ -118,6 +128,7 @@ async function achievements(req, res) {
         count: posts.length,
         coverPost: posts[posts.length - 1],
         posts,
+        goal: goalByTag.get(tag) || null,
       };
     });
 
@@ -150,6 +161,23 @@ async function create(req, res) {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0]
     );
+
+    // Optional goal metadata, only ever set from the composer the first
+    // time a tag is used — INSERT IGNORE makes this a safe no-op if the
+    // client's new-tag check was stale and a goal already exists.
+    if (cleanTag && (req.body.goalTargetDate || req.body.goalSubtasks)) {
+      let subtaskTexts = [];
+      try { subtaskTexts = JSON.parse(req.body.goalSubtasks || '[]'); } catch { subtaskTexts = []; }
+      const subtasks = subtaskTexts
+        .filter((t) => typeof t === 'string' && t.trim())
+        .slice(0, 15)
+        .map((t) => ({ text: t.trim().slice(0, 140), done: false }));
+      await pool.query(
+        `INSERT IGNORE INTO goals (id, author_id, tag, target_date, subtasks)
+         VALUES (?, ?, ?, ?, ?)`,
+        [uuidv4(), req.userId, cleanTag, req.body.goalTargetDate || null, JSON.stringify(subtasks)]
+      );
+    }
 
     res.json({ ok: true, id });
   } catch (e) {

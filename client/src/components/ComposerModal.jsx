@@ -1,8 +1,11 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import api from '../api';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { CATEGORIES } from '../lib/format';
 import { LOOK_RECIPES, getRecipeById, applyLookToImage } from '../lib/looks';
+
+const MAX_SUBTASKS = 15;
 
 const VIBE_ITEMS = [{ id: '', emoji: '⚪', label: 'No look' }, ...LOOK_RECIPES];
 
@@ -10,6 +13,7 @@ const VIBE_ITEMS = [{ id: '', emoji: '⚪', label: 'No look' }, ...LOOK_RECIPES]
 // story" (kind="story") — the two flows only differ by the category
 // picker and the endpoint/labels used.
 export default function ComposerModal({ kind, onClose, onCreated }) {
+  const { user } = useAuth();
   const showToast = useToast();
   const fileInputRef = useRef(null);
 
@@ -20,9 +24,34 @@ export default function ComposerModal({ kind, onClose, onCreated }) {
   const [tagRaw, setTagRaw] = useState('');
   const [generating, setGenerating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [existingTags, setExistingTags] = useState(null); // Set, or null while loading
+  const [goalTargetDate, setGoalTargetDate] = useState('');
+  const [goalSubtasks, setGoalSubtasks] = useState([]);
 
   const isPost = kind === 'post';
   const title = isPost ? 'Create post' : 'Add to your story';
+  const normalizedTag = tagRaw.replace(/^#/, '').toLowerCase().slice(0, 24);
+  const isNewTag = isPost && !!normalizedTag && !!existingTags && !existingTags.has(normalizedTag);
+
+  useEffect(() => {
+    if (!isPost || !user) return;
+    let cancelled = false;
+    api.get('/api/posts/achievements', { params: { authorId: user.id } })
+      .then(({ data }) => { if (!cancelled) setExistingTags(new Set(data.achievements.map((a) => a.tag))); })
+      .catch(() => { if (!cancelled) setExistingTags(new Set()); });
+    return () => { cancelled = true; };
+  }, [isPost, user]);
+
+  function addSubtask() {
+    if (goalSubtasks.length >= MAX_SUBTASKS) return;
+    setGoalSubtasks((s) => [...s, '']);
+  }
+  function updateSubtask(i, text) {
+    setGoalSubtasks((s) => s.map((t, idx) => (idx === i ? text.slice(0, 140) : t)));
+  }
+  function removeSubtask(i) {
+    setGoalSubtasks((s) => s.filter((_, idx) => idx !== i));
+  }
 
   function handleFileChange(e) {
     const file = e.target.files[0];
@@ -107,9 +136,16 @@ export default function ComposerModal({ kind, onClose, onCreated }) {
       const form = new FormData();
       form.append('media', media.file);
       form.append('vibe', vibeLabel.slice(0, 60));
-      form.append('tag', tagRaw.replace(/^#/, '').toLowerCase().slice(0, 24));
+      form.append('tag', normalizedTag);
       form.append('aiStyled', String(!!(media.kind === 'image' && media.styled)));
       if (isPost) form.append('category', chosenCat);
+      if (isNewTag) {
+        const cleanSubtasks = goalSubtasks.filter((t) => t.trim());
+        if (goalTargetDate || cleanSubtasks.length) {
+          form.append('goalTargetDate', goalTargetDate);
+          form.append('goalSubtasks', JSON.stringify(cleanSubtasks));
+        }
+      }
 
       const endpoint = isPost ? '/api/posts' : '/api/stories';
       await api.post(endpoint, form, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -221,6 +257,32 @@ export default function ComposerModal({ kind, onClose, onCreated }) {
               />
               <span className="tag-hint">Just one word — no caption needed.</span>
             </div>
+            {isNewTag && (
+              <div className="goal-setup">
+                <div className="goal-setup-label">🎯 Set a goal for #{normalizedTag}? (optional)</div>
+                <input
+                  type="date"
+                  className="goal-date-input"
+                  value={goalTargetDate}
+                  onChange={(e) => setGoalTargetDate(e.target.value)}
+                />
+                {goalSubtasks.map((text, i) => (
+                  <div className="goal-subtask-row" key={i}>
+                    <input
+                      type="text"
+                      placeholder={`Subtask ${i + 1}`}
+                      maxLength={140}
+                      value={text}
+                      onChange={(e) => updateSubtask(i, e.target.value)}
+                    />
+                    <button type="button" className="goal-remove-btn" onClick={() => removeSubtask(i)}>✕</button>
+                  </div>
+                ))}
+                {goalSubtasks.length < MAX_SUBTASKS && (
+                  <button type="button" className="goal-add-btn" onClick={addSubtask}>+ Add subtask</button>
+                )}
+              </div>
+            )}
           </div>
           <div className="modal-detail-footer">
             <button

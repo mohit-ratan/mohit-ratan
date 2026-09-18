@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import Header from '../components/Header';
 import AchievementsRoom from '../components/AchievementsRoom';
@@ -9,7 +10,9 @@ import AchievementDetailModal from '../components/AchievementDetailModal';
 export default function AchievementsPage() {
   const { id: authorId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const showToast = useToast();
+  const isMe = user?.id === authorId;
 
   const [profile, setProfile] = useState(null);
   const [achievements, setAchievements] = useState([]);
@@ -59,6 +62,7 @@ export default function AchievementsPage() {
       {activeAchievement && (
         <AchievementDetailModal
           achievement={activeAchievement}
+          isMe={isMe}
           onClose={() => setActiveAchievement(null)}
           onOpenAuthor={(id) => navigate(`/profile/${id}`)}
           onOpenTag={(tag) => navigate(`/?tag=${encodeURIComponent(tag)}`)}

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { mediaUrl } from '../api';
-import { CATEGORIES, CAT_MAP } from '../lib/format';
+import { CATEGORIES, CAT_MAP, goalStatusLabel } from '../lib/format';
 import { VideoIcon } from '../lib/icons';
 import { EmptyRoomShell, Rug, Shelf, PlantPot, Lamp, SideTable } from '../lib/roomArt';
 
@@ -31,6 +31,7 @@ function RoomZone({ category, achievements, onOpen }) {
           achievements.map((a) => {
             const cover = a.coverPost;
             const isVideo = cover?.mediaType === 'video';
+            const status = goalStatusLabel(a.goal);
             return (
               <button
                 key={a.tag}
@@ -47,6 +48,9 @@ function RoomZone({ category, achievements, onOpen }) {
                   </>
                 ) : (
                   <img src={mediaUrl(cover.mediaUrl)} alt="" loading="lazy" />
+                )}
+                {status && (
+                  <span className={`room-goal-badge room-goal-badge-${status.tone}`}>{status.text}</span>
                 )}
                 <span className="room-caption">#{a.tag} · {a.count}</span>
               </button>
