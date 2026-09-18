@@ -503,127 +503,34 @@
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
   }
 
-  /* ---------- house entry + hallway ---------- */
-  .house-entry{
-    position:relative;display:flex;flex-direction:column;align-items:center;gap:14px;
-    width:100%;max-width:360px;margin:0 auto 18px;padding:28px 20px;
-    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-l);
-    box-shadow:var(--shadow-s);cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;
+  /* ---------- 3D house/rooms (react-three-fiber) ---------- */
+  .three-page{position:fixed;inset:0;background:#0a0e14;}
+  .three-page canvas{display:block;}
+  .three-loading-shell{
+    position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    background:var(--bg);color:var(--text-muted);font-size:14px;
   }
-  .house-entry:hover,.house-entry:focus-visible{transform:scale(1.02);box-shadow:var(--shadow-m);outline:none;}
-  .house-entry-art{width:200px;position:relative;}
-  .house-entry-art svg{width:100%;height:auto;display:block;}
-  .house-window-preview{
-    position:absolute;left:18.75%;top:56.4%;width:16.25%;height:18.6%;
-    border-radius:2px;overflow:hidden;pointer-events:none;
+  .three-header-overlay{
+    position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;gap:14px;
+    padding:12px 16px;background:linear-gradient(180deg,rgba(10,14,20,.55),transparent);
   }
-  .house-window-preview img,.house-window-preview video{width:100%;height:100%;object-fit:cover;display:block;}
-  .house-window-preview-1{left:65%;}
-  .house-entry-label{font-family:var(--font-display);font-size:16px;font-weight:600;}
-  .house-entry-summary{font-size:12.5px;color:var(--text-faint);}
+  .three-back-btn{
+    background:rgba(255,255,255,.92);border:none;border-radius:999px;padding:7px 14px;
+    font-size:12.5px;font-weight:700;cursor:pointer;color:var(--text);
+  }
+  .three-back-btn:hover{background:#fff;}
+  .three-room-label{color:#fff;font-family:var(--font-display);font-size:14px;font-weight:600;text-shadow:0 1px 3px rgba(0,0,0,.5);}
 
-  .house-hallway{display:flex;gap:18px;margin-bottom:18px;flex-wrap:wrap;}
-  .house-door{
-    position:relative;flex:1;min-width:140px;display:flex;flex-direction:column;align-items:center;gap:8px;
-    padding:18px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);
-    box-shadow:var(--shadow-s);text-decoration:none;color:var(--text);
-    transition:transform .15s ease,box-shadow .15s ease;
+  .three-crosshair-overlay{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:15;
+    display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none;
   }
-  .house-door:hover,.house-door:focus-visible{
-    transform:scale(1.04);
-    box-shadow:0 0 0 3px var(--frame-glow,var(--accent)),var(--shadow-m);outline:none;
+  .three-crosshair-dot{width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.4);}
+  .three-crosshair-prompt{
+    margin-top:34px;font-size:12.5px;font-weight:700;color:#fff;background:rgba(10,14,20,.7);
+    padding:5px 12px;border-radius:999px;white-space:nowrap;
   }
-  .house-door-art{width:70px;}
-  .house-door-art svg{width:100%;height:auto;display:block;}
-  .house-door-label{font-family:var(--font-display);font-size:15px;font-weight:600;}
-  .house-door-count{font-size:12px;color:var(--text-faint);}
-  .house-door-goal-stats{display:flex;gap:6px;}
-  .house-door-stat{font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;color:#fff;}
-  .house-door-stat-done{background:var(--health);}
-  .house-door-stat-active{background:var(--accent);}
-  @media (max-width:560px){ .house-hallway{flex-direction:column;} }
 
-  .house-door-popover{
-    position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(4px);
-    width:210px;padding:10px 12px;background:var(--text);color:#fff;border-radius:var(--radius-s);
-    box-shadow:var(--shadow-m);opacity:0;pointer-events:none;
-    transition:opacity .15s ease,transform .15s ease;z-index:5;
-  }
-  .house-entry:hover .house-door-popover,.house-entry:focus-visible .house-door-popover,
-  .house-door:hover .house-door-popover,.house-door:focus-visible .house-door-popover{
-    opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;
-  }
-  .house-door-popover-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;max-height:160px;overflow-y:auto;}
-  .house-door-popover-list li{font-size:11.5px;opacity:.8;}
-  .house-door-popover-list li.done{opacity:1;font-weight:700;}
-
-  /* ---------- achievements room ---------- */
-  .achievements-room{display:flex;gap:16px;margin-bottom:18px;}
-  @media (max-width:760px){ .achievements-room{flex-direction:column;} }
-
-  .room-zone{
-    flex:1;min-width:0;background:var(--surface);border:1px solid var(--border);
-    border-radius:var(--radius-m);box-shadow:var(--shadow-s);
-  }
-  .room-shell-wrap{
-    position:relative;width:100%;padding-top:56%;overflow:hidden;
-    border-radius:var(--radius-m) var(--radius-m) 0 0;
-  }
-  .room-shell{position:absolute;inset:0;width:100%;height:100%;display:block;}
-  .room-zone-label{
-    position:absolute;top:8px;left:10px;font-weight:700;font-size:13px;
-    font-family:var(--font-display);text-shadow:0 1px 2px rgba(255,255,255,.6);
-  }
-  .room-enter-link{
-    position:absolute;top:8px;right:10px;font-size:11.5px;font-weight:700;
-    color:var(--text);background:rgba(255,255,255,.75);padding:3px 9px;border-radius:999px;
-    text-decoration:none;text-shadow:none;
-  }
-  .room-enter-link:hover{background:#fff;}
-
-  /* Large variant — RoomPage shows a single zone at full width instead of
-     one of three in a row, so everything scales up for genuine presence. */
-  .room-zone-large .room-shell-wrap{padding-top:38%;}
-  .room-zone-large .room-zone-label{font-size:22px;top:16px;left:18px;}
-  .room-zone-large .room-frame{width:150px;height:150px;}
-  .room-zone-large .room-caption{font-size:13px;padding:6px 9px;}
-  .room-zone-large .room-frame-badge{width:26px;height:26px;top:8px;right:8px;}
-  .room-zone-large .room-frames{padding:22px;gap:18px;}
-  .room-zone-large .subtask-icon{width:34px;height:34px;font-size:17px;}
-  .room-zone-large .achievement-cluster{gap:9px;}
-  .room-deco{position:absolute;pointer-events:none;}
-  .room-deco svg{width:100%;height:100%;display:block;}
-  .room-deco-plant{left:6%;bottom:4%;width:15%;height:26%;}
-  .room-deco-rug{left:30%;bottom:2%;width:44%;height:16%;}
-  .room-deco-shelf{right:6%;top:16%;width:26%;height:9%;}
-  .room-deco-lamp{left:6%;top:20%;width:9%;height:32%;}
-  .room-deco-table{right:6%;bottom:4%;width:20%;height:12%;}
-
-  .room-frames{
-    display:flex;flex-wrap:wrap;gap:10px;padding:14px;min-height:76px;align-content:flex-start;
-  }
-  .room-empty-caption{margin:0;font-size:13px;color:var(--text-faint);padding:6px 2px;}
-  .room-frame{
-    position:relative;width:84px;height:84px;padding:0;border:none;border-radius:var(--radius-s);
-    overflow:hidden;cursor:pointer;background:var(--surface-2);
-    box-shadow:0 0 0 3px var(--surface),0 0 0 4px var(--border);
-    transition:transform .15s ease,box-shadow .15s ease;
-  }
-  .room-frame img,.room-frame video{width:100%;height:100%;object-fit:cover;display:block;}
-  .room-frame:hover,.room-frame:focus-visible{
-    transform:scale(1.08);
-    box-shadow:0 0 0 3px var(--surface),0 0 0 4px var(--frame-glow,var(--accent)),0 6px 16px rgba(20,22,26,.28);
-    outline:none;z-index:1;
-  }
-  .room-frame-badge{
-    position:absolute;top:5px;right:5px;color:#fff;background:rgba(10,14,20,.55);
-    border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;
-  }
-  .room-caption{
-    position:absolute;left:0;right:0;bottom:0;padding:3px 6px;font-size:10.5px;font-weight:600;
-    color:#fff;background:linear-gradient(0deg,rgba(10,14,20,.75),transparent);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  }
   .modal-box.modal-box-gallery{max-width:640px;}
   .modal-box-gallery .modal-detail-pane{max-width:none;}
 

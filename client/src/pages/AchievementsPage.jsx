@@ -1,30 +1,28 @@
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Canvas } from '@react-three/fiber';
 import api from '../api';
 import { useToast } from '../context/ToastContext';
-import Header from '../components/Header';
-import HouseEntry from '../components/HouseEntry';
-import HouseHallway from '../components/HouseHallway';
+import HallwayScene from '../three/HallwayScene';
+import Crosshair from '../three/Crosshair';
 
+// Full-viewport 3D hallway — walk around with WASD (click to lock the
+// mouse first), press E on a door to enter that category's RoomScene.
 export default function AchievementsPage() {
   const { id: authorId } = useParams();
   const navigate = useNavigate();
   const showToast = useToast();
 
   const [profile, setProfile] = useState(null);
-  const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [entered, setEntered] = useState(false);
+  const [locked, setLocked] = useState(false);
+  const [focusedLabel, setFocusedLabel] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [profileRes, achievementsRes] = await Promise.all([
-        api.get(`/api/profile/${authorId}`),
-        api.get('/api/posts/achievements', { params: { authorId } }),
-      ]);
-      setProfile(profileRes.data.user);
-      setAchievements(achievementsRes.data.achievements);
+      const { data } = await api.get(`/api/profile/${authorId}`);
+      setProfile(data.user);
     } catch (err) {
       showToast(err.message, true);
     } finally {
@@ -33,39 +31,30 @@ export default function AchievementsPage() {
   }, [authorId]);
 
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { setEntered(false); }, [authorId]);
 
   if (loading || !profile) {
-    return (
-      <>
-        <Header streak={0} counts={{}} />
-        <div className="wrap"><main className="layout"><section className="feed-col"><div className="card empty-state"><p>Loading…</p></div></section></main></div>
-      </>
-    );
+    return <div className="three-loading-shell"><p>Loading house…</p></div>;
   }
 
   return (
-    <>
-      <Header streak={0} counts={{}} onCompose={() => navigate('/')} />
-      <div className="wrap">
-        <main className="layout">
-          <section className="feed-col">
-            <div
-              className="back-link"
-              onClick={() => (entered ? setEntered(false) : navigate(`/profile/${authorId}`))}
-            >
-              ← Back to {entered ? 'the front door' : 'profile'}
-            </div>
-            <h2 className="profile-name" style={{ marginBottom: 14 }}>{profile.displayName}’s Achievements Room</h2>
-            {entered ? (
-              <HouseHallway achievements={achievements} authorId={authorId} />
-            ) : (
-              <HouseEntry displayName={profile.displayName} achievements={achievements} onEnter={() => setEntered(true)} />
-            )}
-          </section>
-          <aside className="side-col" />
-        </main>
+    <div className="three-page">
+      <div className="three-header-overlay">
+        <button type="button" className="three-back-btn" onClick={() => navigate(`/profile/${authorId}`)}>
+          ← Back to profile
+        </button>
+        <div className="three-room-label">{profile.displayName}’s Achievements Room</div>
       </div>
-    </>
+      <Canvas camera={{ position: [0, 1.6, 3], fov: 70 }}>
+        <Suspense fallback={null}>
+          <HallwayScene
+            onEnter={(category) => navigate(`/profile/${authorId}/room/${category}`)}
+            locked={locked}
+            onLockChange={setLocked}
+            onFocusChange={setFocusedLabel}
+          />
+        </Suspense>
+      </Canvas>
+      <Crosshair locked={locked} focusedLabel={focusedLabel} />
+    </div>
   );
 }

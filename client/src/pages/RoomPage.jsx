@@ -1,16 +1,18 @@
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Canvas } from '@react-three/fiber';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import Header from '../components/Header';
-import { RoomZone } from '../components/AchievementsRoom';
+import RoomScene from '../three/RoomScene';
+import Crosshair from '../three/Crosshair';
 import AchievementDetailModal from '../components/AchievementDetailModal';
 import { CAT_MAP } from '../lib/format';
 
-// Full-screen view of a single achievements-room zone — reuses RoomZone
-// unchanged (it was built from the start not knowing it's 1-of-3), just
-// at size="large" and standing alone instead of sitting in a row of three.
+// Full-viewport 3D view of a single category room — walk around with WASD
+// (click to lock the mouse first), look at achievement frames, press E to
+// open one. AchievementDetailModal is a normal DOM overlay and needs no
+// changes to work on top of the canvas.
 export default function RoomPage() {
   const { id: authorId, category } = useParams();
   const navigate = useNavigate();
@@ -22,6 +24,8 @@ export default function RoomPage() {
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeAchievement, setActiveAchievement] = useState(null);
+  const [locked, setLocked] = useState(false);
+  const [focusedLabel, setFocusedLabel] = useState(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -43,30 +47,38 @@ export default function RoomPage() {
 
   const cat = CAT_MAP[category];
 
+  function openAchievement(a) {
+    document.exitPointerLock?.();
+    setActiveAchievement(a);
+  }
+
   if (loading || !profile || !cat) {
-    return (
-      <>
-        <Header streak={0} counts={{}} />
-        <div className="wrap"><main className="layout"><section className="feed-col"><div className="card empty-state"><p>Loading…</p></div></section></main></div>
-      </>
-    );
+    return <div className="three-loading-shell"><p>Loading room…</p></div>;
   }
 
   const filtered = achievements.filter((a) => a.category === category);
 
   return (
-    <>
-      <Header streak={0} counts={{}} onCompose={() => navigate('/')} />
-      <div className="wrap">
-        <main className="layout">
-          <section className="feed-col">
-            <div className="back-link" onClick={() => navigate(`/profile/${authorId}/achievements`)}>← Back to Achievements Room</div>
-            <h2 className="profile-name" style={{ marginBottom: 14 }}>{cat.emoji} {profile.displayName}’s {cat.label} Room</h2>
-            <RoomZone category={category} achievements={filtered} authorId={authorId} onOpen={setActiveAchievement} size="large" />
-          </section>
-          <aside className="side-col" />
-        </main>
+    <div className="three-page">
+      <div className="three-header-overlay">
+        <button type="button" className="three-back-btn" onClick={() => navigate(`/profile/${authorId}/achievements`)}>
+          ← Achievements Room
+        </button>
+        <div className="three-room-label">{cat.emoji} {profile.displayName}’s {cat.label} Room</div>
       </div>
+      <Canvas camera={{ position: [0, 1.6, 3], fov: 70 }}>
+        <Suspense fallback={null}>
+          <RoomScene
+            category={category}
+            achievements={filtered}
+            onOpen={openAchievement}
+            locked={locked}
+            onLockChange={setLocked}
+            onFocusChange={setFocusedLabel}
+          />
+        </Suspense>
+      </Canvas>
+      <Crosshair locked={locked} focusedLabel={focusedLabel} />
       {activeAchievement && (
         <AchievementDetailModal
           achievement={activeAchievement}
@@ -77,6 +89,6 @@ export default function RoomPage() {
           onOpenTag={(tag) => navigate(`/?tag=${encodeURIComponent(tag)}`)}
         />
       )}
-    </>
+    </div>
   );
 }
