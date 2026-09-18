@@ -16,6 +16,10 @@ const MAX_SPEED_FORWARD = 8;
 const MAX_SPEED_REVERSE = 4;
 const FRICTION = 5;
 const TURN_RATE = 2.2; // rad/sec at full speed
+const BOOST_FACTOR = 1.6; // Shift held
+
+const JUMP_SPEED = 6;
+const GRAVITY = 16;
 
 // Kenney's car models don't all share the same "forward" axis convention —
 // if the car visually drives sideways/backwards, adjust this in increments
@@ -27,15 +31,38 @@ const KEY_MAP = {
   KeyS: 'backward', ArrowDown: 'backward',
   KeyA: 'left', ArrowLeft: 'left',
   KeyD: 'right', ArrowRight: 'right',
+  ShiftLeft: 'boost', ShiftRight: 'boost',
 };
+
+// Short two-tone beep via the Web Audio API — no sound asset/loading risk,
+// always available.
+function honk() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(440, ctx.currentTime);
+    osc.frequency.setValueAtTime(330, ctx.currentTime + 0.12);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.28);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.28);
+    osc.onended = () => ctx.close();
+  } catch {
+    // Web Audio unavailable — honking is decorative, safe to skip silently.
+  }
+}
 
 export default function CarController({ bounds, carPosRef, registryRef }) {
   const { scene } = useGLTF(CAR_MODEL_URL);
   const { camera } = useThree();
   const groupRef = useRef(null);
-  const move = useRef({ forward: false, backward: false, left: false, right: false });
+  const move = useRef({ forward: false, backward: false, left: false, right: false, boost: false });
   const speed = useRef(0);
   const heading = useRef(0);
+  const verticalVelocity = useRef(0);
   const camPos = useRef(new THREE.Vector3(0, 3.2, 5));
   const camTarget = useRef(new THREE.Vector3());
 
@@ -43,6 +70,16 @@ export default function CarController({ bounds, carPosRef, registryRef }) {
     function onKeyDown(e) {
       const dir = KEY_MAP[e.code];
       if (dir) move.current[dir] = true;
+      if (e.code === 'Space' && !e.repeat && groupRef.current?.position.y <= 0.001) {
+        verticalVelocity.current = JUMP_SPEED;
+      }
+      if (e.code === 'KeyH' && !e.repeat) honk();
+      if (e.code === 'KeyR' && !e.repeat && groupRef.current) {
+        groupRef.current.position.set(0, 0, 0);
+        speed.current = 0;
+        heading.current = 0;
+        verticalVelocity.current = 0;
+      }
     }
     function onKeyUp(e) {
       const dir = KEY_MAP[e.code];
@@ -60,11 +97,13 @@ export default function CarController({ bounds, carPosRef, registryRef }) {
     const group = groupRef.current;
     if (!group) return;
     const m = move.current;
+    const maxForward = m.boost ? MAX_SPEED_FORWARD * BOOST_FACTOR : MAX_SPEED_FORWARD;
+    const accel = m.boost ? ACCEL * BOOST_FACTOR : ACCEL;
 
     if (m.forward) {
-      speed.current = Math.min(MAX_SPEED_FORWARD, speed.current + ACCEL * delta);
+      speed.current = Math.min(maxForward, speed.current + accel * delta);
     } else if (m.backward) {
-      speed.current = Math.max(-MAX_SPEED_REVERSE, speed.current - ACCEL * delta);
+      speed.current = Math.max(-MAX_SPEED_REVERSE, speed.current - accel * delta);
     } else {
       const sign = Math.sign(speed.current);
       speed.current -= sign * Math.min(Math.abs(speed.current), FRICTION * delta);
@@ -89,15 +128,21 @@ export default function CarController({ bounds, carPosRef, registryRef }) {
     group.position.z = nz;
     group.rotation.y = heading.current;
 
+    // Jump: simple gravity integration, lands back on the ground plane.
+    verticalVelocity.current -= GRAVITY * delta;
+    const nextY = Math.max(0, group.position.y + verticalVelocity.current * delta);
+    if (nextY === 0) verticalVelocity.current = 0;
+    group.position.y = nextY;
+
     if (carPosRef) carPosRef.current = { x: nx, z: nz };
 
     camPos.current.set(
       nx - Math.sin(heading.current) * 5.5,
-      3.2,
+      3.2 + group.position.y,
       nz - Math.cos(heading.current) * 5.5
     );
     camera.position.lerp(camPos.current, 1 - Math.pow(0.0005, delta));
-    camTarget.current.set(nx, 0.6, nz);
+    camTarget.current.set(nx, 0.6 + group.position.y, nz);
     camera.lookAt(camTarget.current);
   });
 

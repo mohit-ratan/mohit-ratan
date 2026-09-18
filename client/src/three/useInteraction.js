@@ -60,7 +60,7 @@ export function useProximityInteraction(registryRef, carPosRef, { enabled, maxDi
 
   useEffect(() => {
     function onKeyDown(e) {
-      if (e.code === 'KeyE' && focusedInteract.current) focusedInteract.current();
+      if ((e.code === 'KeyE' || e.code === 'Enter') && focusedInteract.current) focusedInteract.current();
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);

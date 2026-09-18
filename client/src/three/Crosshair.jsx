@@ -6,7 +6,7 @@ export default function Crosshair({ focusedLabel }) {
       {focusedLabel ? (
         <div className="three-crosshair-prompt">E · {focusedLabel}</div>
       ) : (
-        <div className="three-drive-hint">WASD to drive</div>
+        <div className="three-drive-hint">WASD drive · Shift boost · Space jump · H honk · R respawn</div>
       )}
     </div>
   );
