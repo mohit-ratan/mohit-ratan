@@ -486,6 +486,35 @@
   }
   .back-link:hover{color:var(--text);}
 
+  /* ---------- house entry + hallway ---------- */
+  .house-entry{
+    display:flex;flex-direction:column;align-items:center;gap:14px;
+    width:100%;max-width:360px;margin:0 auto 18px;padding:28px 20px;
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-l);
+    box-shadow:var(--shadow-s);cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;
+  }
+  .house-entry:hover,.house-entry:focus-visible{transform:scale(1.02);box-shadow:var(--shadow-m);outline:none;}
+  .house-entry-art{width:200px;}
+  .house-entry-art svg{width:100%;height:auto;display:block;}
+  .house-entry-label{font-family:var(--font-display);font-size:16px;font-weight:600;}
+
+  .house-hallway{display:flex;gap:18px;margin-bottom:18px;flex-wrap:wrap;}
+  .house-door{
+    flex:1;min-width:140px;display:flex;flex-direction:column;align-items:center;gap:8px;
+    padding:18px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);
+    box-shadow:var(--shadow-s);text-decoration:none;color:var(--text);
+    transition:transform .15s ease,box-shadow .15s ease;
+  }
+  .house-door:hover,.house-door:focus-visible{
+    transform:scale(1.04);
+    box-shadow:0 0 0 3px var(--frame-glow,var(--accent)),var(--shadow-m);outline:none;
+  }
+  .house-door-art{width:70px;}
+  .house-door-art svg{width:100%;height:auto;display:block;}
+  .house-door-label{font-family:var(--font-display);font-size:15px;font-weight:600;}
+  .house-door-count{font-size:12px;color:var(--text-faint);}
+  @media (max-width:560px){ .house-hallway{flex-direction:column;} }
+
   /* ---------- achievements room ---------- */
   .achievements-room{display:flex;gap:16px;margin-bottom:18px;}
   @media (max-width:760px){ .achievements-room{flex-direction:column;} }

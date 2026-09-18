@@ -55,6 +55,33 @@ export function Lamp({ color }) {
   );
 }
 
+export function HouseFacade({ wallColor, roofColor, doorColor }) {
+  return (
+    <svg viewBox="0 0 320 260" preserveAspectRatio="none" aria-hidden="true">
+      <polygon points="10,120 160,20 310,120" fill={roofColor} />
+      <rect x="30" y="120" width="260" height="130" fill={wallColor} />
+      <rect x="52" y="148" width="54" height="54" rx="4" fill="#EAF4FC" stroke="#fff" strokeWidth="3" />
+      <line x1="79" y1="148" x2="79" y2="202" stroke="#fff" strokeWidth="2" />
+      <line x1="52" y1="175" x2="106" y2="175" stroke="#fff" strokeWidth="2" />
+      <rect x="214" y="148" width="54" height="54" rx="4" fill="#EAF4FC" stroke="#fff" strokeWidth="3" />
+      <line x1="241" y1="148" x2="241" y2="202" stroke="#fff" strokeWidth="2" />
+      <line x1="214" y1="175" x2="268" y2="175" stroke="#fff" strokeWidth="2" />
+      <rect x="134" y="162" width="52" height="88" rx="4" fill={doorColor} />
+      <circle cx="173" cy="208" r="3.5" fill="#fff" opacity="0.9" />
+    </svg>
+  );
+}
+
+export function DoorArt({ color }) {
+  return (
+    <svg viewBox="0 0 100 170" preserveAspectRatio="none" aria-hidden="true">
+      <rect x="4" y="4" width="92" height="162" rx="6" fill={color} />
+      <rect x="14" y="14" width="72" height="142" rx="4" fill="#fff" opacity="0.12" />
+      <circle cx="80" cy="88" r="4.5" fill="#fff" opacity="0.9" />
+    </svg>
+  );
+}
+
 export function SideTable({ color }) {
   return (
     <svg viewBox="0 0 54 34" aria-hidden="true">

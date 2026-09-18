@@ -1,28 +1,23 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api';
-import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import Header from '../components/Header';
-import AchievementsRoom from '../components/AchievementsRoom';
-import AchievementDetailModal from '../components/AchievementDetailModal';
+import HouseEntry from '../components/HouseEntry';
+import HouseHallway from '../components/HouseHallway';
 
 export default function AchievementsPage() {
   const { id: authorId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const showToast = useToast();
-  const isMe = user?.id === authorId;
 
   const [profile, setProfile] = useState(null);
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeAchievement, setActiveAchievement] = useState(null);
+  const [entered, setEntered] = useState(false);
 
-  // Silent refresh — no loading flag, so it can run in the background while
-  // a modal is open (e.g. after editing/deleting a post or goal) without
-  // unmounting the page's loading-shell branch out from under it.
-  const refresh = useCallback(async () => {
+  const load = useCallback(async () => {
+    setLoading(true);
     try {
       const [profileRes, achievementsRes] = await Promise.all([
         api.get(`/api/profile/${authorId}`),
@@ -32,16 +27,13 @@ export default function AchievementsPage() {
       setAchievements(achievementsRes.data.achievements);
     } catch (err) {
       showToast(err.message, true);
+    } finally {
+      setLoading(false);
     }
   }, [authorId]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    await refresh();
-    setLoading(false);
-  }, [refresh]);
-
   useEffect(() => { load(); }, [load]);
+  useEffect(() => { setEntered(false); }, [authorId]);
 
   if (loading || !profile) {
     return (
@@ -58,23 +50,22 @@ export default function AchievementsPage() {
       <div className="wrap">
         <main className="layout">
           <section className="feed-col">
-            <div className="back-link" onClick={() => navigate(`/profile/${authorId}`)}>← Back to profile</div>
+            <div
+              className="back-link"
+              onClick={() => (entered ? setEntered(false) : navigate(`/profile/${authorId}`))}
+            >
+              ← Back to {entered ? 'the front door' : 'profile'}
+            </div>
             <h2 className="profile-name" style={{ marginBottom: 14 }}>{profile.displayName}’s Achievements Room</h2>
-            <AchievementsRoom achievements={achievements} authorId={authorId} onOpen={setActiveAchievement} />
+            {entered ? (
+              <HouseHallway achievements={achievements} authorId={authorId} />
+            ) : (
+              <HouseEntry displayName={profile.displayName} onEnter={() => setEntered(true)} />
+            )}
           </section>
           <aside className="side-col" />
         </main>
       </div>
-      {activeAchievement && (
-        <AchievementDetailModal
-          achievement={activeAchievement}
-          isMe={isMe}
-          onChanged={refresh}
-          onClose={() => setActiveAchievement(null)}
-          onOpenAuthor={(id) => navigate(`/profile/${id}`)}
-          onOpenTag={(tag) => navigate(`/?tag=${encodeURIComponent(tag)}`)}
-        />
-      )}
     </>
   );
 }
