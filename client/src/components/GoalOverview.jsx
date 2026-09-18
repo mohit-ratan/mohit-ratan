@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { CATEGORIES, goalStatusLabel } from '../lib/format';
 
-export default function GoalOverview({ goals, onOpen }) {
+export default function GoalOverview({ goals, onOpen, onUploadTask }) {
   // Keep deadlines current when this page stays open overnight.
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -45,7 +45,7 @@ export default function GoalOverview({ goals, onOpen }) {
                     <div className="goal-task-summary goal-progress-label"><span>{checked} of {taskCount} tasks complete</span><strong>{percent}%</strong></div>
                     <progress className="goal-progress-bar" value={checked} max={taskCount || 1} aria-label={`#${item.tag} task progress`} aria-valuetext={`${checked} of ${taskCount} tasks complete, ${percent}%`} />
                     {taskCount ? <ul className="goal-summary-tasks">{item.goal.subtasks.map((task, index) => (
-                      <li key={index} className={task.done ? 'is-complete' : ''}><span aria-label={task.done ? 'Completed' : 'Pending'}>{task.done ? '✓' : '○'}</span><span>{task.text}</span></li>
+                      <li key={index} className={task.done ? 'is-complete' : ''}><span aria-label={task.done ? 'Completed' : 'Pending'}>{task.done ? '✓' : '○'}</span><span>{task.text}</span>{!task.done && <button type="button" className="goal-task-photo" aria-label={`Upload photo for ${task.text}`} onClick={() => onUploadTask({ tag: item.tag, category: item.category, index })}>＋ Photo</button>}</li>
                     ))}</ul> : <p className="goal-category-empty">Add tasks to start working toward an award.</p>}
                     <button type="button" className="house-enter-btn" onClick={() => onOpen(item)}>{item.goal.completed ? 'View achievement' : 'Manage tasks'} →</button>
                   </article>

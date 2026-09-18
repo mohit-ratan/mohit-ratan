@@ -12,16 +12,18 @@ const VIBE_ITEMS = [{ id: '', emoji: '⚪', label: 'No look' }, ...LOOK_RECIPES]
 // One modal used for both "Create post" (kind="post") and "Add to your
 // story" (kind="story") — the two flows only differ by the category
 // picker and the endpoint/labels used.
-export default function ComposerModal({ kind, onClose, onCreated }) {
+export default function ComposerModal({ kind, onClose, onCreated, initialGoalTask }) {
   const { user } = useAuth();
   const showToast = useToast();
   const fileInputRef = useRef(null);
 
   const [media, setMedia] = useState(null); // { file, originalFile, previewUrl, kind: 'image'|'video', styled }
-  const [chosenCat, setChosenCat] = useState(CATEGORIES[0].id);
+  const [chosenCat, setChosenCat] = useState(initialGoalTask?.category || CATEGORIES[0].id);
   const [chosenVibeId, setChosenVibeId] = useState('');
   const [vibeLabel, setVibeLabel] = useState('');
-  const [tagRaw, setTagRaw] = useState('');
+  const [tagRaw, setTagRaw] = useState(initialGoalTask?.tag || '');
+  const [availableGoals, setAvailableGoals] = useState([]);
+  const [taskIndex, setTaskIndex] = useState(initialGoalTask ? String(initialGoalTask.index) : '');
   const [generating, setGenerating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [existingTags, setExistingTags] = useState(null); // Set, or null while loading
@@ -31,13 +33,15 @@ export default function ComposerModal({ kind, onClose, onCreated }) {
   const isPost = kind === 'post';
   const title = isPost ? 'Create post' : 'Add to your story';
   const normalizedTag = tagRaw.replace(/^#/, '').toLowerCase().slice(0, 24);
+  const linkedGoal = availableGoals.find((item) => item.tag === normalizedTag);
+  const selectedTask = taskIndex !== '' ? linkedGoal?.goal.subtasks[Number(taskIndex)] : null;
   const isNewTag = isPost && !!normalizedTag && !!existingTags && !existingTags.has(normalizedTag);
 
   useEffect(() => {
     if (!isPost || !user) return;
     let cancelled = false;
     api.get('/api/posts/achievements', { params: { authorId: user.id } })
-      .then(({ data }) => { if (!cancelled) setExistingTags(new Set(data.tags)); })
+      .then(({ data }) => { if (!cancelled) { setExistingTags(new Set(data.tags)); setAvailableGoals([...data.goals, ...data.achievements]); } })
       .catch(() => { if (!cancelled) setExistingTags(new Set()); });
     return () => { cancelled = true; };
   }, [isPost, user]);
@@ -131,6 +135,10 @@ export default function ComposerModal({ kind, onClose, onCreated }) {
       return;
     }
 
+    if (taskIndex !== '' && (!selectedTask || media.kind !== 'image')) {
+      showToast('Choose a goal task and upload a photo to complete it.', true);
+      return;
+    }
     setSubmitting(true);
     try {
       const form = new FormData();
@@ -138,7 +146,11 @@ export default function ComposerModal({ kind, onClose, onCreated }) {
       form.append('vibe', vibeLabel.slice(0, 60));
       form.append('tag', normalizedTag);
       form.append('aiStyled', String(!!(media.kind === 'image' && media.styled)));
-      if (isPost) form.append('category', chosenCat);
+      if (isPost) form.append('category', selectedTask ? linkedGoal.category : chosenCat);
+      if (isPost && selectedTask) {
+        form.append('goalTaskIndex', taskIndex);
+        form.append('goalTaskText', selectedTask.text);
+      }
       if (isNewTag) {
         const cleanSubtasks = goalSubtasks.filter((t) => t.trim());
         if (goalTargetDate || cleanSubtasks.length) {
@@ -148,9 +160,9 @@ export default function ComposerModal({ kind, onClose, onCreated }) {
       }
 
       const endpoint = isPost ? '/api/posts' : '/api/stories';
-      await api.post(endpoint, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const { data } = await api.post(endpoint, form, { headers: { 'Content-Type': 'multipart/form-data' } });
 
-      showToast(isPost ? 'Posted!' : 'Added to your story!');
+      showToast(data.goalCompleted ? '🏆 Goal complete! Your award is in your Achievement House.' : data.taskCompleted ? 'Photo posted — task completed and progress updated!' : isPost ? 'Posted!' : 'Added to your story!');
       onCreated?.();
       onClose();
     } catch (err) {
@@ -235,6 +247,7 @@ export default function ComposerModal({ kind, onClose, onCreated }) {
                     type="button"
                     className={`cat-choice${c.id === chosenCat ? ' chosen' : ''}`}
                     data-cat={c.id}
+                    disabled={!!selectedTask}
                     onClick={() => setChosenCat(c.id)}
                   >
                     {c.emoji} {c.label}
@@ -253,10 +266,29 @@ export default function ComposerModal({ kind, onClose, onCreated }) {
                 maxLength={24}
                 placeholder="One word or hashtag (optional) — e.g. #grateful"
                 value={tagRaw}
-                onChange={(e) => setTagRaw(e.target.value)}
+                onChange={(e) => { setTagRaw(e.target.value); setTaskIndex(''); }}
               />
               <span className="tag-hint">Just one word — no caption needed.</span>
             </div>
+            {isPost && availableGoals.length > 0 && <div className="goal-setup">
+              <label className="goal-setup-label" htmlFor="photo-goal">Update a goal with this photo</label>
+              <select id="photo-goal" value={linkedGoal?.tag || ''} onChange={(e) => {
+                const item = availableGoals.find((goal) => goal.tag === e.target.value);
+                setTagRaw(item?.tag || ''); setTaskIndex('');
+                if (item) setChosenCat(item.category);
+              }}>
+                <option value="">No goal selected</option>
+                {availableGoals.map((item) => <option key={item.tag} value={item.tag}>#{item.tag}</option>)}
+              </select>
+              {linkedGoal && <>
+                <label htmlFor="photo-task">Which task does this photo complete?</label>
+                <select id="photo-task" value={taskIndex} onChange={(e) => { setTaskIndex(e.target.value); setChosenCat(linkedGoal.category); }}>
+                  <option value="">Post without completing a task</option>
+                  {linkedGoal.goal.subtasks.map((task, index) => <option key={index} value={index}>{task.done ? '✓ ' : ''}{task.text}</option>)}
+                </select>
+                <span className="tag-hint">Sharing a photo marks the selected task complete. Each task counts once toward your goal.</span>
+              </>}
+            </div>}
             {isNewTag && (
               <div className="goal-setup">
                 <div className="goal-setup-label">🎯 Set a goal for #{normalizedTag}? (optional)</div>

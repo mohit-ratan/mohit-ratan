@@ -177,6 +177,40 @@ async function create(req, res) {
     const mediaType = mediaTypeFromMime(req.file.mimetype);
     const cleanTag = (tag || '').replace(/^#/, '').toLowerCase().slice(0, 24);
 
+    if (req.body.goalTaskIndex !== undefined) {
+      if (mediaType !== 'image') return res.status(400).json({ error: 'Upload a photo to complete a task.' });
+      const index = Number(req.body.goalTaskIndex);
+      if (!/^\d+$/.test(String(req.body.goalTaskIndex)) || !Number.isSafeInteger(index)) {
+        return res.status(400).json({ error: 'Choose a valid goal task.' });
+      }
+      const connection = await pool.getConnection();
+      try {
+        await connection.beginTransaction();
+        const [rows] = await connection.query('SELECT id, subtasks FROM goals WHERE author_id = ? AND tag = ? FOR UPDATE', [req.userId, cleanTag]);
+        const subtasks = rows[0]?.subtasks;
+        if (!Array.isArray(subtasks) || !subtasks[index] || subtasks[index].text !== req.body.goalTaskText) {
+          await connection.rollback();
+          return res.status(409).json({ error: 'This goal task has changed. Reopen the uploader and choose it again.' });
+        }
+        await connection.query(
+          `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0]
+        );
+        const taskCompleted = !subtasks[index].done;
+        subtasks[index].done = true;
+        subtasks[index].photoPostId = id;
+        await connection.query('UPDATE goals SET subtasks = ? WHERE id = ?', [JSON.stringify(subtasks), rows[0].id]);
+        await connection.commit();
+        return res.json({ ok: true, id, taskCompleted, goalCompleted: subtasks.every((task) => task.done) });
+      } catch (error) {
+        await connection.rollback();
+        throw error;
+      } finally {
+        connection.release();
+      }
+    }
+
     await pool.query(
       `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,

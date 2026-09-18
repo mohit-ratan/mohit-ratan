@@ -8,6 +8,7 @@ import HouseInterior from '../three/HouseInterior';
 import Crosshair from '../three/Crosshair';
 import AchievementDetailModal from '../components/AchievementDetailModal';
 import GoalOverview from '../components/GoalOverview';
+import ComposerModal from '../components/ComposerModal';
 import { CATEGORIES } from '../lib/format';
 
 // Defined outside the component so its identity never changes across
@@ -28,6 +29,7 @@ export default function AchievementsPage() {
   const showToast = useToast();
   const isMe = user?.id === authorId;
 
+  const [photoTask, setPhotoTask] = useState(null);
   const [view, setView] = useState('house');
   const [error, setError] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -133,7 +135,7 @@ export default function AchievementsPage() {
               </div>
             </section>
           </div>
-          {isMe && <GoalOverview goals={[...goals, ...achievements]} onOpen={setActiveAchievement} />}
+          {isMe && <GoalOverview goals={[...goals, ...achievements]} onOpen={setActiveAchievement} onUploadTask={setPhotoTask} />}
         </main>
       ) : <>
       <Canvas camera={CAMERA_CONFIG}>
@@ -164,6 +166,7 @@ export default function AchievementsPage() {
 
       </>}
 
+      {photoTask && <ComposerModal kind="post" initialGoalTask={photoTask} onClose={() => setPhotoTask(null)} onCreated={refresh} />}
       {activeAchievement && (
         <AchievementDetailModal
           achievement={activeAchievement}
