@@ -1152,3 +1152,8 @@ body{background:radial-gradient(ellipse at 0 0,#ffddbe80,transparent 55%),radial
 .brand-mark{font-family:var(--font-body);font-size:22px;font-weight:700;letter-spacing:-1px;line-height:1.15;background:none;color:#C7470C;-webkit-text-fill-color:currentColor;}
 .auth-logo .brand-mark{font-size:27px;letter-spacing:-1.25px;}
 .brand-tag{font-size:10px;letter-spacing:.08em;}
+/* The three-loop symbol is paired with a restrained, unboxed wordmark. */
+.brand{gap:9px;}
+.brand-mark{font-weight:600;letter-spacing:-.85px;color:#B83E12;}
+.auth-logo{gap:12px;}
+.auth-logo .brand-mark{font-weight:600;letter-spacing:-1.1px;}
