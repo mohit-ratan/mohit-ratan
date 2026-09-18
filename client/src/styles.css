@@ -1146,3 +1146,9 @@ body{background:radial-gradient(ellipse at 0 0,#ffddbe80,transparent 55%),radial
 .composer-workspace button:focus-visible,.composer-workspace input:focus-visible,.composer-workspace select:focus-visible,.profile-hero button:focus-visible{outline-color:var(--accent);}
 .goal-task-photo{background:#fff5ea;border-color:#ebd3be;color:#994917;}
 .post-goal-link{color:var(--accent);}
+/* Contemporary, compact brand lockup: white monogram on signature orange. */
+.brand{gap:10px;}
+.brand-icon{filter:none;}
+.brand-mark{font-family:var(--font-body);font-size:22px;font-weight:700;letter-spacing:-1px;line-height:1.15;background:none;color:#C7470C;-webkit-text-fill-color:currentColor;}
+.auth-logo .brand-mark{font-size:27px;letter-spacing:-1.25px;}
+.brand-tag{font-size:10px;letter-spacing:.08em;}
