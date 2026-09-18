@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BrandLogo from './BrandLogo';
 import Avatar from './Avatar';
@@ -15,11 +16,28 @@ export default function Header({
   streak = 0,
 }) {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClickOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [menuOpen]);
 
   function handleCategoryClick(id) {
     if (onCategoryChange) onCategoryChange(id);
     else navigate(id === 'all' ? '/' : `/?category=${id}`);
+  }
+
+  function handleLogout() {
+    setMenuOpen(false);
+    signOut();
+    navigate('/login');
   }
 
   return (
@@ -50,16 +68,30 @@ export default function Header({
         </div>
         <div className="header-actions">
           <button className="pill-btn" type="button" onClick={onCompose}>+ Post</button>
-          <div className="me-wrap">
+          <div className="me-wrap" ref={menuRef}>
             <button
               className="avatar-btn"
               type="button"
-              title="Your profile"
-              onClick={() => navigate(`/profile/${user?.id}`)}
+              title="Account menu"
+              onClick={() => setMenuOpen((v) => !v)}
             >
               {user ? <Avatar id={user.id} name={user.displayName} photoUrl={user.photoUrl} size={32} /> : 'Me'}
             </button>
             <span className="streak-badge" hidden={!streak}>🔥<span>{streak}</span></span>
+            {menuOpen && (
+              <div className="me-menu">
+                <button
+                  type="button"
+                  className="me-menu-item"
+                  onClick={() => { setMenuOpen(false); navigate(`/profile/${user?.id}`); }}
+                >
+                  View profile
+                </button>
+                <button type="button" className="me-menu-item danger" onClick={handleLogout}>
+                  Log out
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
