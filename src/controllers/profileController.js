@@ -1,4 +1,5 @@
 const pool = require('../db');
+const { getFollowStatus } = require('../lib/follows');
 
 function dateKey(ts) {
   const d = new Date(ts);
@@ -37,10 +38,12 @@ async function getProfile(req, res) {
     if (!rows.length) return res.status(404).json({ error: 'User not found.' });
     const u = rows[0];
     const streak = await computeStreak(req.params.id);
+    const followStatus = await getFollowStatus(req.userId, req.params.id);
 
     res.json({
       user: { id: u.id, displayName: u.display_name, bio: u.bio, photoUrl: u.photo_url },
       streak,
+      followStatus,
     });
   } catch (err) {
     console.error('get profile error:', err);

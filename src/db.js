@@ -29,4 +29,17 @@ pool.query(`
   ) ENGINE=InnoDB
 `).catch((err) => console.error('Could not ensure goals table exists:', err));
 
+pool.query(`
+  CREATE TABLE IF NOT EXISTS follows (
+    follower_id VARCHAR(36) NOT NULL,
+    followee_id VARCHAR(36) NOT NULL,
+    status ENUM('pending','accepted') NOT NULL DEFAULT 'pending',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (follower_id, followee_id),
+    FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (followee_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_follows_followee_status (followee_id, status)
+  ) ENGINE=InnoDB
+`).catch((err) => console.error('Could not ensure follows table exists:', err));
+
 module.exports = pool;

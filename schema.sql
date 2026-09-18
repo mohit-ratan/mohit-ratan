@@ -91,3 +91,16 @@ CREATE TABLE IF NOT EXISTS goals (
   UNIQUE KEY uniq_author_tag (author_id, tag),
   FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+-- Every account is private by default: a follower can only see someone's
+-- posts/stories/achievements once that person accepts the follow request.
+CREATE TABLE IF NOT EXISTS follows (
+  follower_id   VARCHAR(36) NOT NULL,
+  followee_id   VARCHAR(36) NOT NULL,
+  status        ENUM('pending','accepted') NOT NULL DEFAULT 'pending',
+  created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (follower_id, followee_id),
+  FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (followee_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_follows_followee_status (followee_id, status)
+) ENGINE=InnoDB;

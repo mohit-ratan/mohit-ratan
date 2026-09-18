@@ -8,6 +8,7 @@ import Avatar from '../components/Avatar';
 import PostGrid from '../components/PostGrid';
 import PostDetailModal from '../components/PostDetailModal';
 import TrophyCase from '../components/TrophyCase';
+import FollowRequests from '../components/FollowRequests';
 import { CameraIcon } from '../lib/icons';
 
 export default function ProfilePage() {
@@ -25,6 +26,8 @@ export default function ProfilePage() {
   const [trophies, setTrophies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewPost, setViewPost] = useState(null);
+  const [followStatus, setFollowStatus] = useState('none');
+  const [followLoading, setFollowLoading] = useState(false);
 
   const [nameDraft, setNameDraft] = useState('');
   const [bioDraft, setBioDraft] = useState('');
@@ -32,20 +35,30 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
+  const canView = isMe || followStatus === 'accepted';
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [profileRes, postsRes, achievementsRes] = await Promise.all([
-        api.get(`/api/profile/${authorId}`),
-        api.get('/api/posts', { params: { authorId } }),
-        api.get('/api/posts/achievements', { params: { authorId } }),
-      ]);
+      const profileRes = await api.get(`/api/profile/${authorId}`);
       setProfile(profileRes.data.user);
       setStreak(profileRes.data.streak);
+      setFollowStatus(profileRes.data.followStatus);
       setNameDraft(profileRes.data.user.displayName || '');
       setBioDraft(profileRes.data.user.bio || '');
-      setPosts(postsRes.data.posts);
-      setTrophies(achievementsRes.data.achievements.filter((a) => a.goal?.completed));
+
+      const allowed = profileRes.data.followStatus === 'me' || profileRes.data.followStatus === 'accepted';
+      if (allowed) {
+        const [postsRes, achievementsRes] = await Promise.all([
+          api.get('/api/posts', { params: { authorId } }),
+          api.get('/api/posts/achievements', { params: { authorId } }),
+        ]);
+        setPosts(postsRes.data.posts);
+        setTrophies(achievementsRes.data.achievements.filter((a) => a.goal?.completed));
+      } else {
+        setPosts([]);
+        setTrophies([]);
+      }
     } catch (err) {
       showToast(err.message, true);
     } finally {
@@ -54,6 +67,32 @@ export default function ProfilePage() {
   }, [authorId, showToast]);
 
   useEffect(() => { load(); }, [load]);
+
+  async function sendFollowRequest() {
+    setFollowLoading(true);
+    try {
+      const { data } = await api.post(`/api/follows/${authorId}`);
+      setFollowStatus(data.status);
+    } catch (err) {
+      showToast(err.message, true);
+    } finally {
+      setFollowLoading(false);
+    }
+  }
+
+  async function removeFollow() {
+    setFollowLoading(true);
+    try {
+      await api.delete(`/api/follows/${authorId}`);
+      setFollowStatus('none');
+      setPosts([]);
+      setTrophies([]);
+    } catch (err) {
+      showToast(err.message, true);
+    } finally {
+      setFollowLoading(false);
+    }
+  }
 
   async function saveProfile() {
     setSaving(true);
@@ -138,6 +177,15 @@ export default function ProfilePage() {
                     </>}
                   </div>
                   {isMe && <button type="button" className="profile-edit-toggle" aria-expanded={editing} aria-controls="profile-editor" onClick={() => { setNameDraft(profile.displayName || ''); setBioDraft(profile.bio || ''); setEditing(!editing); }} disabled={saving}>{editing ? 'Cancel editing' : 'Edit profile'}</button>}
+                  {!isMe && followStatus === 'none' && (
+                    <button type="button" className="pill-btn primary" onClick={sendFollowRequest} disabled={followLoading}>Follow</button>
+                  )}
+                  {!isMe && followStatus === 'pending' && (
+                    <button type="button" className="pill-btn" onClick={removeFollow} disabled={followLoading}>Requested</button>
+                  )}
+                  {!isMe && followStatus === 'accepted' && (
+                    <button type="button" className="pill-btn" onClick={removeFollow} disabled={followLoading}>Following</button>
+                  )}
                 </div>
                 <div className="profile-identity-copy">
                   <span className="profile-kicker">{isMe ? 'YOUR PERSONAL JOURNEY' : 'A JOURNEY IN PROGRESS'}</span>
@@ -155,21 +203,34 @@ export default function ProfilePage() {
                     <div><dd>{trophies.length}</dd><dt>Awards earned</dt></div>
                     <div><dd>{streak}<span> days</span></dd><dt>Current streak</dt></div>
                   </dl>
-                  <button type="button" className="profile-house-link" onClick={() => navigate(`/profile/${authorId}/achievements`)}>
-                    <span className="profile-house-icon" aria-hidden="true">🏆</span><span><strong>Achievement House</strong><small>Goals, progress & earned awards</small></span><span aria-hidden="true">↗</span>
-                  </button>
+                  {canView && (
+                    <button type="button" className="profile-house-link" onClick={() => navigate(`/profile/${authorId}/achievements`)}>
+                      <span className="profile-house-icon" aria-hidden="true">🏆</span><span><strong>Achievement House</strong><small>Goals, progress & earned awards</small></span><span aria-hidden="true">↗</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
-            <div className="profile-posts-heading"><h2>{isMe ? 'Your moments' : 'Moments'}</h2><span>{posts.length} {posts.length === 1 ? 'post' : 'posts'}</span></div>
-            <TrophyCase trophies={trophies} authorId={authorId} />
-            <PostGrid
-              posts={posts}
-              onOpen={setViewPost}
-              emptyIcon="📭"
-              emptyTitle="No posts yet"
-              emptyText={isMe ? 'Share your first photo, video, or update from the home feed.' : "This person hasn't posted yet."}
-            />
+            {isMe && <FollowRequests />}
+            {canView ? (
+              <>
+                <div className="profile-posts-heading"><h2>{isMe ? 'Your moments' : 'Moments'}</h2><span>{posts.length} {posts.length === 1 ? 'post' : 'posts'}</span></div>
+                <TrophyCase trophies={trophies} authorId={authorId} />
+                <PostGrid
+                  posts={posts}
+                  onOpen={setViewPost}
+                  emptyIcon="📭"
+                  emptyTitle="No posts yet"
+                  emptyText={isMe ? 'Share your first photo, video, or update from the home feed.' : "This person hasn't posted yet."}
+                />
+              </>
+            ) : (
+              <div className="card locked-profile">
+                <span className="locked-profile-icon" aria-hidden="true">🔒</span>
+                <h3>This account is private</h3>
+                <p>{followStatus === 'pending' ? 'Your follow request is waiting for approval.' : "Follow this account to see their photos, videos, and achievements."}</p>
+              </div>
+            )}
           </section>
           <aside className="side-col" />
         </main>

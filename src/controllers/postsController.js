@@ -3,6 +3,7 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const { targetDays, normalizeTasks } = require('../lib/goalProgress');
+const { canView } = require('../lib/follows');
 
 function mediaTypeFromMime(mime) {
   return mime && mime.startsWith('video') ? 'video' : 'image';
@@ -50,8 +51,11 @@ async function list(req, res) {
                (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) as like_count,
                (SELECT COUNT(*) FROM comments cm WHERE cm.post_id = p.id) as comment_count,
                EXISTS(SELECT 1 FROM post_likes pl2 WHERE pl2.post_id = p.id AND pl2.user_id = ?) as liked_by_me
-               FROM posts p JOIN users u ON u.id = p.author_id WHERE 1=1`;
-    const params = [req.userId];
+               FROM posts p JOIN users u ON u.id = p.author_id
+               WHERE (p.author_id = ? OR EXISTS(
+                 SELECT 1 FROM follows f WHERE f.follower_id = ? AND f.followee_id = p.author_id AND f.status = 'accepted'
+               ))`;
+    const params = [req.userId, req.userId, req.userId];
     if (category && category !== 'all') {
       sql += ' AND p.category = ?';
       params.push(category);
@@ -106,6 +110,9 @@ async function achievements(req, res) {
   try {
     const { authorId } = req.query;
     if (!authorId) return res.status(400).json({ error: 'authorId is required.' });
+    if (!(await canView(req.userId, authorId))) {
+      return res.json({ achievements: [], goals: [], tags: [] });
+    }
 
     const [rows] = await pool.query(
       `SELECT p.*, u.display_name, u.photo_url as author_photo,
