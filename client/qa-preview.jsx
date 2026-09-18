@@ -8,7 +8,7 @@ import {ToastProvider} from './src/context/ToastContext';
 import './src/styles.css';
 const user={id:'qa-user',displayName:'Alex Morgan',bio:'Building better habits, one day at a time.'};
 const goal={targetDate:'2026-10-01',completed:false,subtasks:[{id:'walk',text:'Walk for 30 minutes',targetDays:10,completedDays:3,done:false},{id:'food',text:'Cook a balanced meal',targetDays:10,completedDays:5,done:false}]};
-const posts=['health','wealth','relationships','health','wealth','relationships'].map((category,i)=>({id:`p${i}`,authorId:user.id,authorName:user.displayName,category,tag:['daily-movement','learning','family'][i%3],createdAt:Date.now(),mediaType:'image',mediaUrl:'/brand/packsomework-mark.svg',likeCount:4,commentCount:0}));
+const posts=['health','wealth','relationships','health','wealth','relationships'].map((category,i)=>({id:`p${i}`,authorId:user.id,authorName:user.displayName,category,tag:['daily-movement','learning','family'][i%3],createdAt:Date.now(),mediaType:'image',mediaUrl:'/brand/mark.svg',likeCount:4,commentCount:0}));
 const journey={tag:'daily-movement',category:'health',goal,posts:[posts[0]],count:1};
 api.defaults.adapter=async(config)=>{
  await new Promise(r=>setTimeout(r,250));
