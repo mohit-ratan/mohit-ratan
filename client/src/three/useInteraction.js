@@ -14,6 +14,7 @@ export function useInteractionRegistry() {
 
 export function useRegisterInteractable(registryRef, { position, radius = 0, label, onInteract }) {
   useEffect(() => {
+    if (!registryRef) return undefined; // e.g. decorative trees with no collision/interaction
     const entry = { position, radius, label, onInteract };
     registryRef.current.push(entry);
     return () => {
