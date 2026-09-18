@@ -193,6 +193,8 @@ export default function HomePage() {
               <PostGrid
                 posts={visiblePosts}
                 onOpen={(post) => setModal({ type: 'view', post })}
+                onOpenAuthor={openAuthor}
+                showAuthor
                 emptyIcon="🎒"
                 emptyTitle={searchQuery || tagFilter ? "No matching moments" : "Your next chapter starts here"}
                 emptyText={searchQuery || tagFilter ? "Try another search or clear your filters." : `Share your first moment in ${catLabel} using Create post above.`}

@@ -393,11 +393,24 @@
   .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;}
   @media (max-width:560px){ .grid{grid-template-columns:repeat(2,1fr);gap:3px;} }
   .grid-tile{
-    position:relative;aspect-ratio:1/1;overflow:hidden;cursor:pointer;
+    position:relative;aspect-ratio:1/1;overflow:hidden;
     background:var(--surface-2);border-radius:6px;
+  }
+  .tile-open{
+    position:absolute;inset:0;width:100%;height:100%;
+    border:0;padding:0;margin:0;background:none;cursor:pointer;font:inherit;color:inherit;text-align:left;
   }
   .grid-tile img,.grid-tile video{width:100%;height:100%;object-fit:cover;display:block;}
   .grid-tile .text-card{font-size:13.5px;}
+  .tile-author{
+    position:absolute;top:8px;left:8px;z-index:3;
+    display:flex;align-items:center;gap:6px;max-width:calc(100% - 16px);
+    background:rgba(15,18,24,.55);backdrop-filter:blur(2px);
+    border:0;border-radius:999px;padding:3px 10px 3px 3px;cursor:pointer;
+  }
+  .tile-author-avatar{display:flex;border-radius:50%;border:2px solid transparent;}
+  .tile-author-name{color:#fff;font-size:11.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tile-author:hover .tile-author-name{text-decoration:underline;}
   .grid-tile .tile-badge{
     position:absolute;top:8px;right:8px;color:#fff;
     filter:drop-shadow(0 1px 3px rgba(0,0,0,.55));
@@ -1161,8 +1174,7 @@ body{background:radial-gradient(ellipse at 0 0,#ffddbe80,transparent 55%),radial
 button,a,input,select,textarea{-webkit-tap-highlight-color:transparent;}
 button:focus-visible,a:focus-visible,[tabindex="0"]:focus-visible{outline:3px solid var(--accent);outline-offset:3px;}
 button:disabled{cursor:wait;opacity:.6;}
-.grid-tile{border:0;padding:0;text-align:left;font:inherit;color:inherit;}
-.grid-tile:focus-visible .tile-overlay{opacity:1;}
+.tile-open:focus-visible .tile-overlay{opacity:1;}
 .story-tap-zone{border:0;background:transparent;cursor:pointer;}
 .composer-fields{margin:0;border:0;min-width:0;}
 .feed-intro{display:flex;justify-content:space-between;align-items:center;gap:20px;margin:0 0 20px;}
