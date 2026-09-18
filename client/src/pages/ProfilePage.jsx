@@ -28,6 +28,7 @@ export default function ProfilePage() {
 
   const [nameDraft, setNameDraft] = useState('');
   const [bioDraft, setBioDraft] = useState('');
+  const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
@@ -50,7 +51,7 @@ export default function ProfilePage() {
     } finally {
       setLoading(false);
     }
-  }, [authorId]);
+  }, [authorId, showToast]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -59,6 +60,7 @@ export default function ProfilePage() {
     try {
       await api.put('/api/profile/me', { displayName: nameDraft.trim() || 'Anonymous', bio: bioDraft.trim().slice(0, 220) });
       updateUser({ displayName: nameDraft.trim() || 'Anonymous', bio: bioDraft.trim().slice(0, 220) });
+      setEditing(false);
       showToast('Profile saved');
       load();
     } catch (err) {
@@ -123,50 +125,43 @@ export default function ProfilePage() {
       <div className="wrap">
         <main className="layout">
           <section className="feed-col">
-            <div className="back-link" onClick={() => navigate('/')}>← Back to feed</div>
-            <div className="card profile-head">
-              <div className="profile-avatar-wrap">
-                <Avatar id={profile.id} name={profile.displayName} photoUrl={profile.photoUrl} size={64} />
-                {isMe && (
-                  <>
-                    <label className={`avatar-edit-btn${uploadingPhoto ? ' uploading' : ''}`} title="Change profile photo">
-                      <CameraIcon />
-                      <input ref={photoInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoChange} />
-                    </label>
-                  </>
-                )}
-              </div>
-              <div>
-                <div className="profile-name">
-                  {profile.displayName}
-                  {isMe && <span style={{ fontSize: 13, color: 'var(--text-faint)', fontFamily: 'var(--font-body)', fontWeight: 600 }}> (you)</span>}
-                </div>
-                {isMe ? (
-                  <div className="profile-edit-form">
-                    <input type="text" placeholder="Your display name" value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} />
-                    <textarea placeholder="A short bio… (optional)" rows={2} value={bioDraft} onChange={(e) => setBioDraft(e.target.value)} />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                      <button className="pill-btn primary" style={{ padding: '7px 14px', fontSize: 12.5 }} disabled={saving} onClick={saveProfile}>
-                        {saving ? 'Saving…' : 'Save profile'}
-                      </button>
-                      {profile.photoUrl && (
-                        <button type="button" className="remove-photo-link" onClick={removePhoto}>Remove photo</button>
-                      )}
-                    </div>
+            <button type="button" className="back-link profile-back" onClick={() => navigate('/')}>← Back to feed</button>
+            <div className="card profile-hero">
+              <div className="profile-hero-banner"><span>HEALTH · WEALTH · RELATIONSHIPS</span><span className="profile-banner-orbit" aria-hidden="true" /></div>
+              <div className="profile-hero-body">
+                <div className="profile-identity-row">
+                  <div className="profile-avatar-wrap profile-hero-avatar">
+                    <Avatar id={profile.id} name={profile.displayName} photoUrl={profile.photoUrl} size={88} />
+                    {isMe && <>
+                      <button type="button" className={`avatar-edit-btn${uploadingPhoto ? ' uploading' : ''}`} aria-label="Change profile photo" disabled={uploadingPhoto} onClick={() => photoInputRef.current?.click()}><CameraIcon /></button>
+                      <input ref={photoInputRef} type="file" accept="image/*" hidden onChange={handlePhotoChange} />
+                    </>}
                   </div>
-                ) : profile.bio ? (
-                  <div className="profile-bio">{profile.bio}</div>
-                ) : null}
-                <button
-                  type="button"
-                  className="pill-btn"
-                  style={{ marginTop: 10 }}
-                  onClick={() => navigate(`/profile/${authorId}/achievements`)}
-                >
-                  🏆 Achievements Room
-                </button>
+                  {isMe && <button type="button" className="profile-edit-toggle" aria-expanded={editing} aria-controls="profile-editor" onClick={() => { setNameDraft(profile.displayName || ''); setBioDraft(profile.bio || ''); setEditing(!editing); }} disabled={saving}>{editing ? 'Cancel editing' : 'Edit profile'}</button>}
+                </div>
+                <div className="profile-identity-copy">
+                  <span className="profile-kicker">{isMe ? 'YOUR PERSONAL JOURNEY' : 'A JOURNEY IN PROGRESS'}</span>
+                  <h1 className="profile-name">{profile.displayName}</h1>
+                  <p className="profile-bio">{profile.bio || (isMe ? 'Small steps. Meaningful progress. A life you’re building.' : 'Building a life, one milestone at a time.')}</p>
+                </div>
+                {isMe && editing && <form id="profile-editor" className="profile-editor" onSubmit={(e) => { e.preventDefault(); saveProfile(); }}>
+                  <label>Display name<input type="text" value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} disabled={saving} /></label>
+                  <label>Bio <span>(optional)</span><textarea rows={3} maxLength={220} value={bioDraft} onChange={(e) => setBioDraft(e.target.value)} placeholder="What are you working toward?" disabled={saving} /></label>
+                  <div className="profile-editor-actions"><button type="submit" className="pill-btn primary" disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</button>{profile.photoUrl && <button type="button" className="remove-photo-link" onClick={removePhoto}>Remove photo</button>}</div>
+                </form>}
+                <div className="profile-bottom-row">
+                  <dl className="profile-metrics">
+                    <div><dd>{posts.length}</dd><dt>Posts</dt></div>
+                    <div><dd>{trophies.length}</dd><dt>Awards earned</dt></div>
+                    <div><dd>{streak}<span> days</span></dd><dt>Current streak</dt></div>
+                  </dl>
+                  <button type="button" className="profile-house-link" onClick={() => navigate(`/profile/${authorId}/achievements`)}>
+                    <span className="profile-house-icon" aria-hidden="true">🏆</span><span><strong>Achievement House</strong><small>Goals, progress & earned awards</small></span><span aria-hidden="true">↗</span>
+                  </button>
+                </div>
               </div>
             </div>
+            <div className="profile-posts-heading"><h2>{isMe ? 'Your moments' : 'Moments'}</h2><span>{posts.length} {posts.length === 1 ? 'post' : 'posts'}</span></div>
             <TrophyCase trophies={trophies} authorId={authorId} />
             <PostGrid
               posts={posts}
