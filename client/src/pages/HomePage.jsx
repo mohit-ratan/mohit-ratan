@@ -4,7 +4,7 @@ import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
 import StoriesBar from '../components/StoriesBar';
-import PostGrid from '../components/PostGrid';
+import FeedList from '../components/FeedList';
 import SideColumn from '../components/SideColumn';
 import FollowListPanel from '../components/FollowListPanel';
 import Avatar from '../components/Avatar';
@@ -190,11 +190,11 @@ export default function HomePage() {
             {loading && <div className="feed-skeleton" role="status" aria-label="Loading posts">{[0,1,2,3,4,5].map((i) => <span key={i} />)}</div>}
             {feedError && <div className="card empty-state" role="alert"><h3>We couldn’t load your feed</h3><p>{feedError}</p><button className="house-enter-btn" type="button" onClick={loadPosts}>Try again</button></div>}
             {!loading && !feedError && (
-              <PostGrid
+              <FeedList
                 posts={visiblePosts}
                 onOpen={(post) => setModal({ type: 'view', post })}
                 onOpenAuthor={openAuthor}
-                showAuthor
+                onOpenTag={openTag}
                 emptyIcon="🎒"
                 emptyTitle={searchQuery || tagFilter ? "No matching moments" : "Your next chapter starts here"}
                 emptyText={searchQuery || tagFilter ? "Try another search or clear your filters." : `Share your first moment in ${catLabel} using Create post above.`}

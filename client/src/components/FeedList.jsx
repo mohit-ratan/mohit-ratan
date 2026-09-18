@@ -1,0 +1,92 @@
+import { useState } from 'react';
+import api, { mediaUrl } from '../api';
+import { CAT_MAP, timeAgo, truncate } from '../lib/format';
+import { pickLookRecipe } from '../lib/looks';
+import { HeartIcon, CommentIcon, VideoIcon, SparkleIcon } from '../lib/icons';
+import Avatar from './Avatar';
+
+function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
+  const cat = CAT_MAP[post.category] || CAT_MAP.health;
+  const isVideo = post.mediaUrl && post.mediaType === 'video';
+  const isImage = post.mediaUrl && post.mediaType !== 'video';
+  const filter = post.vibe ? pickLookRecipe(post.vibe, post.category).filter : undefined;
+  const [liked, setLiked] = useState(!!post.likedByMe);
+  const [likeCount, setLikeCount] = useState(post.likeCount || 0);
+  const [likePending, setLikePending] = useState(false);
+
+  async function toggleLike(e) {
+    e.stopPropagation();
+    if (likePending) return;
+    setLikePending(true);
+    const wasLiked = liked;
+    setLiked(!wasLiked);
+    setLikeCount((c) => c + (wasLiked ? -1 : 1));
+    try {
+      await api.post(`/api/posts/${post.id}/like`);
+    } catch {
+      setLiked(wasLiked);
+      setLikeCount((c) => c + (wasLiked ? 1 : -1));
+    } finally {
+      setLikePending(false);
+    }
+  }
+
+  return (
+    <article className="card feed-card">
+      <header className="feed-card-head">
+        <span onClick={() => onOpenAuthor(post.authorId)} style={{ cursor: 'pointer' }}>
+          <Avatar id={post.authorId} name={post.authorName} photoUrl={post.authorPhotoUrl} size={38} />
+        </span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span className="post-author" onClick={() => onOpenAuthor(post.authorId)}>{post.authorName}</span>
+          <div className="post-meta">
+            <span className={`cat-label ${cat.id}`}>{cat.emoji} {cat.label}</span>
+            <span>· {timeAgo(post.createdAt)}</span>
+          </div>
+        </div>
+      </header>
+      <button type="button" className="feed-card-media" aria-label={`Open ${post.tag ? `#${post.tag}` : cat.label} post`} onClick={() => onOpen(post)}>
+        {isVideo ? (
+          <video src={mediaUrl(post.mediaUrl)} style={filter ? { filter } : undefined} muted playsInline preload="metadata" />
+        ) : isImage ? (
+          <img src={mediaUrl(post.mediaUrl)} alt={post.tag ? `Post for #${post.tag}` : 'Post'} loading="lazy" decoding="async" style={!post.aiStyled && filter ? { filter } : undefined} />
+        ) : (
+          <div className={`text-card ${cat.id}`}><span className="reveal-text">{cat.label}</span></div>
+        )}
+        {isVideo && <span className="tile-badge"><VideoIcon /></span>}
+        {isImage && post.aiStyled && <span className="styled-badge"><SparkleIcon />Filtered</span>}
+        {isImage && post.vibe && !post.aiStyled && <span className="vibe-chip">✨ {truncate(post.vibe, 34)}</span>}
+      </button>
+      <div className="feed-card-actions">
+        <button type="button" className={`action-btn like-btn${liked ? ' liked' : ''}`} disabled={likePending} onClick={toggleLike}>
+          <HeartIcon filled={liked} />{likeCount > 0 ? likeCount : 'Like'}
+        </button>
+        <button type="button" className="action-btn" onClick={() => onOpen(post)}>
+          <CommentIcon />{post.commentCount > 0 ? post.commentCount : 'Comment'}
+        </button>
+      </div>
+      {post.tag && (
+        <div className="tags-row feed-card-tags">
+          <span className="tag-chip" onClick={() => onOpenTag(post.tag)}>#{post.tag}</span>
+        </div>
+      )}
+    </article>
+  );
+}
+
+export default function FeedList({ posts, onOpen, onOpenAuthor, onOpenTag, emptyIcon, emptyTitle, emptyText }) {
+  if (!posts || posts.length === 0) {
+    return (
+      <div className="card empty-state">
+        <div className="emoji">{emptyIcon}</div>
+        <h3>{emptyTitle}</h3>
+        <p>{emptyText}</p>
+      </div>
+    );
+  }
+  return (
+    <div className="feed-list">
+      {posts.map((p) => <FeedCard key={p.id} post={p} onOpen={onOpen} onOpenAuthor={onOpenAuthor} onOpenTag={onOpenTag} />)}
+    </div>
+  );
+}
