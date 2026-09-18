@@ -909,3 +909,10 @@
 .goal-summary-card .house-enter-btn{font-size:11px;padding:8px 11px;}
 .goal-category-empty{font-size:12px;color:#626b75;line-height:1.7;}
 @media(max-width:850px){.goal-category-grid{grid-template-columns:1fr;}.goal-category-stats dt{font-size:12px;}}
+.goal-progress-label{margin-top:14px;color:#626b75;}
+.goal-progress-label strong{color:var(--floor-color);}
+.goal-category progress{appearance:none;border:0;border-radius:999px;overflow:hidden;background:#dce3dd;}
+.goal-category progress::-webkit-progress-bar{background:#dce3dd;border-radius:999px;}
+.goal-category progress::-webkit-progress-value{background:var(--floor-color);border-radius:999px;}
+.goal-category progress::-moz-progress-bar{background:var(--floor-color);border-radius:999px;}
+.goal-category .goal-progress-bar{height:8px;margin:8px 0 16px;}
