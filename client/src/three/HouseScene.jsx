@@ -5,7 +5,8 @@ import CarController from './CarController';
 import FurnitureProp from './FurnitureProp';
 import AchievementPlinth from './AchievementPlinth';
 import { FURNITURE_URLS } from './assets';
-import { SkyDome, Mountains, TreeRing, BirdFlock, isNightNow } from './Environment';
+import { SkyDome, Mountains, TreeRing, BirdFlock, GrassField, CheckeredEdge, isNightNow } from './Environment';
+import WaterFeature from './WaterFeature';
 import { useInteractionRegistry, useProximityInteraction } from './useInteraction';
 import { CATEGORIES, CAT_MAP } from '../lib/format';
 
@@ -149,7 +150,9 @@ export default function HouseScene({ achievements, onOpen, onFocusChange }) {
 
       <Mountains radius={68} />
       <TreeRing innerRadius={32} outerRadius={44} count={30} />
+      <GrassField innerRadius={26} outerRadius={40} count={600} />
       <BirdFlock count={6} />
+      <WaterFeature position={[34, 0, 26]} size={8} registryRef={registryRef} />
 
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[WORLD_SIZE, WORLD_SIZE]} />
@@ -159,6 +162,8 @@ export default function HouseScene({ achievements, onOpen, onFocusChange }) {
         <planeGeometry args={[roofWidth, 20]} />
         <meshStandardMaterial color={ROAD_COLOR} />
       </mesh>
+      <CheckeredEdge axis="z" from={-5} to={15} cross={-roofWidth / 2 - 0.6} />
+      <CheckeredEdge axis="z" from={-5} to={15} cross={roofWidth / 2 + 0.6} />
 
       {/* Shared glass roof ties the three rooms together as one house. */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, WALL_HEIGHT + 0.1, ZONE_CENTER_Z]}>

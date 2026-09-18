@@ -3,7 +3,8 @@ import CarController from './CarController';
 import FurnitureProp from './FurnitureProp';
 import AchievementPlinth from './AchievementPlinth';
 import { FURNITURE_URLS } from './assets';
-import { SkyDome, Mountains, TreeRing, BirdFlock, isNightNow } from './Environment';
+import { SkyDome, Mountains, TreeRing, BirdFlock, GrassField, CheckeredEdge, isNightNow } from './Environment';
+import WaterFeature from './WaterFeature';
 import { useInteractionRegistry, useProximityInteraction } from './useInteraction';
 
 // Hex equivalents of the CSS category vars in styles.css :root — Three.js
@@ -79,7 +80,9 @@ export default function RoomScene({ category, achievements, onOpen, onFocusChang
 
       <Mountains />
       <TreeRing />
+      <GrassField innerRadius={12} outerRadius={20} count={350} />
       <BirdFlock />
+      <WaterFeature position={[-13, 0, -10]} size={4.5} registryRef={registryRef} />
 
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[YARD_SIZE, YARD_SIZE]} />
@@ -93,6 +96,8 @@ export default function RoomScene({ category, achievements, onOpen, onFocusChang
         <planeGeometry args={[0.15, YARD_SIZE]} />
         <meshStandardMaterial color={colors.accent} />
       </mesh>
+      <CheckeredEdge axis="z" from={-YARD_SIZE / 2} to={YARD_SIZE / 2} cross={-1.9} />
+      <CheckeredEdge axis="z" from={-YARD_SIZE / 2} to={YARD_SIZE / 2} cross={1.9} />
 
       <Decor count={achievements.length} registryRef={registryRef} />
 

@@ -1,6 +1,6 @@
 import { Suspense, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Sky, Stars } from '@react-three/drei';
+import { Sky, Stars, Instances, Instance } from '@react-three/drei';
 import FurnitureProp from './FurnitureProp';
 import { TREE_URLS } from './assets';
 
@@ -72,6 +72,59 @@ export function TreeRing({ innerRadius = 24, outerRadius = 34, count = 22 }) {
       ))}
     </Suspense>
   );
+}
+
+// Dense spiky grass blades (instanced for performance) scattered in a ring
+// between the drivable area and the tree line — stylized rather than a
+// flat green plane, closer to the reference's spiky-grass look.
+export function GrassField({ innerRadius = 20, outerRadius = 32, count = 500, color = '#8FBF5A' }) {
+  const blades = useMemo(() => {
+    return Array.from({ length: count }, (_, i) => {
+      const angle = ((i * 2.4) % (Math.PI * 2));
+      const r = innerRadius + ((i * 53) % Math.round((outerRadius - innerRadius) * 10)) / 10;
+      const scale = 0.7 + ((i * 17) % 6) * 0.12;
+      return {
+        position: [Math.cos(angle) * r, 0.18 * scale, Math.sin(angle) * r],
+        rotation: [0, (i * 2.1) % (Math.PI * 2), 0],
+        scale,
+      };
+    });
+  }, [innerRadius, outerRadius, count]);
+
+  return (
+    <Instances limit={count}>
+      <coneGeometry args={[0.06, 0.36, 4]} />
+      <meshStandardMaterial color={color} />
+      {blades.map((b, i) => (
+        <Instance key={i} position={b.position} rotation={b.rotation} scale={b.scale} />
+      ))}
+    </Instances>
+  );
+}
+
+// Alternating red/white blocks along a straight edge — the classic
+// checkered road-curb look. `axis` is 'x' or 'z' (which axis the edge runs
+// along); `cross` offsets perpendicular to it (the two sides of a road).
+export function CheckeredEdge({ axis = 'z', from, to, cross, step = 1.4, blockSize = 0.9 }) {
+  const blocks = useMemo(() => {
+    const arr = [];
+    let i = 0;
+    for (let p = from; p < to; p += step) {
+      const color = i % 2 === 0 ? '#C23B3B' : '#F2EFE7';
+      const position = axis === 'z' ? [cross, 0.02, p] : [p, 0.02, cross];
+      const size = axis === 'z' ? [blockSize, 0.03, step * 0.9] : [step * 0.9, 0.03, blockSize];
+      arr.push({ key: i, color, position, size });
+      i += 1;
+    }
+    return arr;
+  }, [axis, from, to, cross, step, blockSize]);
+
+  return blocks.map((b) => (
+    <mesh key={b.key} position={b.position}>
+      <boxGeometry args={b.size} />
+      <meshStandardMaterial color={b.color} />
+    </mesh>
+  ));
 }
 
 function Bird({ radius, height, speed, offset, color }) {
