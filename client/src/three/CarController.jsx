@@ -65,6 +65,7 @@ export default function CarController({ bounds, carPosRef, registryRef }) {
   const verticalVelocity = useRef(0);
   const camPos = useRef(new THREE.Vector3(0, 3.2, 5));
   const camTarget = useRef(new THREE.Vector3());
+  const baseFov = useRef(camera.fov);
 
   useEffect(() => {
     function onKeyDown(e) {
@@ -144,6 +145,16 @@ export default function CarController({ bounds, carPosRef, registryRef }) {
     camera.position.lerp(camPos.current, 1 - Math.pow(0.0005, delta));
     camTarget.current.set(nx, 0.6 + group.position.y, nz);
     camera.lookAt(camTarget.current);
+
+    // Widen the FOV slightly with speed — a cheap, classic "sense of
+    // velocity" trick (slight fisheye stretch at speed) that reads much
+    // more like actually driving fast than a fixed lens ever does.
+    if (camera.isPerspectiveCamera) {
+      const speedRatioForFov = THREE.MathUtils.clamp(Math.abs(speed.current) / (MAX_SPEED_FORWARD * BOOST_FACTOR), 0, 1);
+      const targetFov = baseFov.current + speedRatioForFov * 8;
+      camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 1 - Math.pow(0.001, delta));
+      camera.updateProjectionMatrix();
+    }
   });
 
   return (

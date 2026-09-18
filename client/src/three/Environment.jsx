@@ -5,12 +5,16 @@ import * as THREE from 'three';
 import FurnitureProp from './FurnitureProp';
 import { TREE_URLS } from './assets';
 
-const GROUND_PALETTE = ['#6FA85C', '#5F9650', '#7BB868', '#6AA058'];
+// Warmer, more yellow-leaning greens than a "realistic lawn" — closer to
+// the sun-baked, toy-diorama palette than a photoreal turf green.
+const GROUND_PALETTE = ['#9CB24E', '#87A63F', '#B0C15E', '#7C9B3A'];
 
 // A flat single-color plane reads as an obviously fake floor — this bakes
 // per-vertex color noise (a patchy blend of a few grass shades, plus a
 // brightness jitter) directly into the geometry, no texture file needed,
 // so the ground has actual organic variation instead of one flat color.
+// flatShading (faceted, no smoothed normals) plus matte roughness gives the
+// low-poly "painted" look instead of a smooth realistic PBR surface.
 export function NaturalGround({ size = 40, segments = 40, position = [0, 0, 0] }) {
   const geometry = useMemo(() => {
     const geo = new THREE.PlaneGeometry(size, size, segments, segments);
@@ -30,7 +34,7 @@ export function NaturalGround({ size = 40, segments = 40, position = [0, 0, 0] }
 
   return (
     <mesh geometry={geometry} rotation={[-Math.PI / 2, 0, 0]} position={position}>
-      <meshStandardMaterial vertexColors roughness={1} />
+      <meshStandardMaterial vertexColors roughness={0.95} flatShading />
     </mesh>
   );
 }
@@ -105,11 +109,16 @@ export function TreeRing({ innerRadius = 24, outerRadius = 34, count = 22 }) {
 }
 
 const GRASS_PALETTE = ['#8FBF5A', '#79A84D', '#A3D06B', '#6E9C48', '#98C862'];
+const PUSH_RADIUS = 2.6;
+const MAX_LEAN = 1.15;
 
-// Dense spiky grass blades (instanced for performance), varied in color and
-// swaying in a wind-like sine motion — a flat static field reads as fake;
-// even a subtle sway sells "alive" far more than any amount of density.
-export function GrassField({ innerRadius = 20, outerRadius = 32, count = 700 }) {
+// Dense spiky grass blades (instanced for performance), varied in color,
+// swaying in a wind-like sine motion, AND bending away from the car as it
+// drives through — that reactive bend (not the wind sway alone) is what
+// actually sells "driving through grass" rather than "driving next to a
+// grass texture." `carPosRef` is optional so decorative/out-of-reach patches
+// (e.g. beyond the drivable bounds) can skip the per-frame distance check.
+export function GrassField({ innerRadius = 20, outerRadius = 32, count = 700, carPosRef }) {
   const blades = useMemo(() => {
     return Array.from({ length: count }, (_, i) => {
       const angle = (i * 2.4) % (Math.PI * 2);
@@ -129,11 +138,26 @@ export function GrassField({ innerRadius = 20, outerRadius = 32, count = 700 }) 
 
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
+    const car = carPosRef?.current;
     for (let i = 0; i < blades.length; i++) {
       const inst = instanceRefs.current[i];
       if (!inst) continue;
-      const sway = Math.sin(t * 1.6 + blades[i].phase) * 0.18;
-      inst.rotation.set(sway, blades[i].baseRotY, sway * 0.6);
+      const b = blades[i];
+      const sway = Math.sin(t * 1.6 + b.phase) * 0.18;
+      let leanX = 0;
+      let leanZ = 0;
+      if (car) {
+        const dx = b.position[0] - car.x;
+        const dz = b.position[2] - car.z;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+        if (dist < PUSH_RADIUS) {
+          const amount = (1 - dist / PUSH_RADIUS) ** 1.5 * MAX_LEAN;
+          const invDist = dist > 0.0001 ? 1 / dist : 0;
+          leanX = dz * invDist * amount;
+          leanZ = -dx * invDist * amount;
+        }
+      }
+      inst.rotation.set(sway + leanX, b.baseRotY, sway * 0.6 + leanZ);
     }
   });
 

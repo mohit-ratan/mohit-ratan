@@ -78,7 +78,7 @@ export default function RoomScene({ category, achievements, onOpen, onFocusChang
       <directionalLight position={[10, 16, 8]} intensity={night ? 0.25 : 0.9} />
 
       <TreeRing />
-      <GrassField innerRadius={12} outerRadius={20} count={450} />
+      <GrassField innerRadius={12} outerRadius={20} count={450} carPosRef={carPosRef} />
       <BirdFlock />
       <WaterFeature position={[-13, 0, -10]} size={4.5} registryRef={registryRef} />
 

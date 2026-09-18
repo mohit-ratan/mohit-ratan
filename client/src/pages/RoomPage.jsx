@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import RoomScene from '../three/RoomScene';
 import Crosshair from '../three/Crosshair';
+import PostFX from '../three/PostFX';
 import AchievementDetailModal from '../components/AchievementDetailModal';
 import { CAT_MAP } from '../lib/format';
 
@@ -68,6 +69,7 @@ export default function RoomPage() {
             onFocusChange={setFocusedLabel}
           />
         </Suspense>
+        <PostFX />
       </Canvas>
       <Crosshair focusedLabel={focusedLabel} />
       {activeAchievement && (

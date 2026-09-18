@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import HouseScene from '../three/HouseScene';
 import Crosshair from '../three/Crosshair';
+import PostFX from '../three/PostFX';
 import AchievementDetailModal from '../components/AchievementDetailModal';
 
 // Full-viewport 3D glass house — WASD to drive, press E near a plinth to
@@ -58,6 +59,7 @@ export default function AchievementsPage() {
         <Suspense fallback={null}>
           <HouseScene achievements={achievements} onOpen={setActiveAchievement} onFocusChange={setFocusedLabel} />
         </Suspense>
+        <PostFX />
       </Canvas>
       <Crosshair focusedLabel={focusedLabel} />
       {activeAchievement && (

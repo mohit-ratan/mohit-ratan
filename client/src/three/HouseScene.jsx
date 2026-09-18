@@ -148,7 +148,7 @@ export default function HouseScene({ achievements, onOpen, onFocusChange }) {
       <directionalLight position={[14, 20, 10]} intensity={night ? 0.25 : 0.9} />
 
       <TreeRing innerRadius={32} outerRadius={44} count={30} />
-      <GrassField innerRadius={26} outerRadius={40} count={750} />
+      <GrassField innerRadius={26} outerRadius={40} count={750} carPosRef={carPosRef} />
       <BirdFlock count={6} />
       <WaterFeature position={[34, 0, 26]} size={8} registryRef={registryRef} />
 
