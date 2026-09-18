@@ -1,3 +1,4 @@
+import BrandLogo from '../components/BrandLogo';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../api';
@@ -37,6 +38,7 @@ export default function VerifyEmailPage() {
     <div className="auth-shell">
       <div className="auth-card">
         <div className="auth-logo">
+          <BrandLogo size={42} />
           <span className="brand-mark">PackSomeWork</span>
         </div>
         <h1 className="auth-title">Email verification</h1>

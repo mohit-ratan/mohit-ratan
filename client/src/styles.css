@@ -1,16 +1,16 @@
 
   :root{
-    --bg:#FFFFFF;
+    --bg:#FFFAF6;
     --surface:#FFFFFF;
-    --surface-2:#F2F4F7;
-    --border:#E0E5EB;
-    --text:#20262D;
-    --text-muted:#626B75;
-    --text-faint:#94A0AB;
-    --accent:#1656C9;
-    --accent-deep:#0B2A5B;
-    --accent-hover:#1147A6;
-    --accent-soft:#E3ECFB;
+    --surface-2:#FFF3E9;
+    --border:#EEDFD4;
+    --text:#342A25;
+    --text-muted:#77665B;
+    --text-faint:#8E796C;
+    --accent:#C7470C;
+    --accent-deep:#7D2B0B;
+    --accent-hover:#A93808;
+    --accent-soft:#FFEBDB;
     --accent-contrast:#FFFFFF;
     --danger:#B5482B;
     --danger-soft:#F6E4DD;
@@ -78,7 +78,7 @@
     font-weight:600;
     font-size:22px;
     letter-spacing:-0.01em;
-    background:linear-gradient(90deg,var(--health),var(--wealth) 52%,var(--relationships));
+    background:linear-gradient(100deg,#A6380A,#DF611A);
     background-clip:text;-webkit-background-clip:text;
     color:transparent;-webkit-text-fill-color:transparent;
   }
@@ -1103,3 +1103,46 @@
 .post-goal-tasks li span{font-size:10px;color:#74816d;white-space:nowrap;}
 .post-goal-link{font-size:11px;color:#355a43;font-weight:600;text-decoration:none;}
 .post-goal-link:hover{text-decoration:underline;}
+
+/* Orange-and-white brand palette. Category colours retain their meaning. */
+body{background:radial-gradient(ellipse at 0 0,#ffddbe80,transparent 55%),radial-gradient(ellipse at 100% 80%,#ffe8d680,transparent 50%),var(--bg);background-attachment:fixed;}
+.site-header{background:#fffdf9ed;border-bottom-color:#f0dfd0;}
+.brand-icon{filter:drop-shadow(0 3px 5px #bc4a1420);}
+.brand-tag{color:#947463;}
+.auth-shell{background:radial-gradient(ellipse at 10% 10%,#ffdbbb,transparent 55%),linear-gradient(135deg,#fffaf6,#fff,#fff0e2);}
+.auth-card{border:1px solid #f1dfd1;box-shadow:0 18px 60px #a6481010;}
+.profile-hero{border-color:var(--border);}
+.profile-hero-banner{background:linear-gradient(115deg,#ffdab9,#fff0df 55%,#fffaf6);}
+.profile-hero-banner>span:first-child,.profile-kicker{color:#966449;}
+.profile-identity-copy .profile-name,.profile-metrics dd{color:#66381f;}
+.profile-house-link{background:#fff3e7;border-color:#f1d7c0;color:#873d15;}
+.profile-house-link:hover{background:#ffe8d3;border-color:#e5b896;}
+.profile-house-link small{color:#916e57;}
+.profile-editor{background:#fff8f1;border-color:var(--border);}
+.profile-edit-toggle{border-color:var(--border);color:#825335;}
+.profile-edit-toggle:hover{background:#fff3e7;}
+.achievement-house-page{background:radial-gradient(ellipse at 5% 0,#ffe4cb,transparent 55%),#fffaf6;color:var(--text);}
+.house-roof{background:#bf511e;}
+.house-roof span{color:#fff6ec;}
+.house-eyebrow{color:#946344;}
+.achievement-house-intro p,.house-gallery>p{color:#8b7161;}
+.house-enter-btn{border-color:var(--border);color:#a5481b;}
+.house-enter-btn:hover{background:#fff0e2;}
+.house-empty{border-color:#e8cdb5;}
+.goal-overview{border-color:var(--border);}
+.composer-backdrop{background:#30201799;}
+.composer-workspace-header,.composer-workspace .modal-detail-footer{background:#fffaf5;border-color:var(--border);}
+.composer-workspace-header h2,.composer-panel-heading h3{color:#613c25;}
+.composer-eyebrow,.composer-panel-heading p,.composer-share-note{color:#8e6e58;}
+.composer-workspace .media-and-look-row{background:#fff0e2;}
+.composer-workspace .modal-detail-pane{border-color:var(--border);}
+.composer-workspace .create-dropzone{background:#fffaf5;border-color:#e1ba9a;color:#946444;}
+.composer-workspace .goal-setup,.post-goal-panel{background:#fff8f0;border-color:var(--border);}
+.composer-workspace .goal-setup>label,.composer-field-label{color:#825538;}
+.composer-workspace .vibe-choice{border-color:#efd7c3;}
+.composer-workspace .vibe-choice.chosen{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 2px white,0 0 0 3px #e8854b;}
+.composer-workspace .modal-detail-footer .primary{background:var(--accent);border-color:var(--accent);}
+.composer-workspace .modal-detail-footer .primary:hover{background:var(--accent-hover);}
+.composer-workspace button:focus-visible,.composer-workspace input:focus-visible,.composer-workspace select:focus-visible,.profile-hero button:focus-visible{outline-color:var(--accent);}
+.goal-task-photo{background:#fff5ea;border-color:#ebd3be;color:#994917;}
+.post-goal-link{color:var(--accent);}

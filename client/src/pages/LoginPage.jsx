@@ -1,3 +1,4 @@
+import BrandLogo from '../components/BrandLogo';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api';
@@ -73,6 +74,7 @@ export default function LoginPage() {
     <div className="auth-shell">
       <div className="auth-card">
         <div className="auth-logo">
+          <BrandLogo size={42} />
           <span className="brand-mark">PackSomeWork</span>
         </div>
         <h1 className="auth-title">Welcome back</h1>
