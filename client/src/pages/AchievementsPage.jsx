@@ -7,6 +7,7 @@ import { useToast } from '../context/ToastContext';
 import HouseInterior from '../three/HouseInterior';
 import Crosshair from '../three/Crosshair';
 import AchievementDetailModal from '../components/AchievementDetailModal';
+import GoalOverview from '../components/GoalOverview';
 import { CATEGORIES } from '../lib/format';
 
 // Defined outside the component so its identity never changes across
@@ -130,20 +131,9 @@ export default function AchievementsPage() {
                   </button>
                 )) : <div className="house-empty"><span aria-hidden="true">{category.emoji}</span><h3>Your first award awaits.</h3><p>{isMe ? 'Complete all tasks in a goal to earn an achievement and showcase its award here.' : 'No awards earned on this floor yet.'}</p>{isMe && <button type="button" className="house-enter-btn" onClick={() => navigate('/')}>Go to feed →</button>}</div>}
               </div>
-              {isMe && goals.some((a) => a.category === category.id) && (
-                <div className="house-goals">
-                  <h3>Goals in progress</h3>
-                  <p>Finish every task to earn your award.</p>
-                  {goals.filter((a) => a.category === category.id).map((a) => (
-                    <button type="button" className="house-achievement" key={a.tag} onClick={() => setActiveAchievement(a)}>
-                      <span><strong>#{a.tag}</strong><small>{a.goal.subtasks.filter((t) => t.done).length} of {a.goal.subtasks.length} tasks complete</small></span>
-                      <span>View tasks →</span>
-                    </button>
-                  ))}
-                </div>
-              )}
             </section>
           </div>
+          {isMe && <GoalOverview goals={[...goals, ...achievements]} onOpen={setActiveAchievement} />}
         </main>
       ) : <>
       <Canvas camera={CAMERA_CONFIG}>

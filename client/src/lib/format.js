@@ -48,14 +48,19 @@ export function timeAgo(ts) {
   return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
-export function goalStatusLabel(goal) {
+export function goalStatusLabel(goal, now = new Date()) {
   if (!goal) return null;
   if (goal.completed) return { text: '✅ Completed', tone: 'done' };
   if (!goal.targetDate) return null;
-  const days = Math.ceil((new Date(goal.targetDate) - new Date()) / 86400000);
-  if (days < 0) return { text: `${-days}d overdue`, tone: 'overdue' };
+  // Compare local calendar dates, not elapsed hours (including DST changes).
+  const [year, month, day] = goal.targetDate.split('-').map(Number);
+  const deadline = Date.UTC(year, month - 1, day);
+  if (!Number.isFinite(deadline)) return null;
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const days = Math.round((deadline - today) / 86400000);
+  if (days < 0) return { text: `${-days} ${days === -1 ? 'day' : 'days'} overdue`, tone: 'overdue' };
   if (days === 0) return { text: 'Due today', tone: 'soon' };
-  return { text: `${days}d left`, tone: 'active' };
+  return { text: `${days} ${days === 1 ? 'day' : 'days'} left`, tone: 'active' };
 }
 
 // Aggregate goal status across a set of achievements — used on the house
