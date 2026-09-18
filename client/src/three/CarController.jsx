@@ -3,6 +3,9 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { CAR_MODEL_URL } from './assets';
+import { resolveCollisions } from './useInteraction';
+
+const CAR_RADIUS = 0.75;
 
 // Simple arcade car model — no physics engine: acceleration/friction on
 // speed, steering rate scaled by current speed (so it can't spin in place),
@@ -26,7 +29,7 @@ const KEY_MAP = {
   KeyD: 'right', ArrowRight: 'right',
 };
 
-export default function CarController({ bounds, carPosRef }) {
+export default function CarController({ bounds, carPosRef, registryRef }) {
   const { scene } = useGLTF(CAR_MODEL_URL);
   const { camera } = useThree();
   const groupRef = useRef(null);
@@ -73,6 +76,11 @@ export default function CarController({ bounds, carPosRef }) {
 
     let nx = group.position.x + Math.sin(heading.current) * speed.current * delta;
     let nz = group.position.z + Math.cos(heading.current) * speed.current * delta;
+    if (registryRef) {
+      const corrected = resolveCollisions(nx, nz, registryRef, CAR_RADIUS);
+      nx = corrected.x;
+      nz = corrected.z;
+    }
     if (bounds) {
       nx = THREE.MathUtils.clamp(nx, bounds.minX, bounds.maxX);
       nz = THREE.MathUtils.clamp(nz, bounds.minZ, bounds.maxZ);
