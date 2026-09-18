@@ -14,3 +14,11 @@ export const FURNITURE_URLS = {
   sofa: `${KENNEY_BASE}/furniture/loungeSofa.glb`,
   sideTable: `${KENNEY_BASE}/furniture/sideTable.glb`,
 };
+
+export const TREE_URLS = [
+  `${KENNEY_BASE}/nature/tree_pineTallA.glb`,
+  `${KENNEY_BASE}/nature/tree_pineTallB.glb`,
+  `${KENNEY_BASE}/nature/tree_oak.glb`,
+  `${KENNEY_BASE}/nature/tree_default.glb`,
+  `${KENNEY_BASE}/nature/tree_fat.glb`,
+];
