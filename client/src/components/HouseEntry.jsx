@@ -1,5 +1,5 @@
 import { mediaUrl } from '../api';
-import { goalStats } from '../lib/format';
+import { CATEGORIES, goalStats } from '../lib/format';
 import { HouseFacade } from '../lib/roomArt';
 
 // The first thing you see on the Achievements Room page — a house exterior
@@ -40,6 +40,21 @@ export default function HouseEntry({ displayName, achievements, onEnter }) {
         <div className="house-door-goal-stats">
           {stats.trophies > 0 && <span className="house-door-stat house-door-stat-done">🏆 {stats.trophies} earned</span>}
           {stats.active > 0 && <span className="house-door-stat house-door-stat-active">🎯 {stats.active} in progress</span>}
+        </div>
+      )}
+      {stats.total > 0 && (
+        <div className="house-door-popover">
+          <ul className="house-door-popover-list">
+            {CATEGORIES.map((c) => {
+              const catStats = goalStats(achievements.filter((a) => a.category === c.id));
+              if (catStats.total === 0) return null;
+              return (
+                <li key={c.id}>
+                  {c.emoji} {c.label}: {catStats.total} · 🏆 {catStats.trophies} · 🎯 {catStats.active}
+                </li>
+              );
+            })}
+          </ul>
         </div>
       )}
     </button>

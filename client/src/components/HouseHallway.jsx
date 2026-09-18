@@ -2,6 +2,15 @@ import { Link } from 'react-router-dom';
 import { CATEGORIES, goalStats } from '../lib/format';
 import { DoorArt } from '../lib/roomArt';
 
+function achievementStatusLine(a) {
+  if (a.goal?.completed) return { icon: '🏆', text: `#${a.tag}`, done: true };
+  if (a.goal) {
+    const done = a.goal.subtasks.filter((t) => t.done).length;
+    return { icon: '🎯', text: `#${a.tag} (${done}/${a.goal.subtasks.length})`, done: false };
+  }
+  return { icon: '•', text: `#${a.tag}`, done: false };
+}
+
 // The 3-door hub reached after entering the house — replaces the old flat
 // 3-zone-strip overview. Each door leads to that category's full-screen
 // room (RoomPage, at /profile/:id/room/:category).
@@ -12,8 +21,13 @@ export default function HouseHallway({ achievements, authorId }) {
         const inCat = achievements.filter((a) => a.category === c.id);
         const stats = goalStats(inCat);
         return (
-          <Link key={c.id} to={`/profile/${authorId}/room/${c.id}`} className="house-door">
-            <div className="house-door-art" style={{ '--frame-glow': `var(--${c.id})` }}>
+          <Link
+            key={c.id}
+            to={`/profile/${authorId}/room/${c.id}`}
+            className="house-door"
+            style={{ '--frame-glow': `var(--${c.id})` }}
+          >
+            <div className="house-door-art">
               <DoorArt color={`var(--${c.id})`} />
             </div>
             <div className="house-door-label">{c.emoji} {c.label}</div>
@@ -24,6 +38,20 @@ export default function HouseHallway({ achievements, authorId }) {
               <div className="house-door-goal-stats">
                 {stats.trophies > 0 && <span className="house-door-stat house-door-stat-done">🏆 {stats.trophies}</span>}
                 {stats.active > 0 && <span className="house-door-stat house-door-stat-active">🎯 {stats.active}</span>}
+              </div>
+            )}
+            {inCat.length > 0 && (
+              <div className="house-door-popover">
+                <ul className="house-door-popover-list">
+                  {inCat.map((a) => {
+                    const line = achievementStatusLine(a);
+                    return (
+                      <li key={a.tag} className={line.done ? 'done' : ''}>
+                        {line.icon} {line.text}
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
             )}
           </Link>
