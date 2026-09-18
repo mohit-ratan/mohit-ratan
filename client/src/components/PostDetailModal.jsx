@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import useDialog from '../hooks/useDialog';
+import { useEffect, useRef, useState } from 'react';
 import api, { mediaUrl } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -12,9 +13,16 @@ import { HeartIcon, SparkleIcon } from '../lib/icons';
 export default function PostDetailModal({ post, onClose, onChanged, onDeleted, onOpenAuthor, onOpenTag }) {
   const { user } = useAuth();
   const showToast = useToast();
+  const dialogRef = useDialog(onClose);
   const isMe = user?.id === post.authorId;
   const [liked, setLiked] = useState(!!post.likedByMe);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
+  const liking = useRef(false);
+  const commenting = useRef(false);
+  const [likePending, setLikePending] = useState(false);
+  const [commentPending, setCommentPending] = useState(false);
+  const [commentError, setCommentError] = useState(null);
+  const [commentRetry, setCommentRetry] = useState(0);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
   const [loadingComments, setLoadingComments] = useState(true);
@@ -23,13 +31,18 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
 
   useEffect(() => {
     let cancelled = false;
+    setLoadingComments(true);
+    setCommentError(null);
     api.get(`/api/posts/${post.id}/comments`).then(({ data }) => {
       if (!cancelled) setComments(data.comments);
-    }).catch(() => {}).finally(() => { if (!cancelled) setLoadingComments(false); });
+    }).catch((error) => { if (!cancelled) setCommentError(error.message); }).finally(() => { if (!cancelled) setLoadingComments(false); });
     return () => { cancelled = true; };
-  }, [post.id]);
+  }, [post.id, commentRetry]);
 
   async function toggleLike() {
+    if (liking.current) return;
+    liking.current = true;
+    setLikePending(true);
     const wasLiked = liked;
     setLiked(!wasLiked);
     setLikeCount((c) => c + (wasLiked ? -1 : 1));
@@ -40,12 +53,14 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
       setLiked(wasLiked);
       setLikeCount((c) => c + (wasLiked ? 1 : -1));
       showToast(err.message, true);
-    }
+    } finally { liking.current = false; setLikePending(false); }
   }
 
   async function submitComment() {
     const text = commentText.trim();
-    if (!text) return;
+    if (!text || commenting.current) return;
+    commenting.current = true;
+    setCommentPending(true);
     try {
       const { data } = await api.post(`/api/posts/${post.id}/comments`, { text });
       setComments((cs) => [...cs, { id: data.id, authorId: user.id, authorName: user.displayName, text, createdAt: Date.now() }]);
@@ -53,7 +68,7 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
       onChanged?.();
     } catch (err) {
       showToast(err.message, true);
-    }
+    } finally { commenting.current = false; setCommentPending(false); }
   }
 
   async function deletePost() {
@@ -78,7 +93,7 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
 
   return (
     <div className="modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal-box">
+      <div ref={dialogRef} tabIndex={-1} className="modal-box" role="dialog" aria-modal="true" aria-label="Post details">
         <div className="modal-media-pane">
           {isVideo ? (
             <>
@@ -88,11 +103,11 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
           ) : isImage ? (
             <>
               {post.aiStyled ? (
-                <span className="styled-badge"><SparkleIcon />AI look — {truncate(post.vibe || '', 24)}</span>
+                <span className="styled-badge"><SparkleIcon />Filter — {truncate(post.vibe || '', 24)}</span>
               ) : post.vibe ? (
                 <span className="vibe-chip">✨ {truncate(post.vibe, 34)}</span>
               ) : null}
-              <img src={mediaUrl(post.mediaUrl)} alt="Post" />
+              <img src={mediaUrl(post.mediaUrl)} alt={post.tag ? `Post for #${post.tag}` : 'Post'} style={!post.aiStyled && filter ? { filter } : undefined} />
             </>
           ) : (
             <div className={`text-card ${cat.id}`}><span className="reveal-text">{cat.label}</span></div>
@@ -129,7 +144,7 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
               </div>
             )}
             {post.tag && <PostGoalPanel key={`${post.authorId}:${post.tag}`} post={post} />}
-            {loadingComments ? (
+            {commentError ? <div className="inline-error" role="alert">Comments couldn’t load. <button type="button" onClick={() => setCommentRetry((n) => n + 1)}>Retry</button></div> : loadingComments ? (
               <div className="about-text">Loading comments…</div>
             ) : comments.length ? (
               <div className="modal-comments">
@@ -149,7 +164,7 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
           </div>
           <div className="modal-detail-footer">
             <div className="footer-top-row">
-              <button className={`action-btn like-btn${liked ? ' liked' : ''}`} onClick={toggleLike}>
+              <button className={`action-btn like-btn${liked ? ' liked' : ''}`} disabled={likePending} onClick={toggleLike}>
                 <HeartIcon filled={liked} />{likeCount > 0 ? likeCount : 'Like'}
               </button>
               <span className="footer-time">{timeAgo(post.createdAt)}</span>
@@ -158,12 +173,14 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
               <input
                 type="text"
                 className="comment-input"
+                aria-label="Add a comment"
+                disabled={commentPending}
                 placeholder="Add a comment…"
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') submitComment(); }}
               />
-              <button className="comment-send-btn" onClick={submitComment}>Post</button>
+              <button className="comment-send-btn" disabled={commentPending || !commentText.trim()} onClick={submitComment}>{commentPending ? 'Sending…' : 'Post'}</button>
             </div>
           </div>
         </div>

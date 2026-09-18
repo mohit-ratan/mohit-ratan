@@ -35,7 +35,7 @@ export default function StoriesBar({ stories, onOpenAuthor, onAddStory }) {
   return (
     <div className="stories-bar">
       <div className="story-item">
-        <div
+        <button type="button" aria-label={mine ? "View your status" : "Add a status"}
           className={`story-ring ${mine ? 'has-story' : 'no-story'}`}
           onPointerEnter={() => preloadFirst(mine)}
           onTouchStart={() => preloadFirst(mine)}
@@ -44,19 +44,19 @@ export default function StoriesBar({ stories, onOpenAuthor, onAddStory }) {
           <div className="story-ring-inner">
             <Avatar id={user?.id} name={user?.displayName || 'you'} photoUrl={user?.photoUrl} size={54} />
           </div>
-        </div>
+        </button>
         <button type="button" className="story-plus" aria-label="Add to your story" onClick={(e) => { e.stopPropagation(); onAddStory(); }}>+</button>
         <span className="story-label">Your story</span>
       </div>
       {others.map((g) => (
-        <div key={g.authorId} className="story-item" onPointerEnter={() => preloadFirst(g)} onTouchStart={() => preloadFirst(g)} onClick={() => onOpenAuthor(g.authorId)}>
+        <button type="button" aria-label={`View ${g.authorName}’s status`} key={g.authorId} className="story-item" onPointerEnter={() => preloadFirst(g)} onTouchStart={() => preloadFirst(g)} onClick={() => onOpenAuthor(g.authorId)}>
           <div className={`story-ring ${g.hasUnseen ? 'unseen' : 'seen'}`}>
             <div className="story-ring-inner">
               <Avatar id={g.authorId} name={g.authorName} photoUrl={g.authorPhotoUrl} size={54} />
             </div>
           </div>
           <span className="story-label">{truncate(g.authorName, 10)}</span>
-        </div>
+        </button>
       ))}
     </div>
   );

@@ -1,3 +1,4 @@
+import useDialog from '../hooks/useDialog';
 import { useEffect, useRef, useState } from 'react';
 import api, { mediaUrl } from '../api';
 import { timeAgo, truncate } from '../lib/format';
@@ -9,6 +10,7 @@ const STORY_MS = 5000;
 // `groups` is the same author-grouped story list StoriesBar builds;
 // `authorId`/`index` select which story is currently showing.
 export default function StoryViewerModal({ groups, authorId, index, onAdvance, onClose }) {
+  const dialogRef = useDialog(onClose);
   const [loaded, setLoaded] = useState(null);
   const [failed, setFailed] = useState(null);
   const [retry, setRetry] = useState(0);
@@ -48,7 +50,7 @@ export default function StoryViewerModal({ groups, authorId, index, onAdvance, o
 
   return (
     <div className="modal-backdrop story-viewer-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="story-viewer-box">
+      <div ref={dialogRef} tabIndex={-1} className="story-viewer-box" role="dialog" aria-modal="true" aria-label="Status viewer">
         <div className="story-progress-row">
           {group.stories.map((s, i) => (
             <div key={`${s.id}:${retry}`} className={`story-progress-seg ${i < index ? 'done' : i === index && ready && !error ? 'active' : ''}`}>
@@ -66,8 +68,8 @@ export default function StoryViewerModal({ groups, authorId, index, onAdvance, o
           <button className="story-viewer-close" type="button" aria-label="Close" onClick={onClose}>✕</button>
         </div>
         <div className="story-viewer-media">
-          <div className="story-tap-zone prev" onClick={() => onAdvance(-1)} />
-          <div className="story-tap-zone next" onClick={() => onAdvance(1)} />
+          <button type="button" className="story-tap-zone prev" aria-label="Previous status" onClick={() => onAdvance(-1)} />
+          <button type="button" className="story-tap-zone next" aria-label="Next status" onClick={() => onAdvance(1)} />
           {isVideo ? (
             <video
               key={loadKey}

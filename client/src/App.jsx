@@ -4,6 +4,7 @@ import { useAuth } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
+import MobileNav from './components/MobileNav';
 import HomePage from './pages/HomePage';
 import ProfilePage from './pages/ProfilePage';
 
@@ -30,6 +31,7 @@ function RequireAuth({ children }) {
 
 export default function App() {
   return (
+    <>
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
@@ -62,5 +64,7 @@ export default function App() {
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    <MobileNav />
+    </>
   );
 }

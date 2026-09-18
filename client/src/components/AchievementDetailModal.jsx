@@ -1,3 +1,4 @@
+import useDialog from '../hooks/useDialog';
 import { useState } from 'react';
 import api from '../api';
 import { useToast } from '../context/ToastContext';
@@ -12,6 +13,7 @@ const MAX_SUBTASKS = 15;
 // it directly — this is a gallery of N posts, not one post's detail.
 export default function AchievementDetailModal({ achievement, isMe, onChanged, onClose, onOpenAuthor, onOpenTag }) {
   const showToast = useToast();
+  const dialogRef = useDialog(onClose);
   const [zoomedPost, setZoomedPost] = useState(null);
   const [goal, setGoal] = useState(achievement.goal);
   const [editingGoal, setEditingGoal] = useState(false);
@@ -69,7 +71,7 @@ export default function AchievementDetailModal({ achievement, isMe, onChanged, o
 
   return (
     <div className="modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal-box modal-box-gallery">
+      <div ref={dialogRef} tabIndex={-1} className="modal-box modal-box-gallery" role="dialog" aria-modal="true" aria-label="Goal details">
         <div className="modal-detail-pane">
           <div className="modal-detail-head">
             <div style={{ flex: 1, minWidth: 0 }}>

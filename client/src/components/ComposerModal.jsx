@@ -1,3 +1,4 @@
+import useDialog from '../hooks/useDialog';
 import { useEffect, useRef, useState } from 'react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -42,6 +43,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
   const [taskIndex, setTaskIndex] = useState(initialGoalTask ? String(initialGoalTask.index) : '');
   const [generating, setGenerating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const dialogRef = useDialog(onClose, submitting);
   const [existingTags, setExistingTags] = useState(null); // Set, or null while loading
   const [goalTargetDate, setGoalTargetDate] = useState('');
   const [goalSubtasks, setGoalSubtasks] = useState([]);
@@ -58,9 +60,9 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
     let cancelled = false;
     api.get('/api/posts/achievements', { params: { authorId: user.id } })
       .then(({ data }) => { if (!cancelled) { setExistingTags(new Set(data.tags)); setAvailableGoals([...data.goals, ...data.achievements]); } })
-      .catch(() => { if (!cancelled) setExistingTags(new Set()); });
+      .catch(() => { if (!cancelled) showToast('Could not load your goals. Close and reopen the editor to try again.', true); });
     return () => { cancelled = true; };
-  }, [isPost, user]);
+  }, [isPost, user, showToast]);
 
   function addSubtask() {
     if (goalSubtasks.length >= MAX_SUBTASKS) return;
@@ -210,11 +212,11 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
   }
 
   return (
-    <div className="modal-backdrop composer-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal-box composer-workspace" role="dialog" aria-modal="true" aria-labelledby="composer-title">
+    <div className="modal-backdrop composer-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget && !submitting) onClose(); }}>
+      <div ref={dialogRef} tabIndex={-1} className="modal-box composer-workspace" role="dialog" aria-modal="true" aria-labelledby="composer-title">
         <header className="composer-workspace-header">
           <div><span className="composer-eyebrow">PACKSOMEWORK · YOUR DAILY PROGRESS</span><h2 id="composer-title">{title}</h2></div>
-          <button className="composer-close" type="button" aria-label="Close editor" onClick={onClose}>✕</button>
+          <button className="composer-close" type="button" aria-label="Close editor" disabled={submitting} onClick={onClose}>✕</button>
         </header>
         <div className="media-and-look-row">
           {media ? (
@@ -225,10 +227,10 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                 <img src={media.previewUrl} alt="Selected media" />
               )}
               {generating && <div className="generate-bar"><span className="generate-status" role="status">Applying filter…</span></div>}
-              <button className="remove-media" type="button" aria-label="Remove photo or video" onClick={removeMedia}>✕</button>
+              <button className="remove-media" type="button" aria-label="Remove photo or video" disabled={submitting} onClick={removeMedia}>✕</button>
             </div>
           ) : (
-            <label className="modal-media-pane create-dropzone">
+            <label className="modal-media-pane create-dropzone" role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); fileInputRef.current?.click(); } }}>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -266,7 +268,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
 
         <div className="modal-detail-pane">
           <div className="composer-panel-heading"><span className="composer-eyebrow">{isPost ? 'MAKE THIS MOMENT COUNT' : 'SHARE A MOMENT'}</span><h3>{isPost ? 'Your post & goals' : 'Your story'}</h3><p>{isPost ? 'Choose a category, connect a task, and track your progress.' : 'Add a tag and share a little of your day.'}</p></div>
-          <div className="modal-detail-scroll">
+          <fieldset disabled={submitting} className="modal-detail-scroll composer-fields">
             {isPost && (
               <div className="cat-choice-row">
                 {CATEGORIES.map((c) => (
@@ -368,14 +370,14 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                 )}
               </div>
             )}
-          </div>
+          </fieldset>
           <div className="modal-detail-footer">
             <span className="composer-share-note">{selectedTask ? `This photo adds 1 day toward “${selectedTask.text}”.` : 'A little progress, worth sharing.'}</span>
             <button
               className="pill-btn primary"
               type="button"
               style={{ width: '100%', justifyContent: 'center' }}
-              disabled={submitting || generating}
+              disabled={submitting || generating || !media || (isPost && existingTags === null)}
               onClick={handleSubmit}
             >
               {submitting ? uploadPercent === null ? 'Preparing media…' : uploadPercent < 100 ? `Uploading ${uploadPercent}%…` : 'Saving…' : selectedTask ? 'Share photo & update progress →' : isPost ? 'Share post →' : 'Share to story →'}

@@ -1,21 +1,15 @@
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Canvas } from '@react-three/fiber';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import HouseInterior from '../three/HouseInterior';
+const AchievementRoom = lazy(() => import('../three/AchievementRoom')); 
+import RoomBoundary from '../components/RoomBoundary';
 import Crosshair from '../three/Crosshair';
 import AchievementDetailModal from '../components/AchievementDetailModal';
 import GoalOverview from '../components/GoalOverview';
 import ComposerModal from '../components/ComposerModal';
 import { CATEGORIES } from '../lib/format';
-
-// Defined outside the component so its identity never changes across
-// re-renders — @react-three/fiber re-applies the `camera` prop whenever
-// its reference changes, which would otherwise fight with WalkController
-// for control of the camera on every re-render.
-const CAMERA_CONFIG = { position: [0, 1.6, 2.5], fov: 62 };
 
 // One house, three fixed floors (Health/Wealth/Relationships) — walk up to
 // an achievement sticker on the back wall and press E to open its full
@@ -138,16 +132,11 @@ export default function AchievementsPage() {
           {isMe && <GoalOverview goals={[...goals, ...achievements]} onOpen={setActiveAchievement} onUploadTask={setPhotoTask} />}
         </main>
       ) : <>
-      <Canvas camera={CAMERA_CONFIG}>
-        <Suspense fallback={null}>
-          {!activeAchievement && <HouseInterior
-            achievements={achievements}
-            floorIndex={floorIndex}
-            onOpen={setActiveAchievement}
-            onFocusChange={setFocusedLabel}
-          />}
-        </Suspense>
-      </Canvas>
+      <RoomBoundary onBack={() => setView('house')}>
+      <Suspense fallback={<div className="three-loading-shell" role="status">Opening your room…</div>}>
+        <AchievementRoom achievements={achievements} floorIndex={floorIndex} onOpen={setActiveAchievement} onFocusChange={setFocusedLabel} paused={!!activeAchievement} />
+      </Suspense>
+      </RoomBoundary>
       <Crosshair focusedLabel={focusedLabel} />
       <div className="three-floor-selector">
         <button type="button" className="three-floor-btn" onClick={() => setView('house')}>← Whole house</button>

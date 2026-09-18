@@ -5,6 +5,7 @@ import Avatar from './Avatar';
 import api from '../api';
 import { CATEGORIES } from '../lib/format';
 import { SearchIcon, BellIcon } from '../lib/icons';
+import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 
 export default function Header({
@@ -16,6 +17,9 @@ export default function Header({
   streak = 0,
 }) {
   const navigate = useNavigate();
+  const showToast = useToast();
+  const [localSearch, setLocalSearch] = useState('');
+  const effectiveSearch = onSearchChange ? searchQuery : localSearch;
   const { user, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -63,9 +67,7 @@ export default function Header({
     try {
       await api.patch(`/api/follows/${id}`, { action });
       setRequests((current) => current.filter((r) => r.id !== id));
-    } catch {
-      // Leaving the request in the list lets the user just try again.
-    }
+    } catch { showToast('Could not update this follow request. Please try again.', true); }
   }
 
   useEffect(() => {
@@ -78,25 +80,25 @@ export default function Header({
   }, [peopleOpen]);
 
   useEffect(() => {
-    const q = searchQuery.trim();
+    const q = effectiveSearch.trim();
+    let cancelled = false;
     if (!q) { setPeople([]); setPeopleLoading(false); return; }
     setPeopleLoading(true);
     const timer = setTimeout(() => {
       api.get('/api/users/search', { params: { q } })
-        .then(({ data }) => setPeople(data.users))
-        .catch(() => setPeople([]))
-        .finally(() => setPeopleLoading(false));
+        .then(({ data }) => { if (!cancelled) setPeople(data.users); })
+        .catch(() => { if (!cancelled) setPeople([]); })
+        .finally(() => { if (!cancelled) setPeopleLoading(false); });
     }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [effectiveSearch]);
 
   async function sendFollowRequest(id) {
     try {
       const { data } = await api.post(`/api/follows/${id}`);
       setPeople((current) => current.map((p) => (p.id === id ? { ...p, followStatus: data.status } : p)));
     } catch {
-      // Surfacing this inline would need a toast wired into Header; a silent
-      // no-op leaves the button in its prior state, which the user can retry.
+      showToast('Could not send your follow request. Please try again.', true);
     }
   }
 
@@ -119,30 +121,31 @@ export default function Header({
   return (
     <header className="site-header">
       <div className="wrap header-inner">
-        <div className="brand" title="Home" onClick={() => navigate('/')}>
+        <button type="button" className="brand" title="Home" onClick={() => navigate('/')}>
           <BrandLogo />
           <span className="brand-mark">PackSomeWork</span>
-        </div>
+        </button>
         <span className="brand-tag">health · wealth · relationships</span>
-        <div className={`search-box${searchQuery ? ' has-value' : ''}`} ref={searchBoxRef}>
+        <div className={`search-box${effectiveSearch ? ' has-value' : ''}`} ref={searchBoxRef}>
           <SearchIcon />
           <input
             type="text"
+            aria-label="Search posts and people"
             placeholder="Search posts, people, #tags"
             autoComplete="off"
-            value={searchQuery}
-            onChange={(e) => { onSearchChange?.(e.target.value); setPeopleOpen(true); }}
+            value={effectiveSearch}
+            onChange={(e) => { (onSearchChange || setLocalSearch)(e.target.value); setPeopleOpen(true); }}
             onFocus={() => setPeopleOpen(true)}
           />
           <button
             className="clear-btn"
             title="Clear search"
             aria-label="Clear search"
-            onClick={() => onSearchChange?.('')}
+            onClick={() => (onSearchChange || setLocalSearch)('')}
           >
             ✕
           </button>
-          {peopleOpen && searchQuery.trim() && (
+          {peopleOpen && effectiveSearch.trim() && (
             <div className="people-search-dropdown">
               {peopleLoading ? (
                 <div className="people-search-empty">Searching…</div>
@@ -165,7 +168,7 @@ export default function Header({
                   </div>
                 ))
               ) : (
-                <div className="people-search-empty">No people found for "{searchQuery.trim()}"</div>
+                <div className="people-search-empty">No people found for "{effectiveSearch.trim()}"</div>
               )}
             </div>
           )}

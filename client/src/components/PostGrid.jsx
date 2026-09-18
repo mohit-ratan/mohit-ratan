@@ -17,21 +17,21 @@ function GridTile({ post, onOpen }) {
   const captionSource = post.mediaUrl ? (postWord(post) || post.vibe) : '';
 
   return (
-    <div className="grid-tile" onClick={() => onOpen(post)}>
+    <button type="button" aria-label={`Open ${post.authorName || 'user'}’s ${post.tag ? `#${post.tag}` : cat.label} post`} className="grid-tile" onClick={() => onOpen(post)}>
       <span className="tile-cat-dot" style={{ background: `var(--${cat.id})` }} title={cat.label} />
       {isVideo ? (
         <>
-          <video src={mediaUrl(post.mediaUrl)} style={filter ? { filter } : undefined} muted loop autoPlay playsInline preload="metadata" />
+          <video src={mediaUrl(post.mediaUrl)} style={filter ? { filter } : undefined} muted playsInline preload="metadata" />
           <span className="tile-badge"><VideoIcon /></span>
         </>
       ) : isImage ? (
-        <img src={mediaUrl(post.mediaUrl)} alt="" loading="lazy" />
+        <img src={mediaUrl(post.mediaUrl)} alt="" loading="lazy" decoding="async" style={!post.aiStyled && filter ? { filter } : undefined} />
       ) : (
         <div className={`text-card ${cat.id}`}>
           <span className="reveal-text">{truncate(postWord(post) || cat.label, 90)}</span>
         </div>
       )}
-      {badgeHtml && <span className="styled-badge"><SparkleIcon />AI look</span>}
+      {badgeHtml && <span className="styled-badge"><SparkleIcon />Filtered</span>}
       {vibeHtml && <span className="vibe-chip">✨ {truncate(post.vibe, 26)}</span>}
       {captionSource && (
         <div className="tile-caption"><span className="reveal-text">{truncate(captionSource, 54)}</span></div>
@@ -40,7 +40,7 @@ function GridTile({ post, onOpen }) {
         <span><HeartIcon filled />{post.likeCount || 0}</span>
         <span><CommentIcon />{post.commentCount || 0}</span>
       </div>
-    </div>
+    </button>
   );
 }
 

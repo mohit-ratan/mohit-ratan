@@ -26,6 +26,7 @@ export default function ProfilePage() {
   const [posts, setPosts] = useState([]);
   const [trophies, setTrophies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [viewPost, setViewPost] = useState(null);
   const [followStatus, setFollowStatus] = useState('none');
   const [followLoading, setFollowLoading] = useState(false);
@@ -41,6 +42,7 @@ export default function ProfilePage() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const profileRes = await api.get(`/api/profile/${authorId}`);
       setProfile(profileRes.data.user);
@@ -63,6 +65,7 @@ export default function ProfilePage() {
         setTrophies([]);
       }
     } catch (err) {
+      setLoadError(err.message);
       showToast(err.message, true);
     } finally {
       setLoading(false);
@@ -151,6 +154,8 @@ export default function ProfilePage() {
       showToast(err.message, true);
     }
   }
+
+  if (loadError && !loading) return <><Header counts={{}} /><div className="wrap card empty-state" role="alert"><h2>Couldn’t load this profile</h2><p>{loadError}</p><button type="button" className="house-enter-btn" onClick={load}>Try again</button></div></>;
 
   if (loading || !profile) {
     return (

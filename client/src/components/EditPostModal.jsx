@@ -1,3 +1,4 @@
+import useDialog from '../hooks/useDialog';
 import { useEffect, useState } from 'react';
 import api, { mediaUrl } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -23,6 +24,7 @@ export default function EditPostModal({ post, onClose, onSaved }) {
   const [tagRaw, setTagRaw] = useState(post.tag || '');
   const [visibility, setVisibility] = useState(post.visibility === 'public' ? 'public' : 'friends');
   const [submitting, setSubmitting] = useState(false);
+  const dialogRef = useDialog(onClose, submitting);
   const [existingTags, setExistingTags] = useState(null);
   const [goalTargetDate, setGoalTargetDate] = useState('');
   const [goalSubtasks, setGoalSubtasks] = useState([]);
@@ -86,7 +88,7 @@ export default function EditPostModal({ post, onClose, onSaved }) {
 
   return (
     <div className="modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal-box modal-box-stacked">
+      <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Edit post" className="modal-box modal-box-stacked">
         <div className="media-and-look-row">
           <div className="modal-media-pane">
             {isVideo ? (

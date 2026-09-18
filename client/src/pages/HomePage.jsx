@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -31,21 +31,18 @@ export default function HomePage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [category, setCategory] = useState(searchParams.get('category') || 'all');
-  const [tagFilter, setTagFilter] = useState(searchParams.get('tag') || null);
+  const category = ['health', 'wealth', 'relationships'].includes(searchParams.get('category')) ? searchParams.get('category') : 'all';
+  const tagFilter = searchParams.get('tag') || null;
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Pick up ?category=/?tag= set by links from other pages (e.g. a profile's
-  // "back to feed" or a tag chip on someone else's post).
-  useEffect(() => {
-    const urlCategory = searchParams.get('category');
-    const urlTag = searchParams.get('tag');
-    if (urlCategory && urlCategory !== category) setCategory(urlCategory);
-    if (urlTag && urlTag !== tagFilter) setTagFilter(urlTag);
-    if (urlCategory || urlTag) setSearchParams({}, { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
+  function setCategory(value) {
+    setSearchParams((params) => { if (value === 'all') params.delete('category'); else params.set('category', value); return params; }, { replace: true });
+  }
+  function setTagFilter(value) {
+    setSearchParams((params) => { if (value) params.set('tag', value); else params.delete('tag'); return params; }, { replace: true });
+  }
+  const feedRequest = useRef(0);
+  const [feedError, setFeedError] = useState(null);
+  const [storyError, setStoryError] = useState(false);
   const [posts, setPosts] = useState([]);
   const [stories, setStories] = useState([]);
   const [counts, setCounts] = useState({});
@@ -57,16 +54,28 @@ export default function HomePage() {
   const [modal, setModal] = useState(null);
 
   const loadPosts = useCallback(async () => {
-    const params = {};
-    if (category !== 'all') params.category = category;
-    if (tagFilter) params.tag = tagFilter;
-    const { data } = await api.get('/api/posts', { params });
-    setPosts(data.posts);
+    const request = ++feedRequest.current;
+    setLoading(true);
+    setFeedError(null);
+    try {
+      const params = {};
+      if (category !== 'all') params.category = category;
+      if (tagFilter) params.tag = tagFilter;
+      const { data } = await api.get('/api/posts', { params });
+      if (request === feedRequest.current) setPosts(data.posts);
+    } catch (error) {
+      if (request === feedRequest.current) setFeedError(error.message);
+    } finally {
+      if (request === feedRequest.current) setLoading(false);
+    }
   }, [category, tagFilter]);
 
   const loadStories = useCallback(async () => {
-    const { data } = await api.get('/api/stories');
-    setStories(data.stories);
+    try {
+      const { data } = await api.get('/api/stories');
+      setStories(data.stories);
+      setStoryError(false);
+    } catch { setStoryError(true); }
   }, []);
 
   const loadMeta = useCallback(async () => {
@@ -81,12 +90,12 @@ export default function HomePage() {
   }, [user]);
 
   useEffect(() => {
-    setLoading(true);
-    loadPosts().finally(() => setLoading(false));
+    loadPosts();
+    return () => { feedRequest.current += 1; };
   }, [loadPosts]);
 
   useEffect(() => { loadStories(); }, [loadStories]);
-  useEffect(() => { loadMeta(); }, [loadMeta]);
+  useEffect(() => { loadMeta().catch(() => {}); }, [loadMeta]);
 
   const refreshAfterChange = useCallback((result) => {
     if (result?.story) setStories((current) => [...current.filter((s) => s.id !== result.story.id), result.story]);
@@ -159,6 +168,8 @@ export default function HomePage() {
       <div className="wrap">
         <main className="layout">
           <section className="feed-col">
+            <div className="feed-intro"><div><span className="house-eyebrow">A LITTLE PROGRESS, EVERY DAY</span><h1>Your daily chapter.</h1><p>Share a moment. Build a habit. Celebrate the work.</p></div><button className="house-enter-btn" type="button" onClick={() => navigate(`/profile/${user.id}/achievements`)}>My goals ↗</button></div>
+            {storyError && <div className="inline-error" role="alert">Statuses couldn’t refresh. <button type="button" onClick={loadStories}>Retry</button></div>}
             <StoriesBar
               stories={stories}
               onOpenAuthor={openStoryViewer}
@@ -175,13 +186,16 @@ export default function HomePage() {
                 Filtering by <span className="chip">#{tagFilter}<button aria-label="Clear tag filter" onClick={() => setTagFilter(null)}>✕</button></span>
               </div>
             )}
-            {!loading && (
+            <div className="feed-section-title"><h2>{searchQuery ? 'Search results' : category === 'all' ? 'Latest moments' : `${category[0].toUpperCase()}${category.slice(1)} moments`}</h2><span>{!loading && !feedError ? `${visiblePosts.length} posts` : ''}</span></div>
+            {loading && <div className="feed-skeleton" role="status" aria-label="Loading posts">{[0,1,2,3,4,5].map((i) => <span key={i} />)}</div>}
+            {feedError && <div className="card empty-state" role="alert"><h3>We couldn’t load your feed</h3><p>{feedError}</p><button className="house-enter-btn" type="button" onClick={loadPosts}>Try again</button></div>}
+            {!loading && !feedError && (
               <PostGrid
                 posts={visiblePosts}
                 onOpen={(post) => setModal({ type: 'view', post })}
                 emptyIcon="🎒"
-                emptyTitle="Nothing here yet"
-                emptyText={`Be the first to share a photo, video, or update about ${catLabel}.`}
+                emptyTitle={searchQuery || tagFilter ? "No matching moments" : "Your next chapter starts here"}
+                emptyText={searchQuery || tagFilter ? "Try another search or clear your filters." : `Share your first moment in ${catLabel} using Create post above.`}
               />
             )}
           </section>
