@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS posts (
   media_url    VARCHAR(500) NOT NULL,
   media_type   ENUM('image','video') NOT NULL,
   ai_styled    TINYINT(1)   NOT NULL DEFAULT 0,
+  visibility   ENUM('public','friends') NOT NULL DEFAULT 'friends',
   created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_posts_category (category),

@@ -35,6 +35,7 @@ function mapPost(row) {
     mediaUrl: row.media_url,
     mediaType: row.media_type,
     aiStyled: !!row.ai_styled,
+    visibility: row.visibility,
     createdAt: new Date(row.created_at).getTime(),
     likeCount: Number(row.like_count || 0),
     likedByMe: !!row.liked_by_me,
@@ -52,7 +53,7 @@ async function list(req, res) {
                (SELECT COUNT(*) FROM comments cm WHERE cm.post_id = p.id) as comment_count,
                EXISTS(SELECT 1 FROM post_likes pl2 WHERE pl2.post_id = p.id AND pl2.user_id = ?) as liked_by_me
                FROM posts p JOIN users u ON u.id = p.author_id
-               WHERE (p.author_id = ? OR EXISTS(
+               WHERE (p.visibility = 'public' OR p.author_id = ? OR EXISTS(
                  SELECT 1 FROM follows f WHERE f.follower_id = ? AND f.followee_id = p.author_id AND f.status = 'accepted'
                ))`;
     const params = [req.userId, req.userId, req.userId];
@@ -184,6 +185,7 @@ async function create(req, res) {
     const mediaUrl = `/assets/uploads/${req.file.filename}`;
     const mediaType = mediaTypeFromMime(req.file.mimetype);
     const cleanTag = (tag || '').replace(/^#/, '').toLowerCase().slice(0, 24);
+    const visibility = req.body.visibility === 'public' ? 'public' : 'friends';
 
     if (req.body.goalTaskIndex !== undefined) {
       if (mediaType !== 'image') return res.status(400).json({ error: 'Upload a photo to complete a task.' });
@@ -201,9 +203,9 @@ async function create(req, res) {
           return res.status(409).json({ error: 'This goal task has changed. Reopen the uploader and choose it again.' });
         }
         await connection.query(
-          `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-          [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0]
+          `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled, visibility)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0, visibility]
         );
         const wasDone = subtasks[index].done;
         subtasks[index].completedDays = Math.min(subtasks[index].targetDays, subtasks[index].completedDays + 1);
@@ -222,9 +224,9 @@ async function create(req, res) {
     }
 
     await pool.query(
-      `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0]
+      `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled, visibility)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0, visibility]
     );
 
     // Optional goal metadata, only ever set the first time a tag is used
@@ -256,10 +258,11 @@ async function maybeCreateGoal(authorId, tag, goalTargetDate, goalSubtasksRaw) {
   );
 }
 
-// Edits category/vibe/tag only — media isn't editable (delete-and-repost
-// covers that). Retagging onto a brand-new tag offers the same optional
-// goal setup as creating a fresh post with a new tag; retagging away from
-// a tag that then has zero posts left cleans up its now-orphaned goal.
+// Edits category/vibe/tag/visibility only — media isn't editable
+// (delete-and-repost covers that). Retagging onto a brand-new tag offers
+// the same optional goal setup as creating a fresh post with a new tag;
+// retagging away from a tag that then has zero posts left cleans up its
+// now-orphaned goal.
 async function update(req, res) {
   try {
     const [rows] = await pool.query('SELECT * FROM posts WHERE id = ?', [req.params.id]);
@@ -273,10 +276,11 @@ async function update(req, res) {
     }
     const cleanTag = (tag || '').replace(/^#/, '').toLowerCase().slice(0, 24);
     const oldTag = post.tag;
+    const visibility = req.body.visibility === 'public' ? 'public' : 'friends';
 
     await pool.query(
-      'UPDATE posts SET category = ?, vibe = ?, tag = ? WHERE id = ?',
-      [category, (vibe || '').slice(0, 60), cleanTag, post.id]
+      'UPDATE posts SET category = ?, vibe = ?, tag = ?, visibility = ? WHERE id = ?',
+      [category, (vibe || '').slice(0, 60), cleanTag, visibility, post.id]
     );
 
     if (cleanTag !== oldTag) {

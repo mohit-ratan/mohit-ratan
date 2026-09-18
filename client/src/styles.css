@@ -264,6 +264,8 @@
   .cat-label.health{color:var(--health);}
   .cat-label.wealth{color:var(--wealth);}
   .cat-label.relationships{color:var(--relationships);}
+  .visibility-label{font-size:11px;color:var(--text-faint);}
+  .visibility-label::before{content:'·';margin-right:6px;}
 
   .tag-chip{
     font-size:12px;color:var(--accent);background:var(--accent-soft);
@@ -635,6 +637,15 @@
   .cat-choice[data-cat="health"].chosen{background:var(--health-bg);border-color:var(--health);color:var(--health);}
   .cat-choice[data-cat="wealth"].chosen{background:var(--wealth-bg);border-color:var(--wealth);color:var(--wealth);}
   .cat-choice[data-cat="relationships"].chosen{background:var(--relationships-bg);border-color:var(--relationships);color:var(--relationships);}
+
+  .visibility-choice-row{display:flex;flex-direction:column;gap:6px;}
+  .visibility-choice-options{display:flex;gap:8px;flex-wrap:wrap;}
+  .visibility-choice{
+    padding:6px 13px;border-radius:999px;border:1.5px solid var(--border);
+    background:transparent;color:var(--text-muted);font-weight:600;font-size:12.5px;
+    cursor:pointer;
+  }
+  .visibility-choice.chosen{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);}
 
   .modal-detail-scroll textarea{
     width:100%;resize:vertical;min-height:70px;max-height:220px;

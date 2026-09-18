@@ -105,7 +105,12 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
             </span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <span className="post-author" style={{ cursor: 'pointer' }} onClick={() => onOpenAuthor(post.authorId)}>{post.authorName}</span>
-              <div className="post-meta"><span className={`cat-label ${cat.id}`}>{cat.emoji} {cat.label}</span></div>
+              <div className="post-meta">
+                <span className={`cat-label ${cat.id}`}>{cat.emoji} {cat.label}</span>
+                <span className="visibility-label" title={post.visibility === 'public' ? 'Visible to everyone' : 'Visible to accepted followers only'}>
+                  {post.visibility === 'public' ? '🌐 Public' : '👥 Friends'}
+                </span>
+              </div>
             </div>
             {isMe && (
               <div className="post-owner-actions">

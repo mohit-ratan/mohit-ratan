@@ -21,6 +21,7 @@ export default function EditPostModal({ post, onClose, onSaved }) {
   );
   const [vibeLabel, setVibeLabel] = useState(post.vibe || '');
   const [tagRaw, setTagRaw] = useState(post.tag || '');
+  const [visibility, setVisibility] = useState(post.visibility === 'public' ? 'public' : 'friends');
   const [submitting, setSubmitting] = useState(false);
   const [existingTags, setExistingTags] = useState(null);
   const [goalTargetDate, setGoalTargetDate] = useState('');
@@ -62,7 +63,7 @@ export default function EditPostModal({ post, onClose, onSaved }) {
     }
     setSubmitting(true);
     try {
-      const body = { category: chosenCat, vibe: vibeLabel.slice(0, 60), tag: normalizedTag };
+      const body = { category: chosenCat, vibe: vibeLabel.slice(0, 60), tag: normalizedTag, visibility };
       if (isNewTag) {
         const cleanSubtasks = goalSubtasks.filter((t) => t.text.trim());
         if (goalTargetDate || cleanSubtasks.length) {
@@ -138,6 +139,25 @@ export default function EditPostModal({ post, onClose, onSaved }) {
                 onChange={(e) => setTagRaw(e.target.value)}
               />
               <span className="tag-hint">Just one word — no caption needed.</span>
+            </div>
+            <div className="visibility-choice-row">
+              <label className="composer-field-label">Who can see this post?</label>
+              <div className="visibility-choice-options">
+                <button
+                  type="button"
+                  className={`visibility-choice${visibility === 'friends' ? ' chosen' : ''}`}
+                  onClick={() => setVisibility('friends')}
+                >
+                  👥 Friends only
+                </button>
+                <button
+                  type="button"
+                  className={`visibility-choice${visibility === 'public' ? ' chosen' : ''}`}
+                  onClick={() => setVisibility('public')}
+                >
+                  🌐 Public
+                </button>
+              </div>
             </div>
             {isNewTag && (
               <div className="goal-setup">

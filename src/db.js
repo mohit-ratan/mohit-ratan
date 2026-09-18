@@ -30,6 +30,15 @@ pool.query(`
 `).catch((err) => console.error('Could not ensure goals table exists:', err));
 
 pool.query(`
+  SELECT COUNT(*) as cnt FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'posts' AND COLUMN_NAME = 'visibility'
+`).then(([rows]) => {
+  if (!rows[0].cnt) {
+    return pool.query("ALTER TABLE posts ADD COLUMN visibility ENUM('public','friends') NOT NULL DEFAULT 'friends'");
+  }
+}).catch((err) => console.error('Could not ensure posts.visibility column exists:', err));
+
+pool.query(`
   CREATE TABLE IF NOT EXISTS follows (
     follower_id VARCHAR(36) NOT NULL,
     followee_id VARCHAR(36) NOT NULL,

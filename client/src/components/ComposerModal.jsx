@@ -34,6 +34,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
 
   const [media, setMedia] = useState(null); // { file, originalFile, previewUrl, kind: 'image'|'video', styled }
   const [chosenCat, setChosenCat] = useState(initialGoalTask?.category || CATEGORIES[0].id);
+  const [visibility, setVisibility] = useState('friends');
   const [chosenVibeId, setChosenVibeId] = useState('');
   const [vibeLabel, setVibeLabel] = useState('');
   const [tagRaw, setTagRaw] = useState(initialGoalTask?.tag || '');
@@ -176,6 +177,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
       form.append('tag', normalizedTag);
       form.append('aiStyled', String(!!(media.kind === 'image' && media.styled)));
       if (isPost) form.append('category', selectedTask ? linkedGoal.category : chosenCat);
+      if (isPost) form.append('visibility', visibility);
       if (isPost && selectedTask) {
         form.append('goalTaskIndex', taskIndex);
         form.append('goalTaskText', selectedTask.text);
@@ -279,6 +281,28 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                     {c.emoji} {c.label}
                   </button>
                 ))}
+              </div>
+            )}
+            {isPost && (
+              <div className="visibility-choice-row">
+                <label className="composer-field-label">Who can see this post?</label>
+                <div className="visibility-choice-options">
+                  <button
+                    type="button"
+                    className={`visibility-choice${visibility === 'friends' ? ' chosen' : ''}`}
+                    onClick={() => setVisibility('friends')}
+                  >
+                    👥 Friends only
+                  </button>
+                  <button
+                    type="button"
+                    className={`visibility-choice${visibility === 'public' ? ' chosen' : ''}`}
+                    onClick={() => setVisibility('public')}
+                  >
+                    🌐 Public
+                  </button>
+                </div>
+                <span className="tag-hint">{visibility === 'public' ? 'Anyone can see this post, even people who don’t follow you.' : 'Only people you’ve accepted as followers can see this post.'}</span>
               </div>
             )}
             <div className="composer-note">
