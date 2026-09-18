@@ -178,8 +178,12 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
   }
 
   return (
-    <div className="modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal-box modal-box-stacked">
+    <div className="modal-backdrop composer-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal-box composer-workspace" role="dialog" aria-modal="true" aria-labelledby="composer-title">
+        <header className="composer-workspace-header">
+          <div><span className="composer-eyebrow">PACKSOMEWORK · YOUR DAILY PROGRESS</span><h2 id="composer-title">{title}</h2></div>
+          <button className="composer-close" type="button" aria-label="Close editor" onClick={onClose}>✕</button>
+        </header>
         <div className="media-and-look-row">
           {media ? (
             <div className="modal-media-pane">
@@ -239,10 +243,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
         </div>
 
         <div className="modal-detail-pane">
-          <div className="modal-detail-head">
-            <span className="modal-title">{title}</span>
-            <button className="modal-close-btn" type="button" aria-label="Close" onClick={onClose}>✕</button>
-          </div>
+          <div className="composer-panel-heading"><span className="composer-eyebrow">{isPost ? 'MAKE THIS MOMENT COUNT' : 'SHARE A MOMENT'}</span><h3>{isPost ? 'Your post & goals' : 'Your story'}</h3><p>{isPost ? 'Choose a category, connect a task, and track your progress.' : 'Add a tag and share a little of your day.'}</p></div>
           <div className="modal-detail-scroll">
             {isPost && (
               <div className="cat-choice-row">
@@ -266,8 +267,10 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                 : 'Pick a look from the icons beside your media — it shows as a glowing tag and styles video previews live.'}
             </div>
             <div className="tag-input-row">
+              <label className="composer-field-label" htmlFor="composer-tag">Post tag</label>
               <input
                 type="text"
+                id="composer-tag"
                 maxLength={24}
                 placeholder="One word or hashtag (optional) — e.g. #grateful"
                 value={tagRaw}
@@ -323,6 +326,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
             )}
           </div>
           <div className="modal-detail-footer">
+            <span className="composer-share-note">{selectedTask ? `This photo adds 1 day toward “${selectedTask.text}”.` : 'A little progress, worth sharing.'}</span>
             <button
               className="pill-btn primary"
               type="button"
@@ -330,7 +334,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
               disabled={submitting}
               onClick={handleSubmit}
             >
-              {submitting ? 'Sharing…' : isPost ? 'Share' : 'Share to story'}
+              {submitting ? 'Sharing…' : selectedTask ? 'Share photo & update progress →' : isPost ? 'Share post →' : 'Share to story →'}
             </button>
           </div>
         </div>
