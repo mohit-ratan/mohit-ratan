@@ -1,19 +1,18 @@
-import { EffectComposer, Bloom, Vignette, DepthOfField, BrightnessContrast, HueSaturation } from '@react-three/postprocessing';
+import { EffectComposer, Bloom, Vignette, BrightnessContrast, HueSaturation } from '@react-three/postprocessing';
 
-// The single biggest lever for a "toy diorama" feel instead of a flat
-// engineering-demo render: soft bloom on bright surfaces, a darkened
-// vignette to focus the eye toward the car, a touch of depth-of-field so
-// the middle distance goes soft the way a close chase-cam reads on a real
-// lens, and a small saturation/contrast lift so colors pop the way a
-// baked/painted low-poly scene does instead of raw PBR flatness.
+// Soft bloom on bright surfaces, a darkened vignette to focus the eye
+// toward the car, and a small saturation/contrast lift so colors pop the
+// way a baked/painted low-poly scene does instead of raw PBR flatness.
+// (Depth-of-field was tried and dropped — a fixed focus distance doesn't
+// track a moving chase-cam target, so it just blurred the car and nearby
+// grass along with everything else, which made driving harder to read.)
 export default function PostFX() {
   return (
     <EffectComposer multisampling={0}>
-      <DepthOfField focusDistance={0.012} focalLength={0.04} bokehScale={2.2} height={480} />
-      <Bloom intensity={0.55} luminanceThreshold={0.35} luminanceSmoothing={0.25} mipmapBlur />
-      <HueSaturation saturation={0.18} />
-      <BrightnessContrast brightness={0.02} contrast={0.08} />
-      <Vignette eskil={false} offset={0.25} darkness={0.55} />
+      <Bloom intensity={0.5} luminanceThreshold={0.4} luminanceSmoothing={0.25} mipmapBlur />
+      <HueSaturation saturation={0.15} />
+      <BrightnessContrast brightness={0.02} contrast={0.06} />
+      <Vignette eskil={false} offset={0.22} darkness={0.42} />
     </EffectComposer>
   );
 }
