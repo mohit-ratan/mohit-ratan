@@ -17,6 +17,8 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
   const showToast = useToast();
   const fileInputRef = useRef(null);
   const lookRequest = useRef(0);
+  const uploadInFlight = useRef(false);
+  const [uploadPercent, setUploadPercent] = useState(null);
   const previewUrlRef = useRef(null);
 
   useEffect(() => () => {
@@ -136,6 +138,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
   }
 
   async function handleSubmit() {
+    if (uploadInFlight.current) return;
     if (!media) {
       showToast('Attach a photo or video to post.', true);
       return;
@@ -157,10 +160,18 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
       showToast('Enter a whole number of days from 1 to 3650 for each task.', true);
       return;
     }
+    uploadInFlight.current = true;
     setSubmitting(true);
+    setUploadPercent(null);
     try {
       const form = new FormData();
-      form.append('media', media.file);
+      let uploadFile = media.file;
+      // Plain photos otherwise retain full camera resolution and can be 20 MB.
+      if (!isPost && media.kind === 'image' && !media.styled && media.file.type !== 'image/gif') {
+        const blob = await applyLookToImage(media.file, { filter: 'none' });
+        if (blob.size < media.file.size) uploadFile = new File([blob], 'status.jpg', { type: 'image/jpeg' });
+      }
+      form.append('media', uploadFile);
       form.append('vibe', vibeLabel.slice(0, 60));
       form.append('tag', normalizedTag);
       form.append('aiStyled', String(!!(media.kind === 'image' && media.styled)));
@@ -179,14 +190,19 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
       }
 
       const endpoint = isPost ? '/api/posts' : '/api/stories';
-      const { data } = await api.post(endpoint, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const { data } = await api.post(endpoint, form, {
+        onUploadProgress: ({ loaded, total }) => {
+          if (total) setUploadPercent(Math.round(loaded / total * 100));
+        },
+      });
 
       showToast(data.goalCompleted ? '🏆 Goal complete! Your award is in your Achievement House.' : data.targetDays ? `Photo posted — ${data.completedDays} of ${data.targetDays} days complete!` : isPost ? 'Posted!' : 'Added to your story!');
-      onCreated?.();
+      onCreated?.(data.story ? { story: { ...data.story, authorId: user.id, authorName: user.displayName, authorPhotoUrl: user.photoUrl } } : undefined);
       onClose();
     } catch (err) {
       showToast(`Couldn't ${isPost ? 'post' : 'share your story'}: ${err.message || 'please try again'}`, true);
     } finally {
+      uploadInFlight.current = false;
       setSubmitting(false);
     }
   }
@@ -338,7 +354,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
               disabled={submitting || generating}
               onClick={handleSubmit}
             >
-              {submitting ? 'Sharing…' : selectedTask ? 'Share photo & update progress →' : isPost ? 'Share post →' : 'Share to story →'}
+              {submitting ? uploadPercent === null ? 'Preparing media…' : uploadPercent < 100 ? `Uploading ${uploadPercent}%…` : 'Saving…' : selectedTask ? 'Share photo & update progress →' : isPost ? 'Share post →' : 'Share to story →'}
             </button>
           </div>
         </div>

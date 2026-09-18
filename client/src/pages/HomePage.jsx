@@ -87,10 +87,11 @@ export default function HomePage() {
   useEffect(() => { loadStories(); }, [loadStories]);
   useEffect(() => { loadMeta(); }, [loadMeta]);
 
-  const refreshAfterChange = useCallback(() => {
-    loadPosts();
-    loadStories();
-    loadMeta();
+  const refreshAfterChange = useCallback((result) => {
+    if (result?.story) setStories((current) => [...current.filter((s) => s.id !== result.story.id), result.story]);
+    loadPosts().catch(() => {});
+    loadStories().catch(() => {});
+    loadMeta().catch(() => {});
   }, [loadPosts, loadStories, loadMeta]);
 
   const visiblePosts = useMemo(() => {

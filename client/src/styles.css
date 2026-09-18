@@ -1013,3 +1013,5 @@
   .composer-workspace .generate-btn{font-size:10px;padding:7px 10px;}
 }
 @media(max-height:550px) and (min-width:761px){.composer-workspace-header{padding:10px 20px;}.composer-panel-heading{padding:12px 26px;}.composer-panel-heading p{display:none;}}
+.story-load-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#111b;color:#fff;font-size:14px;z-index:3;pointer-events:none;}
+.story-load-state button{pointer-events:auto;border:1px solid #ffffff70;border-radius:8px;padding:9px 16px;background:#fff;color:#25382f;cursor:pointer;}

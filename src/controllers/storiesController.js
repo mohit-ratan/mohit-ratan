@@ -48,7 +48,7 @@ async function create(req, res) {
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [id, req.userId, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0]
     );
-    res.json({ ok: true, id });
+    res.json({ ok: true, id, story: { id, mediaUrl, mediaType, vibe: (vibe || '').slice(0, 60), tag: cleanTag, aiStyled: aiStyled === 'true', createdAt: Date.now(), viewedByMe: false } });
   } catch (e) {
     console.error('create story error:', e);
     res.status(500).json({ error: 'Something went wrong sharing your story.' });

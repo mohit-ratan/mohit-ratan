@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { mediaUrl } from '../api';
 import Avatar from './Avatar';
 import { truncate } from '../lib/format';
 import { useAuth } from '../context/AuthContext';
@@ -17,6 +18,14 @@ function groupByAuthor(stories) {
   return order.map((id) => groups[id]);
 }
 
+function preloadFirst(group) {
+  const story = group?.stories.find((item) => !item.viewedByMe) || group?.stories[0];
+  if (story?.mediaType === 'image') {
+    const image = new Image();
+    image.src = mediaUrl(story.mediaUrl);
+  }
+}
+
 export default function StoriesBar({ stories, onOpenAuthor, onAddStory }) {
   const { user } = useAuth();
   const groups = useMemo(() => groupByAuthor(stories || []), [stories]);
@@ -28,6 +37,8 @@ export default function StoriesBar({ stories, onOpenAuthor, onAddStory }) {
       <div className="story-item">
         <div
           className={`story-ring ${mine ? 'has-story' : 'no-story'}`}
+          onPointerEnter={() => preloadFirst(mine)}
+          onTouchStart={() => preloadFirst(mine)}
           onClick={() => (mine ? onOpenAuthor(user.id) : onAddStory())}
         >
           <div className="story-ring-inner">
@@ -38,7 +49,7 @@ export default function StoriesBar({ stories, onOpenAuthor, onAddStory }) {
         <span className="story-label">Your story</span>
       </div>
       {others.map((g) => (
-        <div key={g.authorId} className="story-item" onClick={() => onOpenAuthor(g.authorId)}>
+        <div key={g.authorId} className="story-item" onPointerEnter={() => preloadFirst(g)} onTouchStart={() => preloadFirst(g)} onClick={() => onOpenAuthor(g.authorId)}>
           <div className={`story-ring ${g.hasUnseen ? 'unseen' : 'seen'}`}>
             <div className="story-ring-inner">
               <Avatar id={g.authorId} name={g.authorName} photoUrl={g.authorPhotoUrl} size={54} />
