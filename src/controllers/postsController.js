@@ -148,7 +148,12 @@ async function achievements(req, res) {
       };
     });
 
-    res.json({ achievements: achievementList });
+    // Tagged posts track progress; only a finished, non-empty checklist earns an award.
+    res.json({
+      achievements: achievementList.filter((a) => a.goal?.completed),
+      goals: achievementList.filter((a) => a.goal && !a.goal.completed),
+      tags: achievementList.map((a) => a.tag),
+    });
   } catch (err) {
     console.error('achievements error:', err);
     res.status(500).json({ error: 'Could not load achievements.' });

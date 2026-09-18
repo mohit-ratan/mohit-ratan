@@ -1,7 +1,7 @@
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Canvas } from '@react-three/fiber';
-import api, { mediaUrl } from '../api';
+import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import HouseInterior from '../three/HouseInterior';
@@ -31,6 +31,7 @@ export default function AchievementsPage() {
   const [error, setError] = useState(null);
   const [profile, setProfile] = useState(null);
   const [achievements, setAchievements] = useState([]);
+  const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeAchievement, setActiveAchievement] = useState(null);
   const [focusedLabel, setFocusedLabel] = useState(null);
@@ -57,6 +58,7 @@ export default function AchievementsPage() {
       ]);
       setProfile(profileRes.data.user);
       setAchievements(achievementsRes.data.achievements);
+      setGoals(achievementsRes.data.goals);
     } catch (err) {
       setError(err.message);
       showToast(err.message, true);
@@ -90,11 +92,11 @@ export default function AchievementsPage() {
           <header className="achievement-house-intro">
             <span className="house-eyebrow">A LITTLE PROGRESS, EVERY DAY</span>
             <h1>A home for your achievements.</h1>
-            <p>Three floors. Three parts of life. Every milestone belongs here.</p>
+            <p>Complete every task in a goal to earn an award for your floor.</p>
           </header>
           <div className="achievement-house-layout">
             <div className="house-scene" aria-label="Achievement house with three floors">
-              <div className="house-roof" aria-hidden="true"><span>PSW</span></div>
+              <div className="house-roof" aria-hidden="true"><span>PackSomeWork</span></div>
               <div className="house-building">
                 {[...CATEGORIES].reverse().map((c) => {
                   const index = CATEGORIES.findIndex((item) => item.id === c.id);
@@ -103,7 +105,7 @@ export default function AchievementsPage() {
                     <button key={c.id} type="button" className={`house-floor house-floor-${c.id}${index === floorIndex ? ' selected' : ''}`}
                       aria-pressed={index === floorIndex} aria-controls="house-floor-gallery" onClick={() => selectFloor(index)}>
                       <span className="house-window" aria-hidden="true"><span>{c.emoji}</span></span>
-                      <span className="house-floor-copy"><small>FLOOR 0{index + 1}</small><strong>{c.label}</strong><span>{items.length} {items.length === 1 ? 'achievement' : 'achievements'} · {items.filter((a) => a.goal?.completed).length} trophies</span></span>
+                      <span className="house-floor-copy"><small>FLOOR 0{index + 1}</small><strong>{c.label}</strong><span>{items.length} {items.length === 1 ? 'award earned' : 'awards earned'}</span><span className="house-floor-awards" aria-hidden="true">{items.slice(0, 5).map((a) => <span key={a.tag} title={`#${a.tag}`}>🏆</span>)}{items.length > 5 && <small>+{items.length - 5}</small>}</span></span>
                       <span className="house-floor-arrow" aria-hidden="true">↗</span>
                     </button>
                   );
@@ -121,13 +123,25 @@ export default function AchievementsPage() {
                 {floorAchievements.length ? floorAchievements.map((a) => (
                   <button type="button" key={a.tag} className="house-achievement" onClick={() => setActiveAchievement(a)}>
                     <span className="house-achievement-cover">
-                      {a.coverPost?.mediaType === 'image' && a.coverPost?.mediaUrl ? <img src={mediaUrl(a.coverPost.mediaUrl)} alt="" loading="lazy" /> : <span aria-hidden="true">{a.goal?.completed ? '🏆' : category.emoji}</span>}
+                      <span aria-hidden="true">🏆</span>
                     </span>
-                    <span><strong>#{a.tag}</strong><small>{a.count} posts{a.goal?.completed ? ' · Trophy earned' : a.goal ? ' · Goal in progress' : ''}</small></span>
+                    <span><strong>#{a.tag}</strong><small>Award earned · {a.goal.subtasks.length} tasks completed</small></span>
                     <span aria-hidden="true">→</span>
                   </button>
-                )) : <div className="house-empty"><span aria-hidden="true">{category.emoji}</span><h3>Your next chapter starts here.</h3><p>{isMe ? `Share a post in ${category.label.toLowerCase()} with a tag to add your first achievement to this floor.` : 'No achievements on this floor yet.'}</p>{isMe && <button type="button" className="house-enter-btn" onClick={() => navigate('/')}>Go to feed →</button>}</div>}
+                )) : <div className="house-empty"><span aria-hidden="true">{category.emoji}</span><h3>Your first award awaits.</h3><p>{isMe ? 'Complete all tasks in a goal to earn an achievement and showcase its award here.' : 'No awards earned on this floor yet.'}</p>{isMe && <button type="button" className="house-enter-btn" onClick={() => navigate('/')}>Go to feed →</button>}</div>}
               </div>
+              {isMe && goals.some((a) => a.category === category.id) && (
+                <div className="house-goals">
+                  <h3>Goals in progress</h3>
+                  <p>Finish every task to earn your award.</p>
+                  {goals.filter((a) => a.category === category.id).map((a) => (
+                    <button type="button" className="house-achievement" key={a.tag} onClick={() => setActiveAchievement(a)}>
+                      <span><strong>#{a.tag}</strong><small>{a.goal.subtasks.filter((t) => t.done).length} of {a.goal.subtasks.length} tasks complete</small></span>
+                      <span>View tasks →</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </section>
           </div>
         </main>

@@ -33,7 +33,7 @@ export default function EditPostModal({ post, onClose, onSaved }) {
     if (!user) return;
     let cancelled = false;
     api.get('/api/posts/achievements', { params: { authorId: user.id } })
-      .then(({ data }) => { if (!cancelled) setExistingTags(new Set(data.achievements.map((a) => a.tag))); })
+      .then(({ data }) => { if (!cancelled) setExistingTags(new Set(data.tags)); })
       .catch(() => { if (!cancelled) setExistingTags(new Set()); });
     return () => { cancelled = true; };
   }, [user]);

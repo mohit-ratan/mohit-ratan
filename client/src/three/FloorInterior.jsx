@@ -1,7 +1,5 @@
-import { Suspense } from 'react';
 import * as THREE from 'three';
-import { Text, useTexture } from '@react-three/drei';
-import { mediaUrl } from '../api';
+import { Text } from '@react-three/drei';
 import { useRegisterInteractable } from './useInteraction';
 import { CAT_MAP } from '../lib/format';
 
@@ -13,11 +11,6 @@ const WALL_COLOR = '#EDE6D6';
 const FLOOR_COLOR = '#C9A876';
 const CEILING_COLOR = '#F5F1E6';
 const ACCENT = { health: '#2F9E5B', wealth: '#2B6CB0', relationships: '#B0527A' };
-
-function StickerTexture({ url }) {
-  const texture = useTexture(url);
-  return <meshStandardMaterial map={texture} />;
-}
 
 // Lays achievement stickers out in a centered grid (up to 3 per row) on
 // the back wall — a floor now holds every achievement in its category,
@@ -39,8 +32,6 @@ function gridOffset(index, total) {
 // One achievement's "sticker" — mounted on the back wall, shows its cover
 // photo. Walk up and press E to open the full detail modal (unchanged).
 function AchievementSticker({ achievement, accent, index, total, registryRef, onOpen }) {
-  const cover = achievement.coverPost;
-  const isVideo = cover?.mediaType === 'video';
   const halfD = ROOM_DEPTH / 2;
   const { x, y } = gridOffset(index, total);
 
@@ -53,22 +44,26 @@ function AchievementSticker({ achievement, accent, index, total, registryRef, on
 
   return (
     <group position={[x, y, -halfD + 0.05]}>
-      <mesh position={[0, 0, -0.03]}>
-        <boxGeometry args={[1.35, 1.35, 0.06]} />
+      <mesh position={[0, -0.5, 0.12]}>
+        <boxGeometry args={[0.85, 0.16, 0.45]} />
         <meshStandardMaterial color={accent} />
       </mesh>
-      <mesh>
-        <planeGeometry args={[1.18, 1.18]} />
-        {isVideo || !cover ? (
-          <meshStandardMaterial color={accent} />
-        ) : (
-          <Suspense fallback={<meshStandardMaterial color={accent} />}>
-            <StickerTexture url={mediaUrl(cover.mediaUrl)} />
-          </Suspense>
-        )}
+      <mesh position={[0, -0.22, 0.12]}>
+        <cylinderGeometry args={[0.07, 0.13, 0.45, 16]} />
+        <meshStandardMaterial color="#D7A62F" metalness={0.65} roughness={0.25} />
       </mesh>
+      <mesh position={[0, 0.15, 0.12]}>
+        <cylinderGeometry args={[0.38, 0.13, 0.48, 24]} />
+        <meshStandardMaterial color="#F2C655" metalness={0.65} roughness={0.25} />
+      </mesh>
+      {[-1, 1].map((side) => (
+        <mesh key={side} position={[side * 0.36, 0.17, 0.12]}>
+          <torusGeometry args={[0.19, 0.045, 8, 20]} />
+          <meshStandardMaterial color="#D7A62F" metalness={0.65} roughness={0.25} />
+        </mesh>
+      ))}
       <Text position={[0, -0.82, 0.04]} fontSize={0.17} color="#33302A" anchorX="center" anchorY="middle">
-        {`#${achievement.tag} · ${achievement.count}`}
+        {`#${achievement.tag} · Award earned`}
       </Text>
     </group>
   );
@@ -190,7 +185,7 @@ export default function FloorInterior({ category, achievements, floorIndex, regi
 
       {achievements.length === 0 ? (
         <Text position={[0, 1.6, -halfD + 0.3]} fontSize={0.18} color="#8A8272" anchorX="center" anchorY="middle" maxWidth={5} textAlign="center">
-          {`No ${cat.label.toLowerCase()} achievements yet.`}
+          {`No ${cat.label.toLowerCase()} awards yet. Complete every task in a goal to earn one.`}
         </Text>
       ) : (
         achievements.map((a, i) => (

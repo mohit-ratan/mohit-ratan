@@ -871,3 +871,13 @@
   .house-window{width:53px;}
   .house-achievements{max-height:none;}
 }
+.house-roof span{font-size:20px;letter-spacing:1px;}
+.house-floor-awards{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:5px;}
+.house-floor-copy .house-floor-awards{font-size:22px;}
+.house-floor-awards small{letter-spacing:0;}
+.house-goals{margin-top:28px;padding-top:20px;border-top:1px solid #dce3d7;}
+.house-goals h3{font-size:16px;margin:0;}
+.house-goals>p{font-size:12px;color:#6c7971;}
+.house-goals .house-achievement{width:100%;margin-top:10px;}
+.house-goals .house-achievement>span:first-child{flex:1;}
+.house-goals .house-achievement>span:last-child{flex:none;font-size:11px;}

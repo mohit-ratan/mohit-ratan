@@ -37,7 +37,7 @@ export default function ComposerModal({ kind, onClose, onCreated }) {
     if (!isPost || !user) return;
     let cancelled = false;
     api.get('/api/posts/achievements', { params: { authorId: user.id } })
-      .then(({ data }) => { if (!cancelled) setExistingTags(new Set(data.achievements.map((a) => a.tag))); })
+      .then(({ data }) => { if (!cancelled) setExistingTags(new Set(data.tags)); })
       .catch(() => { if (!cancelled) setExistingTags(new Set()); });
     return () => { cancelled = true; };
   }, [isPost, user]);
