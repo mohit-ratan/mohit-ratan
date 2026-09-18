@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { mediaUrl } from '../api';
 import { CATEGORIES, CAT_MAP, goalStatusLabel } from '../lib/format';
 import { VideoIcon } from '../lib/icons';
@@ -6,15 +7,16 @@ import { iconForSubtask } from '../lib/subtaskIcons';
 import { EmptyRoomShell, Rug, Shelf, PlantPot, Lamp, SideTable } from '../lib/roomArt';
 
 // RoomZone deliberately knows nothing about being 1-of-3 — it's the seam
-// for a future "house" phase where each zone becomes its own room/route.
-function RoomZone({ category, achievements, onOpen }) {
+// for the "house" phase where each zone becomes its own room/route (see
+// RoomPage, which renders this same component alone at size="large").
+export function RoomZone({ category, achievements, authorId, onOpen, size = 'small' }) {
   const cat = CAT_MAP[category];
   const count = achievements.length;
   const wallVar = `var(--${category}-bg)`;
   const accentVar = `var(--${category})`;
 
   return (
-    <div className="room-zone">
+    <div className={`room-zone room-zone-${size}`}>
       <div className="room-shell-wrap">
         <EmptyRoomShell wallColor={wallVar} floorColor={wallVar} borderColor={accentVar} />
         {count >= 1 && <div className="room-deco room-deco-plant"><PlantPot color={accentVar} /></div>}
@@ -23,6 +25,9 @@ function RoomZone({ category, achievements, onOpen }) {
         {count >= 6 && <div className="room-deco room-deco-lamp"><Lamp color={accentVar} /></div>}
         {count >= 6 && <div className="room-deco room-deco-table"><SideTable color={accentVar} /></div>}
         <div className="room-zone-label" style={{ color: accentVar }}>{cat.emoji} {cat.label}</div>
+        {size === 'small' && authorId && (
+          <Link className="room-enter-link" to={`/profile/${authorId}/room/${category}`}>Enter room →</Link>
+        )}
       </div>
 
       <div className="room-frames">
@@ -79,7 +84,7 @@ function RoomZone({ category, achievements, onOpen }) {
   );
 }
 
-export default function AchievementsRoom({ achievements, onOpen }) {
+export default function AchievementsRoom({ achievements, authorId, onOpen }) {
   const byCategory = useMemo(() => {
     const groups = { health: [], wealth: [], relationships: [] };
     for (const a of achievements) {
@@ -91,7 +96,7 @@ export default function AchievementsRoom({ achievements, onOpen }) {
   return (
     <div className="achievements-room">
       {CATEGORIES.map((c) => (
-        <RoomZone key={c.id} category={c.id} achievements={byCategory[c.id]} onOpen={onOpen} />
+        <RoomZone key={c.id} category={c.id} achievements={byCategory[c.id]} authorId={authorId} onOpen={onOpen} />
       ))}
     </div>
   );

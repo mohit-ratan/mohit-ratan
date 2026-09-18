@@ -6,6 +6,7 @@ import VerifyEmailPage from './pages/VerifyEmailPage';
 import HomePage from './pages/HomePage';
 import ProfilePage from './pages/ProfilePage';
 import AchievementsPage from './pages/AchievementsPage';
+import RoomPage from './pages/RoomPage';
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -47,6 +48,14 @@ export default function App() {
         element={
           <RequireAuth>
             <AchievementsPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/profile/:id/room/:category"
+        element={
+          <RequireAuth>
+            <RoomPage />
           </RequireAuth>
         }
       />

@@ -500,6 +500,23 @@
     position:absolute;top:8px;left:10px;font-weight:700;font-size:13px;
     font-family:var(--font-display);text-shadow:0 1px 2px rgba(255,255,255,.6);
   }
+  .room-enter-link{
+    position:absolute;top:8px;right:10px;font-size:11.5px;font-weight:700;
+    color:var(--text);background:rgba(255,255,255,.75);padding:3px 9px;border-radius:999px;
+    text-decoration:none;text-shadow:none;
+  }
+  .room-enter-link:hover{background:#fff;}
+
+  /* Large variant — RoomPage shows a single zone at full width instead of
+     one of three in a row, so everything scales up for genuine presence. */
+  .room-zone-large .room-shell-wrap{padding-top:38%;}
+  .room-zone-large .room-zone-label{font-size:22px;top:16px;left:18px;}
+  .room-zone-large .room-frame{width:150px;height:150px;}
+  .room-zone-large .room-caption{font-size:13px;padding:6px 9px;}
+  .room-zone-large .room-frame-badge{width:26px;height:26px;top:8px;right:8px;}
+  .room-zone-large .room-frames{padding:22px;gap:18px;}
+  .room-zone-large .subtask-icon{width:34px;height:34px;font-size:17px;}
+  .room-zone-large .achievement-cluster{gap:9px;}
   .room-deco{position:absolute;pointer-events:none;}
   .room-deco svg{width:100%;height:100%;display:block;}
   .room-deco-plant{left:6%;bottom:4%;width:15%;height:26%;}
