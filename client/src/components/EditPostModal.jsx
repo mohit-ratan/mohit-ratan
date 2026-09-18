@@ -46,21 +46,25 @@ export default function EditPostModal({ post, onClose, onSaved }) {
 
   function addSubtask() {
     if (goalSubtasks.length >= MAX_SUBTASKS) return;
-    setGoalSubtasks((s) => [...s, '']);
+    setGoalSubtasks((s) => [...s, { text: '', targetDays: 1 }]);
   }
   function updateSubtask(i, text) {
-    setGoalSubtasks((s) => s.map((t, idx) => (idx === i ? text.slice(0, 140) : t)));
+    setGoalSubtasks((s) => s.map((t, idx) => (idx === i ? { ...t, text: text.slice(0, 140) } : t)));
   }
   function removeSubtask(i) {
     setGoalSubtasks((s) => s.filter((_, idx) => idx !== i));
   }
 
   async function handleSubmit() {
+    if (goalSubtasks.some((task) => task.text.trim() && (!Number.isInteger(Number(task.targetDays)) || Number(task.targetDays) < 1 || Number(task.targetDays) > 3650))) {
+      showToast('Enter a whole number of days from 1 to 3650 for each task.', true);
+      return;
+    }
     setSubmitting(true);
     try {
       const body = { category: chosenCat, vibe: vibeLabel.slice(0, 60), tag: normalizedTag };
       if (isNewTag) {
-        const cleanSubtasks = goalSubtasks.filter((t) => t.trim());
+        const cleanSubtasks = goalSubtasks.filter((t) => t.text.trim());
         if (goalTargetDate || cleanSubtasks.length) {
           body.goalTargetDate = goalTargetDate;
           body.goalSubtasks = JSON.stringify(cleanSubtasks);
@@ -144,15 +148,16 @@ export default function EditPostModal({ post, onClose, onSaved }) {
                   value={goalTargetDate}
                   onChange={(e) => setGoalTargetDate(e.target.value)}
                 />
-                {goalSubtasks.map((text, i) => (
+                {goalSubtasks.map((task, i) => (
                   <div className="goal-subtask-row" key={i}>
                     <input
                       type="text"
                       placeholder={`Subtask ${i + 1}`}
                       maxLength={140}
-                      value={text}
+                      value={task.text}
                       onChange={(e) => updateSubtask(i, e.target.value)}
                     />
+                    <label className="task-days-input">Days<input type="number" min="1" max="3650" value={task.targetDays} onChange={(e) => setGoalSubtasks((tasks) => tasks.map((t, index) => index === i ? { ...t, targetDays: e.target.value } : t))} /></label>
                     <button type="button" className="goal-remove-btn" onClick={() => removeSubtask(i)}>✕</button>
                   </div>
                 ))}

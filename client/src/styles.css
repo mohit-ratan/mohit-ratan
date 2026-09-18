@@ -957,3 +957,9 @@
 @media(max-width:650px){.profile-hero-body{padding:0 20px 20px;}.profile-hero-banner{padding:20px;height:100px;}.profile-bottom-row{flex-direction:column;align-items:stretch;gap:20px;}.profile-metrics{justify-content:space-between;}.profile-house-link>span:nth-child(2){flex:1;}.profile-identity-copy .profile-name{font-size:28px;}}
 .goal-task-photo{margin-left:auto;flex-shrink:0;align-self:flex-start;border:1px solid #d8e0d4;border-radius:6px;background:#f4f7f0;color:#355c45;padding:3px 6px;font-size:10px;cursor:pointer;}
 .goal-setup select{width:100%;min-width:0;padding:9px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font:inherit;font-size:12px;}
+.task-days-input{flex:0 0 72px;display:flex;flex-direction:column;gap:3px;font-size:10px;color:var(--text-muted);}
+.goal-subtask-row .task-days-input input{width:72px;min-width:0;}
+.goal-subtask-row>input{min-width:0;}
+.task-progress-copy{flex:1;min-width:0;}
+.task-progress-copy small{display:block;font-size:10px;color:var(--text-muted);margin-top:4px;}
+.goal-category .task-progress-copy progress{height:5px;margin:6px 0 4px;}

@@ -21,21 +21,6 @@ export default function AchievementDetailModal({ achievement, isMe, onChanged, o
   const cat = CAT_MAP[achievement.category] || CAT_MAP.health;
   const status = goalStatusLabel(goal);
 
-  async function toggleSubtask(index) {
-    if (!isMe) return;
-    const wasCompleted = !!goal?.completed;
-    try {
-      const { data } = await api.patch(`/api/goals/${achievement.tag}/subtasks/${index}`);
-      setGoal((g) => ({ ...g, subtasks: data.subtasks, completed: data.completed }));
-      if (!wasCompleted && data.completed) {
-        showToast(`🏆 Trophy earned: #${achievement.tag}!`);
-      }
-      onChanged?.();
-    } catch (err) {
-      showToast(err.message, true);
-    }
-  }
-
   function startEditGoal() {
     setEditDate(goal?.targetDate || '');
     setEditSubtasks(goal?.subtasks ? goal.subtasks.map((t) => ({ ...t })) : []);
@@ -43,7 +28,7 @@ export default function AchievementDetailModal({ achievement, isMe, onChanged, o
   }
   function addEditSubtask() {
     if (editSubtasks.length >= MAX_SUBTASKS) return;
-    setEditSubtasks((s) => [...s, { text: '', done: false }]);
+    setEditSubtasks((s) => [...s, { text: '', targetDays: 1, completedDays: 0, done: false }]);
   }
   function updateEditSubtask(i, text) {
     setEditSubtasks((s) => s.map((t, idx) => (idx === i ? { ...t, text: text.slice(0, 140) } : t)));
@@ -53,6 +38,10 @@ export default function AchievementDetailModal({ achievement, isMe, onChanged, o
   }
 
   async function saveGoal() {
+    if (editSubtasks.some((task) => task.text.trim() && (!Number.isInteger(Number(task.targetDays ?? 1)) || Number(task.targetDays ?? 1) < 1 || Number(task.targetDays ?? 1) > 3650))) {
+      showToast('Enter a whole number of days from 1 to 3650 for each task.', true);
+      return;
+    }
     setSavingGoal(true);
     try {
       const subtasks = editSubtasks.filter((t) => t.text.trim());
@@ -111,6 +100,7 @@ export default function AchievementDetailModal({ achievement, isMe, onChanged, o
                       value={t.text}
                       onChange={(e) => updateEditSubtask(i, e.target.value)}
                     />
+                    <label className="task-days-input">Days<input type="number" min="1" max="3650" value={t.targetDays || 1} onChange={(e) => setEditSubtasks((tasks) => tasks.map((task, index) => index === i ? { ...task, targetDays: e.target.value } : task))} /></label>
                     <button type="button" className="goal-remove-btn" onClick={() => removeEditSubtask(i)}>✕</button>
                   </div>
                 ))}
@@ -140,8 +130,8 @@ export default function AchievementDetailModal({ achievement, isMe, onChanged, o
                     {goal.subtasks.map((t, i) => (
                       <li key={i}>
                         <label className={isMe ? '' : 'goal-subtask-readonly'}>
-                          <input type="checkbox" checked={t.done} disabled={!isMe} onChange={() => toggleSubtask(i)} />
-                          <span className={t.done ? 'goal-subtask-done' : ''}>{t.text}</span>
+                          <span aria-label={t.done ? 'Completed' : 'In progress'}>{t.done ? '✓' : '○'}</span>
+                          <span className={t.done ? 'goal-subtask-done' : ''}>{t.text} · {t.completedDays || 0}/{t.targetDays || 1} days</span>
                         </label>
                       </li>
                     ))}

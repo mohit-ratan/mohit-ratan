@@ -19,7 +19,7 @@ test('only fully completed goals earn awards; unfinished goals and tags remain a
     module: { exports: {} }, console,
     require: (name) => name === '../db' ? {
       query: async (sql) => [sql.includes('FROM goals') ? goals : posts],
-    } : name === 'uuid' ? { v4: () => 'test-id' } : require(name),
+    } : name === 'uuid' ? { v4: () => 'test-id' } : name === '../lib/goalProgress' ? require('../src/lib/goalProgress') : require(name),
   };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/controllers/postsController.js'), 'utf8'), sandbox);
   let result;

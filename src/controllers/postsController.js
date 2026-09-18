@@ -2,6 +2,7 @@ const fs = require('fs/promises');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
+const { targetDays, normalizeTasks } = require('../lib/goalProgress');
 
 function mediaTypeFromMime(mime) {
   return mime && mime.startsWith('video') ? 'video' : 'image';
@@ -130,8 +131,8 @@ async function achievements(req, res) {
     );
     const goalByTag = new Map(goalRows.map((g) => [g.tag, {
       targetDate: g.target_date ? new Date(g.target_date).toISOString().slice(0, 10) : null,
-      subtasks: g.subtasks || [],
-      completed: Array.isArray(g.subtasks) && g.subtasks.length > 0 && g.subtasks.every((t) => t.done),
+      subtasks: normalizeTasks(g.subtasks),
+      completed: normalizeTasks(g.subtasks).length > 0 && normalizeTasks(g.subtasks).every((t) => t.done),
     }]));
 
     const achievementList = [...byTag.entries()].map(([tag, posts]) => {
@@ -187,8 +188,8 @@ async function create(req, res) {
       try {
         await connection.beginTransaction();
         const [rows] = await connection.query('SELECT id, subtasks FROM goals WHERE author_id = ? AND tag = ? FOR UPDATE', [req.userId, cleanTag]);
-        const subtasks = rows[0]?.subtasks;
-        if (!Array.isArray(subtasks) || !subtasks[index] || subtasks[index].text !== req.body.goalTaskText) {
+        const subtasks = normalizeTasks(rows[0]?.subtasks);
+        if (!Array.isArray(subtasks) || !subtasks[index] || subtasks[index].text !== req.body.goalTaskText || (req.body.goalTaskId && subtasks[index].id !== req.body.goalTaskId)) {
           await connection.rollback();
           return res.status(409).json({ error: 'This goal task has changed. Reopen the uploader and choose it again.' });
         }
@@ -197,12 +198,14 @@ async function create(req, res) {
            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0]
         );
-        const taskCompleted = !subtasks[index].done;
-        subtasks[index].done = true;
+        const wasDone = subtasks[index].done;
+        subtasks[index].completedDays = Math.min(subtasks[index].targetDays, subtasks[index].completedDays + 1);
+        subtasks[index].done = subtasks[index].completedDays >= subtasks[index].targetDays;
+        const taskCompleted = !wasDone && subtasks[index].done;
         subtasks[index].photoPostId = id;
         await connection.query('UPDATE goals SET subtasks = ? WHERE id = ?', [JSON.stringify(subtasks), rows[0].id]);
         await connection.commit();
-        return res.json({ ok: true, id, taskCompleted, goalCompleted: subtasks.every((task) => task.done) });
+        return res.json({ ok: true, id, taskCompleted, completedDays: subtasks[index].completedDays, targetDays: subtasks[index].targetDays, goalCompleted: subtasks.every((task) => task.done) });
       } catch (error) {
         await connection.rollback();
         throw error;
@@ -234,10 +237,11 @@ async function maybeCreateGoal(authorId, tag, goalTargetDate, goalSubtasksRaw) {
   if (!tag || !(goalTargetDate || goalSubtasksRaw)) return;
   let subtaskTexts = [];
   try { subtaskTexts = JSON.parse(goalSubtasksRaw || '[]'); } catch { subtaskTexts = []; }
-  const subtasks = subtaskTexts
-    .filter((t) => typeof t === 'string' && t.trim())
+  const subtasks = (Array.isArray(subtaskTexts) ? subtaskTexts : [])
+    .map((t) => typeof t === 'string' ? { text: t } : t)
+    .filter((t) => t && typeof t.text === 'string' && t.text.trim())
     .slice(0, 15)
-    .map((t) => ({ text: t.trim().slice(0, 140), done: false }));
+    .map((t) => ({ id: uuidv4(), text: t.text.trim().slice(0, 140), targetDays: targetDays(t.targetDays), completedDays: 0, done: false }));
   await pool.query(
     `INSERT IGNORE INTO goals (id, author_id, tag, target_date, subtasks)
      VALUES (?, ?, ?, ?, ?)`,

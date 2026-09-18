@@ -79,3 +79,16 @@ export function parseTag(raw) {
   if (!raw) return '';
   return raw.replace(/^#/, '').toLowerCase().trim().split(/[,\s]+/)[0] || '';
 }
+
+export function taskProgress(task) {
+  const target = Math.max(1, Number(task.targetDays) || 1);
+  const completed = Math.min(target, Math.max(0, Number(task.completedDays ?? (task.done ? target : 0)) || 0));
+  return { target, completed };
+}
+
+export function tasksProgress(tasks) {
+  return tasks.reduce((total, task) => {
+    const progress = taskProgress(task);
+    return { target: total.target + progress.target, completed: total.completed + progress.completed };
+  }, { target: 0, completed: 0 });
+}

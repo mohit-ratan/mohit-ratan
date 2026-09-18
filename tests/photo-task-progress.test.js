@@ -4,8 +4,9 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 
-function fixture({ done = false, missing = false, fail = false } = {}) {
+function fixture({ done = false, missing = false, fail = false, targetDays = 1 } = {}) {
   const events = [];
+  let tasks = [{ text: 'Run', done, targetDays, completedDays: done ? targetDays : 0 }];
   const connection = {
     beginTransaction: async () => events.push('begin'),
     commit: async () => events.push('commit'),
@@ -14,14 +15,14 @@ function fixture({ done = false, missing = false, fail = false } = {}) {
     query: async (sql, args) => {
       if (sql.startsWith('SELECT')) {
         assert.deepEqual(Array.from(args), ['owner', 'fitness']);
-        return [missing ? [] : [{ id: 'goal', subtasks: [{ text: 'Run', done }] }]];
+        return [missing ? [] : [{ id: 'goal', subtasks: tasks }]];
       }
       if (sql.startsWith('INSERT')) { events.push('post'); if (fail) throw new Error('write failed'); }
-      if (sql.startsWith('UPDATE')) { assert.equal(JSON.parse(args[0])[0].done, true); events.push('task'); }
+      if (sql.startsWith('UPDATE')) { tasks = JSON.parse(args[0]); events.push('task'); }
       return [{}];
     },
   };
-  const sandbox = { module: { exports: {} }, console: { error() {} }, require: (name) => name === '../db' ? { getConnection: async () => connection } : name === 'uuid' ? { v4: () => 'photo-id' } : require(name) };
+  const sandbox = { module: { exports: {} }, console: { error() {} }, require: (name) => name === '../db' ? { getConnection: async () => connection } : name === 'uuid' ? { v4: () => 'photo-id' } : name === '../lib/goalProgress' ? require('../src/lib/goalProgress') : require(name) };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/controllers/postsController.js'), 'utf8'), sandbox);
   const req = { userId: 'owner', file: { filename: 'photo.jpg', mimetype: 'image/jpeg' }, body: { category: 'health', tag: 'fitness', goalTaskIndex: '0', goalTaskText: 'Run' } };
   const response = { status: 200 };
@@ -56,4 +57,22 @@ test('video and malformed task selection are rejected', async () => {
   assert.equal(video.response.status, 400);
   const invalid = fixture(); invalid.req.body.goalTaskIndex = '-1'; await invalid.run();
   assert.equal(invalid.response.status, 400);
+});
+
+test('each upload adds one day, completion requires target and is capped', async () => {
+  const f = fixture({ targetDays: 3 });
+  await f.run();
+  assert.equal(f.response.data.completedDays, 1);
+  assert.equal(f.response.data.goalCompleted, false);
+  assert.equal(f.response.data.taskCompleted, false);
+  await f.run();
+  assert.equal(f.response.data.completedDays, 2);
+  assert.equal(f.response.data.goalCompleted, false);
+  await f.run();
+  assert.equal(f.response.data.completedDays, 3);
+  assert.equal(f.response.data.taskCompleted, true);
+  assert.equal(f.response.data.goalCompleted, true);
+  await f.run();
+  assert.equal(f.response.data.completedDays, 3);
+  assert.equal(f.response.data.taskCompleted, false);
 });

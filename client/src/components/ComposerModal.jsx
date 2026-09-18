@@ -48,10 +48,10 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
 
   function addSubtask() {
     if (goalSubtasks.length >= MAX_SUBTASKS) return;
-    setGoalSubtasks((s) => [...s, '']);
+    setGoalSubtasks((s) => [...s, { text: '', targetDays: 1 }]);
   }
   function updateSubtask(i, text) {
-    setGoalSubtasks((s) => s.map((t, idx) => (idx === i ? text.slice(0, 140) : t)));
+    setGoalSubtasks((s) => s.map((t, idx) => (idx === i ? { ...t, text: text.slice(0, 140) } : t)));
   }
   function removeSubtask(i) {
     setGoalSubtasks((s) => s.filter((_, idx) => idx !== i));
@@ -136,7 +136,11 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
     }
 
     if (taskIndex !== '' && (!selectedTask || media.kind !== 'image')) {
-      showToast('Choose a goal task and upload a photo to complete it.', true);
+      showToast('Choose a goal task and upload a photo to record progress.', true);
+      return;
+    }
+    if (goalSubtasks.some((task) => task.text.trim() && (!Number.isInteger(Number(task.targetDays ?? 1)) || Number(task.targetDays ?? 1) < 1 || Number(task.targetDays ?? 1) > 3650))) {
+      showToast('Enter a whole number of days from 1 to 3650 for each task.', true);
       return;
     }
     setSubmitting(true);
@@ -150,9 +154,10 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
       if (isPost && selectedTask) {
         form.append('goalTaskIndex', taskIndex);
         form.append('goalTaskText', selectedTask.text);
+        form.append('goalTaskId', selectedTask.id);
       }
       if (isNewTag) {
-        const cleanSubtasks = goalSubtasks.filter((t) => t.trim());
+        const cleanSubtasks = goalSubtasks.filter((t) => t.text.trim());
         if (goalTargetDate || cleanSubtasks.length) {
           form.append('goalTargetDate', goalTargetDate);
           form.append('goalSubtasks', JSON.stringify(cleanSubtasks));
@@ -162,7 +167,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
       const endpoint = isPost ? '/api/posts' : '/api/stories';
       const { data } = await api.post(endpoint, form, { headers: { 'Content-Type': 'multipart/form-data' } });
 
-      showToast(data.goalCompleted ? '🏆 Goal complete! Your award is in your Achievement House.' : data.taskCompleted ? 'Photo posted — task completed and progress updated!' : isPost ? 'Posted!' : 'Added to your story!');
+      showToast(data.goalCompleted ? '🏆 Goal complete! Your award is in your Achievement House.' : data.targetDays ? `Photo posted — ${data.completedDays} of ${data.targetDays} days complete!` : isPost ? 'Posted!' : 'Added to your story!');
       onCreated?.();
       onClose();
     } catch (err) {
@@ -281,12 +286,12 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                 {availableGoals.map((item) => <option key={item.tag} value={item.tag}>#{item.tag}</option>)}
               </select>
               {linkedGoal && <>
-                <label htmlFor="photo-task">Which task does this photo complete?</label>
+                <label htmlFor="photo-task">Which task is this photo for?</label>
                 <select id="photo-task" value={taskIndex} onChange={(e) => { setTaskIndex(e.target.value); setChosenCat(linkedGoal.category); }}>
-                  <option value="">Post without completing a task</option>
-                  {linkedGoal.goal.subtasks.map((task, index) => <option key={index} value={index}>{task.done ? '✓ ' : ''}{task.text}</option>)}
+                  <option value="">Post without updating a task</option>
+                  {linkedGoal.goal.subtasks.map((task, index) => <option key={index} value={index}>{task.done ? '✓ ' : ''}{task.text} ({task.completedDays || 0}/{task.targetDays || 1} days)</option>)}
                 </select>
-                <span className="tag-hint">Sharing a photo marks the selected task complete. Each task counts once toward your goal.</span>
+                <span className="tag-hint">Each photo adds one day of progress to this task, up to its target. Multiple uploads on the same day each count.</span>
               </>}
             </div>}
             {isNewTag && (
@@ -298,15 +303,16 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                   value={goalTargetDate}
                   onChange={(e) => setGoalTargetDate(e.target.value)}
                 />
-                {goalSubtasks.map((text, i) => (
+                {goalSubtasks.map((task, i) => (
                   <div className="goal-subtask-row" key={i}>
                     <input
                       type="text"
                       placeholder={`Subtask ${i + 1}`}
                       maxLength={140}
-                      value={text}
+                      value={task.text}
                       onChange={(e) => updateSubtask(i, e.target.value)}
                     />
+                    <label className="task-days-input">Days<input type="number" min="1" max="3650" value={task.targetDays} onChange={(e) => setGoalSubtasks((tasks) => tasks.map((t, index) => index === i ? { ...t, targetDays: e.target.value } : t))} /></label>
                     <button type="button" className="goal-remove-btn" onClick={() => removeSubtask(i)}>✕</button>
                   </div>
                 ))}
