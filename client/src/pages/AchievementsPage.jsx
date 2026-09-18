@@ -1,77 +1,65 @@
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Canvas } from '@react-three/fiber';
 import api from '../api';
-import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import HouseScene from '../three/HouseScene';
-import Crosshair from '../three/Crosshair';
-import PostFX from '../three/PostFX';
-import AchievementDetailModal from '../components/AchievementDetailModal';
+import { CATEGORIES } from '../lib/format';
 
-// Full-viewport 3D glass house — WASD to drive, press E near a plinth to
-// open that achievement. All three rooms are visible/driveable in one
-// scene; AchievementDetailModal is a normal DOM overlay on top.
+// A plain 2D hub — one card per category "house." Picking one opens
+// RoomPage, the actual 3D walkable house for that category. No Canvas
+// here: this page doesn't need to carry any WebGL risk just to pick a
+// house.
 export default function AchievementsPage() {
   const { id: authorId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const showToast = useToast();
-  const isMe = user?.id === authorId;
 
   const [profile, setProfile] = useState(null);
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeAchievement, setActiveAchievement] = useState(null);
-  const [focusedLabel, setFocusedLabel] = useState(null);
-
-  const refresh = useCallback(async () => {
-    try {
-      const [profileRes, achievementsRes] = await Promise.all([
-        api.get(`/api/profile/${authorId}`),
-        api.get('/api/posts/achievements', { params: { authorId } }),
-      ]);
-      setProfile(profileRes.data.user);
-      setAchievements(achievementsRes.data.achievements);
-    } catch (err) {
-      showToast(err.message, true);
-    }
-  }, [authorId]);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
-    refresh().finally(() => setLoading(false));
-  }, [refresh]);
+    Promise.all([
+      api.get(`/api/profile/${authorId}`),
+      api.get('/api/posts/achievements', { params: { authorId } }),
+    ])
+      .then(([profileRes, achievementsRes]) => {
+        if (cancelled) return;
+        setProfile(profileRes.data.user);
+        setAchievements(achievementsRes.data.achievements);
+      })
+      .catch((err) => showToast(err.message, true))
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [authorId]);
 
   if (loading || !profile) {
-    return <div className="three-loading-shell"><p>Loading house…</p></div>;
+    return <div className="three-loading-shell"><p>Loading houses…</p></div>;
   }
 
   return (
-    <div className="three-page">
-      <div className="three-header-overlay">
-        <button type="button" className="three-back-btn" onClick={() => navigate(`/profile/${authorId}`)}>
-          ← Back to profile
-        </button>
-        <div className="three-room-label">{profile.displayName}’s Achievements House</div>
+    <div className="wrap achievements-hub">
+      <div className="back-link" onClick={() => navigate(`/profile/${authorId}`)}>← Back to profile</div>
+      <h1 className="achievements-hub-title">{profile.displayName}’s Achievement Houses</h1>
+      <p className="achievements-hub-sub">Each house has one floor per completed goal, with your task stickers on the walls.</p>
+      <div className="achievements-hub-grid">
+        {CATEGORIES.map((c) => {
+          const count = achievements.filter((a) => a.category === c.id).length;
+          return (
+            <button
+              key={c.id}
+              type="button"
+              className="achievement-house-card"
+              onClick={() => navigate(`/profile/${authorId}/room/${c.id}`)}
+            >
+              <span className="achievement-house-emoji">{c.emoji}</span>
+              <span className="achievement-house-label">{c.label} House</span>
+              <span className="achievement-house-count">{count} floor{count === 1 ? '' : 's'}</span>
+            </button>
+          );
+        })}
       </div>
-      <Canvas camera={{ position: [0, 3.2, 19.5], fov: 60 }}>
-        <Suspense fallback={null}>
-          <HouseScene achievements={achievements} onOpen={setActiveAchievement} onFocusChange={setFocusedLabel} />
-        </Suspense>
-        <PostFX />
-      </Canvas>
-      <Crosshair focusedLabel={focusedLabel} />
-      {activeAchievement && (
-        <AchievementDetailModal
-          achievement={activeAchievement}
-          isMe={isMe}
-          onChanged={refresh}
-          onClose={() => setActiveAchievement(null)}
-          onOpenAuthor={(id) => navigate(`/profile/${id}`)}
-          onOpenTag={(tag) => navigate(`/?tag=${encodeURIComponent(tag)}`)}
-        />
-      )}
     </div>
   );
 }

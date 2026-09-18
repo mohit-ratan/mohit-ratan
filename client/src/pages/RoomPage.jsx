@@ -4,15 +4,15 @@ import { Canvas } from '@react-three/fiber';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import RoomScene from '../three/RoomScene';
+import HouseInterior from '../three/HouseInterior';
 import Crosshair from '../three/Crosshair';
-import PostFX from '../three/PostFX';
 import AchievementDetailModal from '../components/AchievementDetailModal';
 import { CAT_MAP } from '../lib/format';
 
-// Full-viewport 3D view of a single category's open drivable yard — WASD to
-// drive, press E near an achievement plinth to open it. AchievementDetailModal
-// is a normal DOM overlay and needs no changes to work on top of the canvas.
+// One category's house — a small walkable room per achievement ("floor"),
+// switched via the floor selector overlay rather than physically climbing
+// stairs. Walk up to the achievement sticker on the back wall and press E
+// to open its full detail; AchievementDetailModal is unchanged.
 export default function RoomPage() {
   const { id: authorId, category } = useParams();
   const navigate = useNavigate();
@@ -25,6 +25,7 @@ export default function RoomPage() {
   const [loading, setLoading] = useState(true);
   const [activeAchievement, setActiveAchievement] = useState(null);
   const [focusedLabel, setFocusedLabel] = useState(null);
+  const [floorIndex, setFloorIndex] = useState(0);
 
   const refresh = useCallback(async () => {
     try {
@@ -45,33 +46,59 @@ export default function RoomPage() {
   }, [refresh]);
 
   const cat = CAT_MAP[category];
+  const filtered = achievements.filter((a) => a.category === category);
+
+  useEffect(() => {
+    setFloorIndex(0);
+  }, [category]);
 
   if (loading || !profile || !cat) {
-    return <div className="three-loading-shell"><p>Loading room…</p></div>;
+    return <div className="three-loading-shell"><p>Loading house…</p></div>;
   }
 
-  const filtered = achievements.filter((a) => a.category === category);
+  const clampedFloor = Math.min(floorIndex, Math.max(filtered.length - 1, 0));
 
   return (
     <div className="three-page">
       <div className="three-header-overlay">
         <button type="button" className="three-back-btn" onClick={() => navigate(`/profile/${authorId}/achievements`)}>
-          ← Achievements Room
+          ← Achievement Houses
         </button>
-        <div className="three-room-label">{cat.emoji} {profile.displayName}’s {cat.label} Yard</div>
+        <div className="three-room-label">{cat.emoji} {profile.displayName}’s {cat.label} House</div>
       </div>
-      <Canvas camera={{ position: [0, 3.2, 13.5], fov: 60 }}>
-        <Suspense fallback={null}>
-          <RoomScene
-            category={category}
-            achievements={filtered}
-            onOpen={setActiveAchievement}
-            onFocusChange={setFocusedLabel}
-          />
-        </Suspense>
-        <PostFX />
-      </Canvas>
-      <Crosshair focusedLabel={focusedLabel} />
+
+      {filtered.length === 0 ? (
+        <div className="three-loading-shell">
+          <p>No {cat.label.toLowerCase()} achievements yet — complete a goal to build this house's first floor.</p>
+        </div>
+      ) : (
+        <>
+          <Canvas camera={{ position: [0, 1.6, 2.5], fov: 62 }}>
+            <Suspense fallback={null}>
+              <HouseInterior
+                achievements={filtered}
+                floorIndex={clampedFloor}
+                onOpen={setActiveAchievement}
+                onFocusChange={setFocusedLabel}
+              />
+            </Suspense>
+          </Canvas>
+          <Crosshair focusedLabel={focusedLabel} />
+          <div className="three-floor-selector">
+            {filtered.map((a, i) => (
+              <button
+                key={a.tag}
+                type="button"
+                className={`three-floor-btn${i === clampedFloor ? ' active' : ''}`}
+                onClick={() => setFloorIndex(i)}
+              >
+                Floor {i + 1} · #{a.tag}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
       {activeAchievement && (
         <AchievementDetailModal
           achievement={activeAchievement}

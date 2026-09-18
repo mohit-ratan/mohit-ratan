@@ -4,17 +4,16 @@ import { useFrame } from '@react-three/fiber';
 const DEFAULT_MAX_DISTANCE = 2.4;
 
 // A mutable registry of { position: {x,z}, radius, label, onInteract }
-// entries — achievement plinths, zone markers, and decor all register
-// themselves once (their position is fixed) and unregister on unmount.
-// `radius` drives collision (resolveCollision); `label`/`onInteract` are
-// optional — decor is collidable but not interactable.
+// entries — achievement stickers register themselves once (their position
+// is fixed) and unregister on unmount. `radius` is the proximity range for
+// triggering `onInteract`.
 export function useInteractionRegistry() {
   return useRef([]);
 }
 
 export function useRegisterInteractable(registryRef, { position, radius = 0, label, onInteract }) {
   useEffect(() => {
-    if (!registryRef) return undefined; // e.g. decorative trees with no collision/interaction
+    if (!registryRef) return undefined;
     const entry = { position, radius, label, onInteract };
     registryRef.current.push(entry);
     return () => {
@@ -25,11 +24,11 @@ export function useRegisterInteractable(registryRef, { position, radius = 0, lab
 }
 
 // Each frame, finds the closest INTERACTABLE entry (has onInteract) within
-// maxDistance of the car's current position (read from carPosRef, updated
-// by CarController) — proximity fits a chase-camera car much better than a
-// raycast crosshair, which assumes you're looking directly at what you
-// want. E interacts with whatever's currently focused. Returns the focused
-// label for the overlay.
+// maxDistance of the player's current position (read from playerPosRef,
+// updated by WalkController) — proximity fits a first-person walk much
+// better than a raycast crosshair, which assumes you're looking directly
+// at what you want. E interacts with whatever's currently focused. Returns
+// the focused label for the overlay.
 export function useProximityInteraction(registryRef, carPosRef, { enabled, maxDistance = DEFAULT_MAX_DISTANCE }) {
   const [focusedLabel, setFocusedLabel] = useState(null);
   const focusedInteract = useRef(null);
@@ -67,27 +66,4 @@ export function useProximityInteraction(registryRef, carPosRef, { enabled, maxDi
   }, []);
 
   return focusedLabel;
-}
-
-// Simple circle-vs-circle position correction — not a physics engine, just
-// "don't let the car's center get closer to an object's center than the
-// sum of their radii," pushing it back out along the separation vector
-// each frame it's overlapping. Called from CarController with the car's
-// tentative next position; returns the corrected {x, z}.
-export function resolveCollisions(nx, nz, registryRef, carRadius) {
-  let x = nx;
-  let z = nz;
-  for (const entry of registryRef.current) {
-    if (!entry.radius) continue;
-    const dx = x - entry.position.x;
-    const dz = z - entry.position.z;
-    const dist = Math.sqrt(dx * dx + dz * dz);
-    const minDist = carRadius + entry.radius;
-    if (dist < minDist && dist > 0.0001) {
-      const push = minDist - dist;
-      x += (dx / dist) * push;
-      z += (dz / dist) * push;
-    }
-  }
-  return { x, z };
 }
