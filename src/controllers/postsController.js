@@ -43,6 +43,32 @@ function mapPost(row) {
   };
 }
 
+// Attaches a { completed, target } day-count summary to each post whose
+// tag has a goal, in one batched query rather than one per post.
+async function attachGoalProgress(posts) {
+  const pairs = [...new Map(
+    posts.filter((p) => p.tag).map((p) => [`${p.authorId}:${p.tag}`, [p.authorId, p.tag]])
+  ).values()];
+  if (!pairs.length) return posts;
+
+  const placeholders = pairs.map(() => '(?,?)').join(',');
+  const [goalRows] = await pool.query(
+    `SELECT author_id, tag, subtasks FROM goals WHERE (author_id, tag) IN (${placeholders})`,
+    pairs.flat()
+  );
+  const byKey = new Map(goalRows.map((g) => [`${g.author_id}:${g.tag}`, normalizeTasks(g.subtasks)]));
+
+  return posts.map((post) => {
+    const tasks = post.tag ? byKey.get(`${post.authorId}:${post.tag}`) : null;
+    if (!tasks || !tasks.length) return post;
+    const goalProgress = tasks.reduce(
+      (acc, t) => ({ completed: acc.completed + t.completedDays, target: acc.target + t.targetDays }),
+      { completed: 0, target: 0 }
+    );
+    return { ...post, goalProgress };
+  });
+}
+
 // Media-only feed — a post with no media is never created (see create() below),
 // so this list is inherently "photos and videos only".
 async function list(req, res) {
@@ -71,7 +97,8 @@ async function list(req, res) {
     }
     sql += ' ORDER BY p.created_at DESC LIMIT 300';
     const [rows] = await pool.query(sql, params);
-    res.json({ posts: rows.map(mapPost) });
+    const posts = await attachGoalProgress(rows.map(mapPost));
+    res.json({ posts });
   } catch (err) {
     console.error('list posts error:', err);
     res.status(500).json({ error: 'Could not load posts.' });

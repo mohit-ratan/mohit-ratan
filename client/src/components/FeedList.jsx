@@ -65,6 +65,12 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
           <CommentIcon />{post.commentCount > 0 ? post.commentCount : 'Comment'}
         </button>
       </div>
+      {post.goalProgress?.target > 0 && (
+        <button type="button" className={`feed-card-progress house-floor-${post.category}`} onClick={() => onOpen(post)}>
+          <span>🎯 {post.goalProgress.completed}/{post.goalProgress.target} days</span>
+          <progress value={post.goalProgress.completed} max={post.goalProgress.target} aria-label="Goal progress" />
+        </button>
+      )}
       {post.tag && (
         <div className="tags-row feed-card-tags">
           <span className="tag-chip" onClick={() => onOpenTag(post.tag)}>#{post.tag}</span>
