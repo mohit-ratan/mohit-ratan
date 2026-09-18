@@ -6,7 +6,7 @@ export const CATEGORIES = [
 
 export const CAT_MAP = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
 
-const AVATAR_COLORS = ['#1656C9', '#2B6CB0', '#0E7490', '#4C63B6', '#1D4E8F', '#3A7BD5'];
+const AVATAR_COLORS = ['#C7470C', '#B94312', '#A93808', '#C24D16', '#AC3F0E', '#B64B1A'];
 
 export function initials(name) {
   if (!name) return '?';
