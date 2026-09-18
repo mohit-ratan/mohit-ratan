@@ -39,6 +39,15 @@ pool.query(`
 }).catch((err) => console.error('Could not ensure posts.visibility column exists:', err));
 
 pool.query(`
+  SELECT COUNT(*) as cnt FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'is_private'
+`).then(([rows]) => {
+  if (!rows[0].cnt) {
+    return pool.query('ALTER TABLE users ADD COLUMN is_private TINYINT(1) NOT NULL DEFAULT 1');
+  }
+}).catch((err) => console.error('Could not ensure users.is_private column exists:', err));
+
+pool.query(`
   CREATE TABLE IF NOT EXISTS follows (
     follower_id VARCHAR(36) NOT NULL,
     followee_id VARCHAR(36) NOT NULL,

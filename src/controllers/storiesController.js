@@ -9,7 +9,7 @@ async function list(req, res) {
        EXISTS(SELECT 1 FROM story_views sv WHERE sv.story_id = s.id AND sv.user_id = ?) as viewed_by_me
        FROM stories s JOIN users u ON u.id = s.author_id
        WHERE s.created_at > (NOW() - INTERVAL 24 HOUR)
-       AND (s.author_id = ? OR EXISTS(
+       AND (s.author_id = ? OR u.is_private = 0 OR EXISTS(
          SELECT 1 FROM follows f WHERE f.follower_id = ? AND f.followee_id = s.author_id AND f.status = 'accepted'
        ))
        ORDER BY s.created_at ASC`,

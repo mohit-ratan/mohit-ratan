@@ -4,7 +4,7 @@ import BrandLogo from './BrandLogo';
 import Avatar from './Avatar';
 import api from '../api';
 import { CATEGORIES } from '../lib/format';
-import { SearchIcon } from '../lib/icons';
+import { SearchIcon, BellIcon } from '../lib/icons';
 import { useAuth } from '../context/AuthContext';
 
 export default function Header({
@@ -24,6 +24,9 @@ export default function Header({
   const [people, setPeople] = useState([]);
   const [peopleOpen, setPeopleOpen] = useState(false);
   const [peopleLoading, setPeopleLoading] = useState(false);
+  const [requests, setRequests] = useState([]);
+  const [requestsOpen, setRequestsOpen] = useState(false);
+  const requestsRef = useRef(null);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -33,6 +36,38 @@ export default function Header({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [menuOpen]);
+
+  useEffect(() => {
+    if (!requestsOpen) return;
+    function handleClickOutside(e) {
+      if (requestsRef.current && !requestsRef.current.contains(e.target)) setRequestsOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [requestsOpen]);
+
+  // Polls rather than pushing, since there's no websocket/SSE layer in this
+  // app — good enough for a personal-scale follow-request inbox.
+  useEffect(() => {
+    let cancelled = false;
+    function load() {
+      api.get('/api/follows/requests').then(({ data }) => {
+        if (!cancelled) setRequests(data.requests);
+      }).catch(() => {});
+    }
+    load();
+    const interval = setInterval(load, 30000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
+
+  async function respondRequest(id, action) {
+    try {
+      await api.patch(`/api/follows/${id}`, { action });
+      setRequests((current) => current.filter((r) => r.id !== id));
+    } catch {
+      // Leaving the request in the list lets the user just try again.
+    }
+  }
 
   useEffect(() => {
     if (!peopleOpen) return;
@@ -138,6 +173,36 @@ export default function Header({
         </div>
         <div className="header-actions">
           <button className="pill-btn" type="button" onClick={onCompose}>+ Post</button>
+          <div className="bell-wrap" ref={requestsRef}>
+            <button
+              className="bell-btn"
+              type="button"
+              title="Follow requests"
+              aria-label="Follow requests"
+              onClick={() => setRequestsOpen((v) => !v)}
+            >
+              <BellIcon />
+              {requests.length > 0 && <span className="bell-badge">{requests.length}</span>}
+            </button>
+            {requestsOpen && (
+              <div className="me-menu bell-menu">
+                {requests.length ? requests.map((r) => (
+                  <div key={r.id} className="bell-request-row">
+                    <button type="button" className="people-search-person" onClick={() => { setRequestsOpen(false); navigate(`/profile/${r.id}`); }}>
+                      <Avatar id={r.id} name={r.displayName} photoUrl={r.photoUrl} size={32} />
+                      <span>{r.displayName}</span>
+                    </button>
+                    <div className="follow-request-actions">
+                      <button type="button" className="pill-btn primary" onClick={() => respondRequest(r.id, 'accept')}>Accept</button>
+                      <button type="button" className="pill-btn" onClick={() => respondRequest(r.id, 'reject')}>Decline</button>
+                    </div>
+                  </div>
+                )) : (
+                  <div className="people-search-empty">No follow requests</div>
+                )}
+              </div>
+            )}
+          </div>
           <div className="me-wrap" ref={menuRef}>
             <button
               className="avatar-btn"

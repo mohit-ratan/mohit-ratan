@@ -53,7 +53,7 @@ async function list(req, res) {
                (SELECT COUNT(*) FROM comments cm WHERE cm.post_id = p.id) as comment_count,
                EXISTS(SELECT 1 FROM post_likes pl2 WHERE pl2.post_id = p.id AND pl2.user_id = ?) as liked_by_me
                FROM posts p JOIN users u ON u.id = p.author_id
-               WHERE (p.visibility = 'public' OR p.author_id = ? OR EXISTS(
+               WHERE (p.visibility = 'public' OR p.author_id = ? OR u.is_private = 0 OR EXISTS(
                  SELECT 1 FROM follows f WHERE f.follower_id = ? AND f.followee_id = p.author_id AND f.status = 'accepted'
                ))`;
     const params = [req.userId, req.userId, req.userId];

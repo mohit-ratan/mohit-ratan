@@ -179,6 +179,23 @@
   }
   .me-menu-item:hover{background:var(--accent-soft);}
   .me-menu-item.danger:hover{background:#FEE2E2;color:#DC2626;}
+  .bell-wrap{position:relative;display:inline-flex;flex-shrink:0;}
+  .bell-btn{
+    width:34px;height:34px;border-radius:50%;position:relative;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--surface);color:var(--text-muted);
+    border:1px solid var(--border);cursor:pointer;flex-shrink:0;
+  }
+  .bell-btn svg{width:16px;height:16px;}
+  .bell-badge{
+    position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 4px;
+    border-radius:999px;background:#DC2626;color:#fff;
+    font-size:10px;font-weight:700;line-height:16px;text-align:center;
+    border:1.5px solid var(--surface);
+  }
+  .bell-menu{min-width:280px;max-height:340px;overflow-y:auto;}
+  .bell-request-row{display:flex;align-items:center;gap:8px;padding:6px;border-radius:8px;}
+  .bell-request-row:hover{background:var(--surface-2);}
   .streak-badge{
     position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);
     background:linear-gradient(135deg,#FF6B35,#F7931E);color:#fff;

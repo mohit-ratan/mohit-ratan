@@ -8,18 +8,33 @@ async function follow(req, res) {
     if (followeeId === req.userId) {
       return res.status(400).json({ error: "You can't follow yourself." });
     }
-    const [target] = await pool.query('SELECT 1 FROM users WHERE id = ?', [followeeId]);
+    const [target] = await pool.query('SELECT is_private FROM users WHERE id = ?', [followeeId]);
     if (!target.length) return res.status(404).json({ error: 'User not found.' });
+    const isPrivate = !!target[0].is_private;
 
-    await pool.query(
-      'INSERT IGNORE INTO follows (follower_id, followee_id, status) VALUES (?, ?, ?)',
-      [req.userId, followeeId, 'pending']
-    );
-    const [rows] = await pool.query(
+    const [existing] = await pool.query(
       'SELECT status FROM follows WHERE follower_id = ? AND followee_id = ?',
       [req.userId, followeeId]
     );
-    res.json({ status: rows[0].status });
+    if (existing.length) {
+      // A pending request left over from when this account was private —
+      // now that it's public, there's nothing left to approve.
+      if (existing[0].status === 'pending' && !isPrivate) {
+        await pool.query(
+          "UPDATE follows SET status = 'accepted' WHERE follower_id = ? AND followee_id = ?",
+          [req.userId, followeeId]
+        );
+        return res.json({ status: 'accepted' });
+      }
+      return res.json({ status: existing[0].status });
+    }
+
+    const status = isPrivate ? 'pending' : 'accepted';
+    await pool.query(
+      'INSERT INTO follows (follower_id, followee_id, status) VALUES (?, ?, ?)',
+      [req.userId, followeeId, status]
+    );
+    res.json({ status });
   } catch (err) {
     console.error('follow error:', err);
     res.status(500).json({ error: 'Could not send follow request.' });

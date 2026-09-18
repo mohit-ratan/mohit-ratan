@@ -32,7 +32,7 @@ async function computeStreak(authorId) {
 async function getProfile(req, res) {
   try {
     const [rows] = await pool.query(
-      'SELECT id, display_name, bio, photo_url FROM users WHERE id = ?',
+      'SELECT id, display_name, bio, photo_url, is_private FROM users WHERE id = ?',
       [req.params.id]
     );
     if (!rows.length) return res.status(404).json({ error: 'User not found.' });
@@ -41,7 +41,7 @@ async function getProfile(req, res) {
     const followStatus = await getFollowStatus(req.userId, req.params.id);
 
     res.json({
-      user: { id: u.id, displayName: u.display_name, bio: u.bio, photoUrl: u.photo_url },
+      user: { id: u.id, displayName: u.display_name, bio: u.bio, photoUrl: u.photo_url, isPrivate: !!u.is_private },
       streak,
       followStatus,
     });
@@ -53,10 +53,10 @@ async function getProfile(req, res) {
 
 async function updateProfile(req, res) {
   try {
-    const { displayName, bio } = req.body || {};
+    const { displayName, bio, isPrivate } = req.body || {};
     await pool.query(
-      'UPDATE users SET display_name = ?, bio = ? WHERE id = ?',
-      [(displayName || 'Anonymous').trim().slice(0, 100), (bio || '').trim().slice(0, 220), req.userId]
+      'UPDATE users SET display_name = ?, bio = ?, is_private = ? WHERE id = ?',
+      [(displayName || 'Anonymous').trim().slice(0, 100), (bio || '').trim().slice(0, 220), isPrivate === false ? 0 : 1, req.userId]
     );
     res.json({ ok: true });
   } catch (err) {

@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
   display_name          VARCHAR(100) NOT NULL,
   bio                   VARCHAR(220) DEFAULT '',
   photo_url             VARCHAR(500) DEFAULT NULL,
+  is_private            TINYINT(1)  NOT NULL DEFAULT 1,
   email_verified         TINYINT(1)  NOT NULL DEFAULT 0,
   verification_token    VARCHAR(255) DEFAULT NULL,
   verification_expires  DATETIME     DEFAULT NULL,

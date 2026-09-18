@@ -31,11 +31,12 @@ export default function ProfilePage() {
 
   const [nameDraft, setNameDraft] = useState('');
   const [bioDraft, setBioDraft] = useState('');
+  const [privateDraft, setPrivateDraft] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
-  const canView = isMe || followStatus === 'accepted';
+  const canView = isMe || !profile?.isPrivate || followStatus === 'accepted';
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -46,8 +47,9 @@ export default function ProfilePage() {
       setFollowStatus(profileRes.data.followStatus);
       setNameDraft(profileRes.data.user.displayName || '');
       setBioDraft(profileRes.data.user.bio || '');
+      setPrivateDraft(profileRes.data.user.isPrivate !== false);
 
-      const allowed = profileRes.data.followStatus === 'me' || profileRes.data.followStatus === 'accepted';
+      const allowed = profileRes.data.followStatus === 'me' || profileRes.data.followStatus === 'accepted' || !profileRes.data.user.isPrivate;
       if (allowed) {
         const [postsRes, achievementsRes] = await Promise.all([
           api.get('/api/posts', { params: { authorId } }),
@@ -97,7 +99,7 @@ export default function ProfilePage() {
   async function saveProfile() {
     setSaving(true);
     try {
-      await api.put('/api/profile/me', { displayName: nameDraft.trim() || 'Anonymous', bio: bioDraft.trim().slice(0, 220) });
+      await api.put('/api/profile/me', { displayName: nameDraft.trim() || 'Anonymous', bio: bioDraft.trim().slice(0, 220), isPrivate: privateDraft });
       updateUser({ displayName: nameDraft.trim() || 'Anonymous', bio: bioDraft.trim().slice(0, 220) });
       setEditing(false);
       showToast('Profile saved');
@@ -176,7 +178,7 @@ export default function ProfilePage() {
                       <input ref={photoInputRef} type="file" accept="image/*" hidden onChange={handlePhotoChange} />
                     </>}
                   </div>
-                  {isMe && <button type="button" className="profile-edit-toggle" aria-expanded={editing} aria-controls="profile-editor" onClick={() => { setNameDraft(profile.displayName || ''); setBioDraft(profile.bio || ''); setEditing(!editing); }} disabled={saving}>{editing ? 'Cancel editing' : 'Edit profile'}</button>}
+                  {isMe && <button type="button" className="profile-edit-toggle" aria-expanded={editing} aria-controls="profile-editor" onClick={() => { setNameDraft(profile.displayName || ''); setBioDraft(profile.bio || ''); setPrivateDraft(profile.isPrivate !== false); setEditing(!editing); }} disabled={saving}>{editing ? 'Cancel editing' : 'Edit profile'}</button>}
                   {!isMe && followStatus === 'none' && (
                     <button type="button" className="pill-btn primary" onClick={sendFollowRequest} disabled={followLoading}>Follow</button>
                   )}
@@ -195,6 +197,14 @@ export default function ProfilePage() {
                 {isMe && editing && <form id="profile-editor" className="profile-editor" onSubmit={(e) => { e.preventDefault(); saveProfile(); }}>
                   <label>Display name<input type="text" value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} disabled={saving} /></label>
                   <label>Bio <span>(optional)</span><textarea rows={3} maxLength={220} value={bioDraft} onChange={(e) => setBioDraft(e.target.value)} placeholder="What are you working toward?" disabled={saving} /></label>
+                  <div className="visibility-choice-row">
+                    <label className="composer-field-label">Account privacy</label>
+                    <div className="visibility-choice-options">
+                      <button type="button" className={`visibility-choice${privateDraft ? ' chosen' : ''}`} disabled={saving} onClick={() => setPrivateDraft(true)}>🔒 Private</button>
+                      <button type="button" className={`visibility-choice${!privateDraft ? ' chosen' : ''}`} disabled={saving} onClick={() => setPrivateDraft(false)}>🌐 Public</button>
+                    </div>
+                    <span className="tag-hint">{privateDraft ? 'People must send a follow request and be accepted before seeing your posts and stories.' : 'Anyone can see your posts and stories, and following you is instant — no approval needed.'}</span>
+                  </div>
                   <div className="profile-editor-actions"><button type="submit" className="pill-btn primary" disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</button>{profile.photoUrl && <button type="button" className="remove-photo-link" onClick={removePhoto}>Remove photo</button>}</div>
                 </form>}
                 <div className="profile-bottom-row">
