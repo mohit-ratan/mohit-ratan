@@ -3,7 +3,7 @@ import CarController from './CarController';
 import FurnitureProp from './FurnitureProp';
 import AchievementPlinth from './AchievementPlinth';
 import { FURNITURE_URLS } from './assets';
-import { SkyDome, Mountains, TreeRing, BirdFlock, GrassField, CheckeredEdge, isNightNow } from './Environment';
+import { SkyDome, Mountains, TreeRing, BirdFlock, GrassField, GroundDebris, NaturalGround, CheckeredEdge, isNightNow } from './Environment';
 import WaterFeature from './WaterFeature';
 import { useInteractionRegistry, useProximityInteraction } from './useInteraction';
 
@@ -16,7 +16,6 @@ const CATEGORY_COLORS = {
   wealth: { accent: '#2B6CB0' },
   relationships: { accent: '#B0527A' },
 };
-const GRASS_COLOR = '#6FA85C';
 const ROAD_COLOR = '#6B6B70';
 const FOG_COLOR_DAY = '#BFE3F5';
 const FOG_COLOR_NIGHT = '#0B1330';
@@ -84,10 +83,8 @@ export default function RoomScene({ category, achievements, onOpen, onFocusChang
       <BirdFlock />
       <WaterFeature position={[-13, 0, -10]} size={4.5} registryRef={registryRef} />
 
-      <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[YARD_SIZE, YARD_SIZE]} />
-        <meshStandardMaterial color={GRASS_COLOR} />
-      </mesh>
+      <NaturalGround size={YARD_SIZE} />
+      <GroundDebris area={YARD_SIZE - 4} />
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
         <planeGeometry args={[3, YARD_SIZE]} />
         <meshStandardMaterial color={ROAD_COLOR} />

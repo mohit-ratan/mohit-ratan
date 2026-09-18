@@ -1,8 +1,62 @@
 import { Suspense, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Sky, Stars, Instances, Instance } from '@react-three/drei';
+import * as THREE from 'three';
 import FurnitureProp from './FurnitureProp';
 import { TREE_URLS } from './assets';
+
+const GROUND_PALETTE = ['#6FA85C', '#5F9650', '#7BB868', '#6AA058'];
+
+// A flat single-color plane reads as an obviously fake floor — this bakes
+// per-vertex color noise (a patchy blend of a few grass shades, plus a
+// brightness jitter) directly into the geometry, no texture file needed,
+// so the ground has actual organic variation instead of one flat color.
+export function NaturalGround({ size = 40, segments = 40, position = [0, 0, 0] }) {
+  const geometry = useMemo(() => {
+    const geo = new THREE.PlaneGeometry(size, size, segments, segments);
+    const count = geo.attributes.position.count;
+    const colorAttr = new Float32Array(count * 3);
+    const palette = GROUND_PALETTE.map((c) => new THREE.Color(c));
+    for (let i = 0; i < count; i++) {
+      const c = palette[Math.floor(Math.random() * palette.length)];
+      const jitter = 0.88 + Math.random() * 0.24;
+      colorAttr[i * 3] = c.r * jitter;
+      colorAttr[i * 3 + 1] = c.g * jitter;
+      colorAttr[i * 3 + 2] = c.b * jitter;
+    }
+    geo.setAttribute('color', new THREE.BufferAttribute(colorAttr, 3));
+    return geo;
+  }, [size, segments]);
+
+  return (
+    <mesh geometry={geometry} rotation={[-Math.PI / 2, 0, 0]} position={position}>
+      <meshStandardMaterial vertexColors roughness={1} />
+    </mesh>
+  );
+}
+
+const DEBRIS_COLORS = ['#B5502A', '#8C6239', '#C97B3D', '#A6472A'];
+
+// Small scattered flat leaf/debris flecks across the ground — cheap way to
+// add the "natural clutter" look the reference image has (little colored
+// specks dotted across the terrain), avoiding a perfectly clean/empty floor.
+export function GroundDebris({ count = 70, area = 34 }) {
+  const items = useMemo(() => {
+    return Array.from({ length: count }, (_, i) => ({
+      position: [(Math.random() - 0.5) * area, 0.02, (Math.random() - 0.5) * area],
+      rotation: Math.random() * Math.PI,
+      color: DEBRIS_COLORS[i % DEBRIS_COLORS.length],
+      scale: 0.14 + Math.random() * 0.14,
+    }));
+  }, [count, area]);
+
+  return items.map((it, i) => (
+    <mesh key={i} position={it.position} rotation={[-Math.PI / 2, 0, it.rotation]} scale={it.scale}>
+      <planeGeometry args={[1, 1]} />
+      <meshStandardMaterial color={it.color} side={THREE.DoubleSide} />
+    </mesh>
+  ));
+}
 
 export function isNightNow() {
   const hour = new Date().getHours();
