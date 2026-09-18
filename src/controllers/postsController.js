@@ -1,8 +1,24 @@
+const fs = require('fs/promises');
+const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 
 function mediaTypeFromMime(mime) {
   return mime && mime.startsWith('video') ? 'video' : 'image';
+}
+
+// Deletes the goal for (authorId, tag) if no posts remain under that tag —
+// a goal with zero posts behind it would be invisible/unmanageable, since
+// achievements only ever surface tags that have at least one post.
+async function deleteGoalIfOrphaned(authorId, tag) {
+  if (!tag) return;
+  const [remaining] = await pool.query(
+    'SELECT 1 FROM posts WHERE author_id = ? AND tag = ? LIMIT 1',
+    [authorId, tag]
+  );
+  if (!remaining.length) {
+    await pool.query('DELETE FROM goals WHERE author_id = ? AND tag = ?', [authorId, tag]);
+  }
 }
 
 function mapPost(row) {
@@ -162,27 +178,90 @@ async function create(req, res) {
       [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0]
     );
 
-    // Optional goal metadata, only ever set from the composer the first
-    // time a tag is used — INSERT IGNORE makes this a safe no-op if the
-    // client's new-tag check was stale and a goal already exists.
-    if (cleanTag && (req.body.goalTargetDate || req.body.goalSubtasks)) {
-      let subtaskTexts = [];
-      try { subtaskTexts = JSON.parse(req.body.goalSubtasks || '[]'); } catch { subtaskTexts = []; }
-      const subtasks = subtaskTexts
-        .filter((t) => typeof t === 'string' && t.trim())
-        .slice(0, 15)
-        .map((t) => ({ text: t.trim().slice(0, 140), done: false }));
-      await pool.query(
-        `INSERT IGNORE INTO goals (id, author_id, tag, target_date, subtasks)
-         VALUES (?, ?, ?, ?, ?)`,
-        [uuidv4(), req.userId, cleanTag, req.body.goalTargetDate || null, JSON.stringify(subtasks)]
-      );
-    }
+    // Optional goal metadata, only ever set the first time a tag is used
+    // (from the composer, or from an edit that retags a post onto a brand
+    // new tag) — INSERT IGNORE makes this a safe no-op if the client's
+    // new-tag check was stale and a goal already exists.
+    await maybeCreateGoal(req.userId, cleanTag, req.body.goalTargetDate, req.body.goalSubtasks);
 
     res.json({ ok: true, id });
   } catch (e) {
     console.error('create post error:', e);
     res.status(500).json({ error: 'Something went wrong creating your post.' });
+  }
+}
+
+async function maybeCreateGoal(authorId, tag, goalTargetDate, goalSubtasksRaw) {
+  if (!tag || !(goalTargetDate || goalSubtasksRaw)) return;
+  let subtaskTexts = [];
+  try { subtaskTexts = JSON.parse(goalSubtasksRaw || '[]'); } catch { subtaskTexts = []; }
+  const subtasks = subtaskTexts
+    .filter((t) => typeof t === 'string' && t.trim())
+    .slice(0, 15)
+    .map((t) => ({ text: t.trim().slice(0, 140), done: false }));
+  await pool.query(
+    `INSERT IGNORE INTO goals (id, author_id, tag, target_date, subtasks)
+     VALUES (?, ?, ?, ?, ?)`,
+    [uuidv4(), authorId, tag, goalTargetDate || null, JSON.stringify(subtasks)]
+  );
+}
+
+// Edits category/vibe/tag only — media isn't editable (delete-and-repost
+// covers that). Retagging onto a brand-new tag offers the same optional
+// goal setup as creating a fresh post with a new tag; retagging away from
+// a tag that then has zero posts left cleans up its now-orphaned goal.
+async function update(req, res) {
+  try {
+    const [rows] = await pool.query('SELECT * FROM posts WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Post not found.' });
+    const post = rows[0];
+    if (post.author_id !== req.userId) return res.status(403).json({ error: 'You can only edit your own posts.' });
+
+    const { category, vibe, tag } = req.body || {};
+    if (!['health', 'wealth', 'relationships'].includes(category)) {
+      return res.status(400).json({ error: 'Pick a category (Health, Wealth, or Relationships).' });
+    }
+    const cleanTag = (tag || '').replace(/^#/, '').toLowerCase().slice(0, 24);
+    const oldTag = post.tag;
+
+    await pool.query(
+      'UPDATE posts SET category = ?, vibe = ?, tag = ? WHERE id = ?',
+      [category, (vibe || '').slice(0, 60), cleanTag, post.id]
+    );
+
+    if (cleanTag !== oldTag) {
+      await deleteGoalIfOrphaned(req.userId, oldTag);
+      const [existingForNewTag] = await pool.query(
+        'SELECT 1 FROM posts WHERE author_id = ? AND tag = ? AND id != ? LIMIT 1',
+        [req.userId, cleanTag, post.id]
+      );
+      if (!existingForNewTag.length) {
+        await maybeCreateGoal(req.userId, cleanTag, req.body.goalTargetDate, req.body.goalSubtasks);
+      }
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('update post error:', err);
+    res.status(500).json({ error: 'Something went wrong saving your changes.' });
+  }
+}
+
+async function remove(req, res) {
+  try {
+    const [rows] = await pool.query('SELECT * FROM posts WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Post not found.' });
+    const post = rows[0];
+    if (post.author_id !== req.userId) return res.status(403).json({ error: 'You can only delete your own posts.' });
+
+    await pool.query('DELETE FROM posts WHERE id = ?', [post.id]);
+    await deleteGoalIfOrphaned(req.userId, post.tag);
+    await fs.unlink(path.join(__dirname, '..', '..', 'public', post.media_url)).catch(() => {});
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('delete post error:', err);
+    res.status(500).json({ error: 'Something went wrong deleting your post.' });
   }
 }
 
@@ -243,4 +322,4 @@ async function addComment(req, res) {
   }
 }
 
-module.exports = { list, trendingTags, categoryCounts, achievements, create, like, listComments, addComment };
+module.exports = { list, trendingTags, categoryCounts, achievements, create, update, remove, like, listComments, addComment };

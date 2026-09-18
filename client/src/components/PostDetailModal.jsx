@@ -5,16 +5,20 @@ import { useToast } from '../context/ToastContext';
 import { CAT_MAP, timeAgo, truncate } from '../lib/format';
 import { pickLookRecipe } from '../lib/looks';
 import Avatar from './Avatar';
+import EditPostModal from './EditPostModal';
 import { HeartIcon, SparkleIcon } from '../lib/icons';
 
-export default function PostDetailModal({ post, onClose, onChanged, onOpenAuthor, onOpenTag }) {
+export default function PostDetailModal({ post, onClose, onChanged, onDeleted, onOpenAuthor, onOpenTag }) {
   const { user } = useAuth();
   const showToast = useToast();
+  const isMe = user?.id === post.authorId;
   const [liked, setLiked] = useState(!!post.likedByMe);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
   const [loadingComments, setLoadingComments] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,6 +52,21 @@ export default function PostDetailModal({ post, onClose, onChanged, onOpenAuthor
       onChanged?.();
     } catch (err) {
       showToast(err.message, true);
+    }
+  }
+
+  async function deletePost() {
+    if (!window.confirm("Delete this post? This can't be undone.")) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/api/posts/${post.id}`);
+      showToast('Post deleted');
+      onChanged?.();
+      onDeleted?.();
+      onClose();
+    } catch (err) {
+      showToast(err.message, true);
+      setDeleting(false);
     }
   }
 
@@ -87,6 +106,14 @@ export default function PostDetailModal({ post, onClose, onChanged, onOpenAuthor
               <span className="post-author" style={{ cursor: 'pointer' }} onClick={() => onOpenAuthor(post.authorId)}>{post.authorName}</span>
               <div className="post-meta"><span className={`cat-label ${cat.id}`}>{cat.emoji} {cat.label}</span></div>
             </div>
+            {isMe && (
+              <div className="post-owner-actions">
+                <button type="button" className="goal-remove-btn" onClick={() => setEditing(true)}>Edit</button>
+                <button type="button" className="goal-remove-btn" disabled={deleting} onClick={deletePost}>
+                  {deleting ? 'Deleting…' : 'Delete'}
+                </button>
+              </div>
+            )}
             <button className="modal-close-btn" type="button" aria-label="Close" onClick={onClose}>✕</button>
           </div>
           <div className="modal-detail-scroll">
@@ -134,6 +161,17 @@ export default function PostDetailModal({ post, onClose, onChanged, onOpenAuthor
           </div>
         </div>
       </div>
+      {editing && (
+        <EditPostModal
+          post={post}
+          onClose={() => setEditing(false)}
+          onSaved={() => {
+            setEditing(false);
+            onChanged?.();
+            onClose();
+          }}
+        />
+      )}
     </div>
   );
 }

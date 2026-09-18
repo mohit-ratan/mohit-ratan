@@ -19,8 +19,10 @@ export default function AchievementsPage() {
   const [loading, setLoading] = useState(true);
   const [activeAchievement, setActiveAchievement] = useState(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  // Silent refresh — no loading flag, so it can run in the background while
+  // a modal is open (e.g. after editing/deleting a post or goal) without
+  // unmounting the page's loading-shell branch out from under it.
+  const refresh = useCallback(async () => {
     try {
       const [profileRes, achievementsRes] = await Promise.all([
         api.get(`/api/profile/${authorId}`),
@@ -30,10 +32,14 @@ export default function AchievementsPage() {
       setAchievements(achievementsRes.data.achievements);
     } catch (err) {
       showToast(err.message, true);
-    } finally {
-      setLoading(false);
     }
   }, [authorId]);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    await refresh();
+    setLoading(false);
+  }, [refresh]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -63,6 +69,7 @@ export default function AchievementsPage() {
         <AchievementDetailModal
           achievement={activeAchievement}
           isMe={isMe}
+          onChanged={refresh}
           onClose={() => setActiveAchievement(null)}
           onOpenAuthor={(id) => navigate(`/profile/${id}`)}
           onOpenTag={(tag) => navigate(`/?tag=${encodeURIComponent(tag)}`)}
