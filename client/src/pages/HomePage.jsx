@@ -153,7 +153,6 @@ export default function HomePage() {
         counts={counts}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        onCompose={() => setModal({ type: 'create' })}
         streak={streak}
       />
       <div className="wrap">

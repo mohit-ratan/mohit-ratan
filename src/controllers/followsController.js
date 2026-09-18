@@ -1,4 +1,5 @@
 const pool = require('../db');
+const { canView } = require('../lib/follows');
 
 // Sends a follow request (or is a no-op if one already exists in either
 // state — the caller just gets back whatever the current status now is).
@@ -112,4 +113,43 @@ async function listRequests(req, res) {
   }
 }
 
-module.exports = { follow, unfollow, respond, listRequests };
+// People who follow :id — same privacy rule as their posts/stories: only
+// visible to the account owner, an accepted follower, or if it's public.
+async function listFollowers(req, res) {
+  try {
+    const targetId = req.params.id;
+    if (!(await canView(req.userId, targetId))) return res.json({ users: [] });
+    const [rows] = await pool.query(
+      `SELECT u.id, u.display_name, u.photo_url FROM follows f
+       JOIN users u ON u.id = f.follower_id
+       WHERE f.followee_id = ? AND f.status = 'accepted'
+       ORDER BY u.display_name ASC`,
+      [targetId]
+    );
+    res.json({ users: rows.map((u) => ({ id: u.id, displayName: u.display_name, photoUrl: u.photo_url })) });
+  } catch (err) {
+    console.error('list followers error:', err);
+    res.status(500).json({ error: 'Could not load followers.' });
+  }
+}
+
+// People :id follows.
+async function listFollowing(req, res) {
+  try {
+    const targetId = req.params.id;
+    if (!(await canView(req.userId, targetId))) return res.json({ users: [] });
+    const [rows] = await pool.query(
+      `SELECT u.id, u.display_name, u.photo_url FROM follows f
+       JOIN users u ON u.id = f.followee_id
+       WHERE f.follower_id = ? AND f.status = 'accepted'
+       ORDER BY u.display_name ASC`,
+      [targetId]
+    );
+    res.json({ users: rows.map((u) => ({ id: u.id, displayName: u.display_name, photoUrl: u.photo_url })) });
+  } catch (err) {
+    console.error('list following error:', err);
+    res.status(500).json({ error: 'Could not load following.' });
+  }
+}
+
+module.exports = { follow, unfollow, respond, listRequests, listFollowers, listFollowing };

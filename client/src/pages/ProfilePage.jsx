@@ -9,6 +9,7 @@ import PostGrid from '../components/PostGrid';
 import PostDetailModal from '../components/PostDetailModal';
 import TrophyCase from '../components/TrophyCase';
 import FollowRequests from '../components/FollowRequests';
+import FollowListPanel from '../components/FollowListPanel';
 import { CameraIcon } from '../lib/icons';
 
 export default function ProfilePage() {
@@ -162,7 +163,7 @@ export default function ProfilePage() {
 
   return (
     <>
-      <Header streak={isMe ? streak : 0} counts={{}} onCompose={() => navigate('/')} />
+      <Header streak={isMe ? streak : 0} counts={{}} />
       <div className="wrap">
         <main className="layout">
           <section className="feed-col">
@@ -242,7 +243,9 @@ export default function ProfilePage() {
               </div>
             )}
           </section>
-          <aside className="side-col" />
+          <aside className="side-col">
+            {canView && <FollowListPanel authorId={authorId} />}
+          </aside>
         </main>
       </div>
       {viewPost && (

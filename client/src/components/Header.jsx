@@ -13,7 +13,6 @@ export default function Header({
   counts = {},
   searchQuery = '',
   onSearchChange,
-  onCompose,
   streak = 0,
 }) {
   const navigate = useNavigate();
@@ -172,7 +171,6 @@ export default function Header({
           )}
         </div>
         <div className="header-actions">
-          <button className="pill-btn" type="button" onClick={onCompose}>+ Post</button>
           <div className="bell-wrap" ref={requestsRef}>
             <button
               className="bell-btn"
