@@ -60,7 +60,7 @@ export default function AchievementsPage() {
             {entered ? (
               <HouseHallway achievements={achievements} authorId={authorId} />
             ) : (
-              <HouseEntry displayName={profile.displayName} onEnter={() => setEntered(true)} />
+              <HouseEntry displayName={profile.displayName} achievements={achievements} onEnter={() => setEntered(true)} />
             )}
           </section>
           <aside className="side-col" />
