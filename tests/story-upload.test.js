@@ -6,7 +6,7 @@ const path = require('node:path');
 
 test('successful status upload returns media immediately for the story list', async () => {
   let inserted = false;
-  const sandbox = { module: { exports: {} }, console, require: (name) => name === '../db' ? { query: async () => { inserted = true; return [{}]; } } : name === 'uuid' ? { v4: () => 'story-id' } : require(name) };
+  const sandbox = { module: { exports: {} }, console, require: (name) => name === '../db' ? { query: async () => { inserted = true; return [{}]; } } : name === 'uuid' ? { v4: () => 'story-id' } : name === '../lib/follows' ? { canView: async () => true } : name === '../lib/notifications' ? { notify: async () => {} } : name === '../lib/storage' ? { uploadMedia: async () => '/assets/uploads/small.jpg', deleteMedia: async () => {} } : require(name) };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/controllers/storiesController.js'), 'utf8'), sandbox);
   let response;
   const res = { json(value) { response = value; }, status() { return this; } };
