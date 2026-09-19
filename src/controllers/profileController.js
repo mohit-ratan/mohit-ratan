@@ -1,5 +1,6 @@
 const pool = require('../db');
 const { getFollowStatus } = require('../lib/follows');
+const { uploadMedia, deleteMedia } = require('../lib/storage');
 
 function dateKey(ts) {
   const d = new Date(ts);
@@ -81,8 +82,10 @@ async function uploadPhoto(req, res) {
     if (!req.file.mimetype.startsWith('image')) {
       return res.status(400).json({ error: 'Please choose an image file.' });
     }
-    const url = `/assets/uploads/${req.file.filename}`;
+    const [existing] = await pool.query('SELECT photo_url FROM users WHERE id = ?', [req.userId]);
+    const url = await uploadMedia(req.file.buffer, req.file.originalname, req.file.mimetype);
     await pool.query('UPDATE users SET photo_url = ? WHERE id = ?', [url, req.userId]);
+    if (existing[0]?.photo_url) await deleteMedia(existing[0].photo_url).catch(() => {});
     res.json({ ok: true, photoUrl: url });
   } catch (e) {
     console.error('upload photo error:', e);
@@ -92,7 +95,9 @@ async function uploadPhoto(req, res) {
 
 async function deletePhoto(req, res) {
   try {
+    const [existing] = await pool.query('SELECT photo_url FROM users WHERE id = ?', [req.userId]);
     await pool.query('UPDATE users SET photo_url = NULL WHERE id = ?', [req.userId]);
+    if (existing[0]?.photo_url) await deleteMedia(existing[0].photo_url).catch(() => {});
     res.json({ ok: true });
   } catch (err) {
     console.error('remove photo error:', err);

@@ -1,17 +1,10 @@
 const multer = require('multer');
-const path = require('path');
-const { v4: uuidv4 } = require('uuid');
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.join(__dirname, '..', 'public', 'assets', 'uploads')),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname || '').slice(0, 10);
-    cb(null, `${uuidv4()}${ext}`);
-  },
-});
-
+// Files land in memory (req.file.buffer) rather than on local disk — the
+// controllers upload that buffer straight to Cloudflare R2, which is what
+// actually survives redeploys (see src/lib/storage.js).
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 20 * 1024 * 1024 }, // 20MB, matches the old artifact's limit
   fileFilter: (req, file, cb) => {
     if (/^image\/|^video\//.test(file.mimetype)) cb(null, true);

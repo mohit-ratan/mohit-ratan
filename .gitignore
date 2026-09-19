@@ -15,7 +15,9 @@ public/icons.svg
 public/assets/*.js
 public/assets/*.css
 
-# User-uploaded media — persistent at runtime, not part of the repo
+# Legacy local-disk upload path — uploads now go to Cloudflare R2 (see
+# src/lib/storage.js) since this directory doesn't survive every host's
+# redeploy. Left ignored in case anything still references it locally.
 public/assets/uploads/*
 !public/assets/uploads/.gitkeep
 

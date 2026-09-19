@@ -10,9 +10,7 @@ or any similar host that just runs `npm install` + `npm start`:
 
 ```
 ├── node_modules/         # not uploaded — installed automatically by the host
-├── public/               # built frontend (index.html, JS/CSS) + persistent uploads
-│   └── assets/
-│       └── uploads/      # user-uploaded photos/videos, served at /assets/uploads/...
+├── public/               # built frontend (index.html, JS/CSS)
 ├── client/               # React 19 + Vite source — builds into ../public
 ├── src/                  # Express API source
 │   ├── controllers/      # request handlers (DB queries, business logic)
@@ -30,8 +28,11 @@ or any similar host that just runs `npm install` + `npm start`:
 - **client/** — React 19 + Vite. `npm run build` compiles it straight into
   `public/`, so the deployed app is just one Express process.
 - **src/** — Node.js + Express REST API. Handles auth, posts, stories,
-  profiles, file uploads, and serves the built frontend + uploaded media.
-- **MySQL** — stores everything (see `schema.sql`).
+  profiles, file uploads, and serves the built frontend.
+- **MySQL** — stores everything except uploaded media (see `schema.sql`).
+- **Cloudflare R2** — stores uploaded photos/videos and profile pictures.
+  Not local disk, since most hosts (including GoDaddy's Node.js hosting)
+  don't guarantee the app's filesystem survives a redeploy.
 
 Nothing here is deployed anywhere — it's yours to host wherever you like
 (GoDaddy's Node.js hosting, a VPS, Render/Railway/Fly.io, etc.), then point
@@ -74,6 +75,12 @@ Edit `.env`:
   App Password), SendGrid, Mailgun, Resend, Postmark, etc. **Without these set,
   the server logs the email content to its console instead of sending it** —
   fine for local testing, but real users need real email delivery.
+- `R2_*` — Cloudflare R2 bucket credentials for storing uploaded photos and
+  videos. Create a bucket at dash.cloudflare.com → R2, an API token under
+  "Manage R2 API Tokens" for the access key/secret, and enable public access
+  on the bucket (or attach a custom domain) for `R2_PUBLIC_URL`. **Without
+  these set, uploads will fail** — there's no local-disk fallback, since that
+  was the whole problem this replaces (see "Uploaded media" below).
 
 ## 3. Build the frontend
 
@@ -84,7 +91,6 @@ npm run build
 This installs the frontend's own dependencies (React, Vite) under `client/`
 and compiles it into `public/` — the folder the Express app serves as
 static files. Run this again any time you change something in `client/`.
-`public/assets/uploads/` (user-uploaded media) is never touched by a rebuild.
 
 For local frontend development with hot reload instead, run the Vite dev
 server directly against a separately-running API:
@@ -106,8 +112,8 @@ npm start
 
 The app listens on `http://localhost:4000` by default — `GET /api/health`
 should return `{"ok":true}`, and every other route serves the built React
-app. Uploaded photos/videos are written to `public/assets/uploads/` and
-served at `/assets/uploads/...`.
+app. Uploaded photos/videos and profile pictures go straight to your
+Cloudflare R2 bucket and are served directly from there.
 
 Open `http://localhost:4000`, register an account, verify the email (or read
 the verification link from the console log if SMTP isn't configured yet),

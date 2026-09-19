@@ -1,10 +1,9 @@
-const fs = require('fs/promises');
-const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const { targetDays, normalizeTasks } = require('../lib/goalProgress');
 const { canView } = require('../lib/follows');
 const { notify } = require('../lib/notifications');
+const { uploadMedia, deleteMedia } = require('../lib/storage');
 
 function mediaTypeFromMime(mime) {
   return mime && mime.startsWith('video') ? 'video' : 'image';
@@ -219,7 +218,7 @@ async function create(req, res) {
     }
 
     const id = uuidv4();
-    const mediaUrl = `/assets/uploads/${req.file.filename}`;
+    const mediaUrl = await uploadMedia(req.file.buffer, req.file.originalname, req.file.mimetype);
     const mediaType = mediaTypeFromMime(req.file.mimetype);
     const cleanTag = (tag || '').replace(/^#/, '').toLowerCase().slice(0, 24);
     const visibility = req.body.visibility === 'public' ? 'public' : 'friends';
@@ -349,7 +348,7 @@ async function remove(req, res) {
 
     await pool.query('DELETE FROM posts WHERE id = ?', [post.id]);
     await deleteGoalIfOrphaned(req.userId, post.tag);
-    await fs.unlink(path.join(__dirname, '..', '..', 'public', post.media_url)).catch(() => {});
+    await deleteMedia(post.media_url).catch(() => {});
 
     res.json({ ok: true });
   } catch (err) {
