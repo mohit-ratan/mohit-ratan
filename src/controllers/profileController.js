@@ -83,7 +83,7 @@ async function uploadPhoto(req, res) {
       return res.status(400).json({ error: 'Please choose an image file.' });
     }
     const [existing] = await pool.query('SELECT photo_url FROM users WHERE id = ?', [req.userId]);
-    const url = await uploadMedia(req.file.buffer, req.file.originalname, req.file.mimetype);
+    const url = await uploadMedia(req.file.buffer, req.file.originalname, req.file.mimetype, 'avatars');
     await pool.query('UPDATE users SET photo_url = ? WHERE id = ?', [url, req.userId]);
     if (existing[0]?.photo_url) await deleteMedia(existing[0].photo_url).catch(() => {});
     res.json({ ok: true, photoUrl: url });

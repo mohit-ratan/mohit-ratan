@@ -218,7 +218,7 @@ async function create(req, res) {
     }
 
     const id = uuidv4();
-    const mediaUrl = await uploadMedia(req.file.buffer, req.file.originalname, req.file.mimetype);
+    const mediaUrl = await uploadMedia(req.file.buffer, req.file.originalname, req.file.mimetype, 'posts');
     const mediaType = mediaTypeFromMime(req.file.mimetype);
     const cleanTag = (tag || '').replace(/^#/, '').toLowerCase().slice(0, 24);
     const visibility = req.body.visibility === 'public' ? 'public' : 'friends';

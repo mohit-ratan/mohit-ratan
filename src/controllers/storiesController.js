@@ -46,7 +46,7 @@ async function create(req, res) {
     if (!req.file) return res.status(400).json({ error: 'Attach a photo or video to your story.' });
     const { vibe, tag, aiStyled } = req.body;
     const id = uuidv4();
-    const mediaUrl = await uploadMedia(req.file.buffer, req.file.originalname, req.file.mimetype);
+    const mediaUrl = await uploadMedia(req.file.buffer, req.file.originalname, req.file.mimetype, 'stories');
     const mediaType = req.file.mimetype.startsWith('video') ? 'video' : 'image';
     const cleanTag = (tag || '').replace(/^#/, '').toLowerCase().slice(0, 24);
 
