@@ -1,14 +1,7 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-// GoDaddy Node.js Hosting blocks outbound SMTP entirely (nodemailer/external
-// SMTP connections fail with EACCES) and instead exposes a loopback-only
-// HTTP gateway inside the container for transactional email. Try that
-// first; a connection failure means the gateway isn't present (e.g. local
-// dev), so fall back to real SMTP or, absent that, logging to the console.
-// An actual gateway error (bad request, rate limit, etc) is a real failure
-// and is thrown rather than masked by falling back to SMTP, which is
-// blocked on this host anyway.
+// Resend is used when configured; otherwise retain the hosting gateway/SMTP flow.
 const EMAIL_GATEWAY_URL = 'http://127.0.0.1:2525/api/email/send';
 
 // Strips the small amount of markup our own email templates use so the
@@ -71,20 +64,44 @@ function getTransporter() {
   return transporter;
 }
 
-// Sends a real email when SMTP_* is configured in .env. Without it, the
-// message is only logged to the console — useful for local dev, but
-// registration/verification/OTP need real SMTP settings to actually work
-// for your users. See .env.example for options (GoDaddy email, Gmail App
-// Password, SendGrid, Mailgun, Resend, Postmark, etc).
+// Use HTTPS directly so configured deployments bypass the hosting email relay.
+async function sendViaResend({ to, subject, html }) {
+  if (!process.env.RESEND_API_KEY || !process.env.MAIL_FROM) {
+    throw new Error('Resend requires RESEND_API_KEY and MAIL_FROM from a verified domain.');
+  }
+  let res;
+  try {
+    res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ from: process.env.MAIL_FROM, to: toArray(to), subject, html, text: htmlToText(html) }),
+      signal: AbortSignal.timeout(15000),
+    });
+  } catch {
+    // Do not retry through another provider: a timed-out send may be accepted.
+    throw new Error('Resend connection failed or timed out. Check outbound HTTPS connectivity.');
+  }
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok || !body.id) {
+    // Avoid logging provider payloads which can contain recipient data.
+    throw new Error(`Resend send failed (HTTP ${res.status}). Check API key, verified sender, and provider logs.`);
+  }
+  return { provider: 'resend', messageId: body.id };
+}
+
 async function sendMail({ to, subject, html }) {
+  if (process.env.EMAIL_PROVIDER === 'resend' || process.env.RESEND_API_KEY) {
+    return sendViaResend({ to, subject, html });
+  }
   const gatewayResult = await sendViaGateway({ to, subject, html });
   if (gatewayResult) return gatewayResult;
 
   const t = getTransporter();
   if (!t) {
-    console.warn(`[mailer] SMTP not configured — email NOT actually sent to ${to}.`);
-    console.log(`[mailer] Subject: ${subject}\n${html}\n`);
-    return { skipped: true };
+    throw new Error('Email delivery unavailable: configure Resend or an available email transport.');
   }
   return t.sendMail({
     from: process.env.MAIL_FROM || '"PackSomeWork" <no-reply@packsomework.com>',
