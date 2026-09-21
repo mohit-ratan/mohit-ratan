@@ -72,6 +72,15 @@ async function attachGoalProgress(posts) {
 
 const PAGE_SIZE = 30;
 
+// The "can this viewer actually see this post" rule — shared by the feed
+// query and the counts/trending-tags queries below it, so a post never gets
+// counted or surfaced as trending for someone who can't actually open it.
+const VISIBLE_TO_VIEWER_SQL = `(p.visibility = 'public' OR p.author_id = ? OR u.is_private = 0 OR EXISTS(
+  SELECT 1 FROM follows f WHERE f.follower_id = ? AND f.followee_id = p.author_id AND f.status = 'accepted'
+)) AND NOT EXISTS (
+  SELECT 1 FROM blocks b WHERE (b.blocker_id = ? AND b.blocked_id = p.author_id) OR (b.blocker_id = p.author_id AND b.blocked_id = ?)
+)`;
+
 // Media-only feed — a post with no media is never created (see create() below),
 // so this list is inherently "photos and videos only".
 async function list(req, res) {
@@ -83,12 +92,7 @@ async function list(req, res) {
                (SELECT COUNT(*) FROM comments cm WHERE cm.post_id = p.id) as comment_count,
                EXISTS(SELECT 1 FROM post_likes pl2 WHERE pl2.post_id = p.id AND pl2.user_id = ?) as liked_by_me
                FROM posts p JOIN users u ON u.id = p.author_id
-               WHERE (p.visibility = 'public' OR p.author_id = ? OR u.is_private = 0 OR EXISTS(
-                 SELECT 1 FROM follows f WHERE f.follower_id = ? AND f.followee_id = p.author_id AND f.status = 'accepted'
-               ))
-               AND NOT EXISTS (
-                 SELECT 1 FROM blocks b WHERE (b.blocker_id = ? AND b.blocked_id = p.author_id) OR (b.blocker_id = p.author_id AND b.blocked_id = ?)
-               )`;
+               WHERE ${VISIBLE_TO_VIEWER_SQL}`;
     const params = [req.userId, req.userId, req.userId, req.userId, req.userId];
     if (category && category !== 'all') {
       sql += ' AND p.category = ?';
@@ -118,9 +122,10 @@ async function list(req, res) {
 async function trendingTags(req, res) {
   try {
     const [rows] = await pool.query(
-      `SELECT tag, COUNT(*) as count FROM posts
-       WHERE tag IS NOT NULL AND tag <> ''
-       GROUP BY tag ORDER BY count DESC LIMIT 8`
+      `SELECT p.tag, COUNT(*) as count FROM posts p JOIN users u ON u.id = p.author_id
+       WHERE p.tag IS NOT NULL AND p.tag <> '' AND ${VISIBLE_TO_VIEWER_SQL}
+       GROUP BY p.tag ORDER BY count DESC LIMIT 8`,
+      [req.userId, req.userId, req.userId, req.userId]
     );
     res.json({ tags: rows.map(r => ({ tag: r.tag, count: Number(r.count) })) });
   } catch (err) {
@@ -131,7 +136,12 @@ async function trendingTags(req, res) {
 
 async function categoryCounts(req, res) {
   try {
-    const [rows] = await pool.query(`SELECT category, COUNT(*) as count FROM posts GROUP BY category`);
+    const [rows] = await pool.query(
+      `SELECT p.category, COUNT(*) as count FROM posts p JOIN users u ON u.id = p.author_id
+       WHERE ${VISIBLE_TO_VIEWER_SQL}
+       GROUP BY p.category`,
+      [req.userId, req.userId, req.userId, req.userId]
+    );
     const counts = { health: 0, wealth: 0, relationships: 0 };
     rows.forEach(r => { counts[r.category] = Number(r.count); });
     res.json({ counts });
