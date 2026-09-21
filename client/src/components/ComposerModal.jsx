@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { CATEGORIES } from '../lib/format';
 import { LOOK_RECIPES, getRecipeById, applyLookToImage } from '../lib/looks';
+import GoalTemplatePicker from './GoalTemplatePicker';
 
 const MAX_SUBTASKS = 15;
 
@@ -358,6 +359,12 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
             {isNewTag && (
               <div className="goal-setup">
                 <div className="goal-setup-label">🎯 Set a goal for #{normalizedTag}? (optional)</div>
+                {!goalSubtasks.length && (
+                  <GoalTemplatePicker
+                    category={chosenCat}
+                    onApply={(subtasks, date) => { setGoalSubtasks(subtasks); setGoalTargetDate(date); }}
+                  />
+                )}
                 <input
                   type="date"
                   className="goal-date-input"

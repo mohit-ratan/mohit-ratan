@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { CATEGORIES } from '../lib/format';
 import { LOOK_RECIPES, getRecipeById, pickLookRecipe } from '../lib/looks';
+import GoalTemplatePicker from './GoalTemplatePicker';
 
 const MAX_SUBTASKS = 15;
 const VIBE_ITEMS = [{ id: '', emoji: '⚪', label: 'No look' }, ...LOOK_RECIPES];
@@ -173,6 +174,12 @@ export default function EditPostModal({ post, onClose, onSaved }) {
             {isNewTag && (
               <div className="goal-setup">
                 <div className="goal-setup-label">🎯 Set a goal for #{normalizedTag}? (optional)</div>
+                {!goalSubtasks.length && (
+                  <GoalTemplatePicker
+                    category={chosenCat}
+                    onApply={(subtasks, date) => { setGoalSubtasks(subtasks); setGoalTargetDate(date); }}
+                  />
+                )}
                 <input
                   type="date"
                   className="goal-date-input"

@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext';
 import { CAT_MAP, goalStatusLabel } from '../lib/format';
 import PostGrid from './PostGrid';
 import PostDetailModal from './PostDetailModal';
+import GoalTemplatePicker from './GoalTemplatePicker';
 
 const MAX_SUBTASKS = 15;
 
@@ -87,6 +88,12 @@ export default function AchievementDetailModal({ achievement, isMe, onChanged, o
             {editingGoal ? (
               <div className="goal-setup">
                 <div className="goal-setup-label">🎯 Goal for #{achievement.tag}</div>
+                {!editSubtasks.length && (
+                  <GoalTemplatePicker
+                    category={achievement.category}
+                    onApply={(subtasks, date) => { setEditSubtasks(subtasks); setEditDate(date); }}
+                  />
+                )}
                 <input
                   type="date"
                   className="goal-date-input"

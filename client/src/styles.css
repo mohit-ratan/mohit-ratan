@@ -818,6 +818,14 @@
   }
   .goal-add-btn:hover{color:var(--accent-hover);}
 
+  .goal-template-picker{display:flex;flex-direction:column;gap:6px;margin-bottom:2px;}
+  .goal-template-options{display:flex;flex-wrap:wrap;gap:6px;}
+  .goal-template-btn{
+    background:var(--surface);border:1px solid var(--border);border-radius:999px;
+    padding:6px 12px;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;
+  }
+  .goal-template-btn:hover{border-color:var(--accent);color:var(--accent);}
+
   .room-goal-badge{
     position:absolute;top:5px;left:5px;font-size:10px;font-weight:700;
     padding:2px 6px;border-radius:999px;color:#fff;background:rgba(10,14,20,.6);
