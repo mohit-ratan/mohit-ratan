@@ -109,27 +109,31 @@ async function sendMail({ to, subject, html }) {
     try {
       return await sendViaResend({ to, subject, html });
     } catch (err) {
+      console.warn('[mailer] Resend failed, falling back:', err.message);
       failures.push(`Resend: ${err.message}`);
     }
   }
 
   try {
     const gatewayResult = await sendViaGateway({ to, subject, html });
-    if (gatewayResult) return gatewayResult;
+    if (gatewayResult) return { ...gatewayResult, provider: 'gateway' };
   } catch (err) {
+    console.warn('[mailer] Gateway failed, falling back:', err.message);
     failures.push(`Gateway: ${err.message}`);
   }
 
   const t = getTransporter();
   if (t) {
     try {
-      return await t.sendMail({
+      const result = await t.sendMail({
         from: process.env.MAIL_FROM || '"PackSomeWork" <no-reply@packsomework.com>',
         to,
         subject,
         html,
       });
+      return { ...result, provider: 'smtp' };
     } catch (err) {
+      console.warn('[mailer] SMTP failed:', err.message);
       failures.push(`SMTP: ${err.message}`);
     }
   }
