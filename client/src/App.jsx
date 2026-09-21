@@ -6,6 +6,7 @@ import RegisterPage from './pages/RegisterPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import MobileNav from './components/MobileNav';
 import HomePage from './pages/HomePage';
+import LandingPage from './pages/LandingPage';
 import ProfilePage from './pages/ProfilePage';
 
 // The three.js/r3f/drei stack is ~1MB — code-split so only the 3D routes
@@ -29,6 +30,12 @@ function RequireAuth({ children }) {
   return children;
 }
 
+function HomeEntry() {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="auth-loading-shell"><p>Loading PackSomeWork…</p></div>;
+  return user ? <HomePage /> : <LandingPage />;
+}
+
 export default function App() {
   return (
     <>
@@ -39,9 +46,7 @@ export default function App() {
       <Route
         path="/"
         element={
-          <RequireAuth>
-            <HomePage />
-          </RequireAuth>
+          <HomeEntry />
         }
       />
       <Route
