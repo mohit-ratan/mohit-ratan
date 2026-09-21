@@ -214,7 +214,7 @@ export default function HomePage() {
           </section>
           <aside className="side-col">
             <SideColumn streak={streak} trendingTags={trendingTags} counts={counts} onTagClick={openTag} />
-            {user && <SuggestedFollows />}
+            {user && <SuggestedFollows onTagClick={openTag} />}
             {user && <FollowListPanel authorId={user.id} />}
           </aside>
         </main>

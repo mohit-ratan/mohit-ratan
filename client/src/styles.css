@@ -551,11 +551,14 @@
   .follow-list-person:hover{background:var(--surface-2);}
   .follow-list-person span{font-weight:600;font-size:13.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .follow-list-empty{margin:0;font-size:13px;color:var(--text-faint);}
-  .suggested-follow-row{display:flex;align-items:center;gap:6px;}
-  .suggested-follow-row .follow-list-person{flex:1;min-width:0;}
-  .suggested-follow-row .follow-list-person span{display:flex;flex-direction:column;gap:1px;}
-  .suggested-follow-row .follow-list-person small{font-weight:500;font-size:11px;color:var(--text-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .suggested-follow-row .pill-btn{padding:6px 12px;font-size:12px;flex-shrink:0;}
+  .suggested-follow-row{display:flex;flex-direction:column;gap:4px;padding-bottom:6px;}
+  .suggested-follow-row+.suggested-follow-row{border-top:1px solid var(--border);padding-top:6px;}
+  .suggested-follow-top{display:flex;align-items:center;gap:6px;}
+  .suggested-follow-top .follow-list-person{flex:1;min-width:0;}
+  .suggested-follow-top .pill-btn{padding:6px 12px;font-size:12px;flex-shrink:0;}
+  .suggested-follow-reason{display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding-left:46px;}
+  .suggested-follow-reason-label{font-size:11px;color:var(--text-faint);white-space:nowrap;}
+  .suggested-follow-reason .tag-chip{font-size:10.5px;padding:2px 8px;}
   .trend-item{
     display:flex;align-items:center;justify-content:space-between;
     padding:7px 0;font-size:13.5px;cursor:pointer;color:var(--text);
