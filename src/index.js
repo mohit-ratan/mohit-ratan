@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const cron = require('node-cron');
+const { sendStreakReminders } = require('./lib/streakReminders');
 
 const authRoutes = require('./routes/auth');
 const postRoutes = require('./routes/posts');
@@ -56,4 +58,12 @@ app.listen(PORT, () => {
   if (!process.env.SMTP_HOST) {
     console.warn('[warning] SMTP_* is not configured — verification/OTP emails will only be logged, not sent.');
   }
+});
+
+// Daily at 19:00 server time — no per-user timezone data exists yet, so
+// this is one fixed time for everyone rather than each user's own evening.
+cron.schedule('0 19 * * *', () => {
+  sendStreakReminders()
+    .then((count) => console.log(`[streak-reminders] sent to ${count} at-risk user(s)`))
+    .catch((err) => console.error('[streak-reminders] job failed:', err));
 });
