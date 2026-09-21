@@ -40,9 +40,13 @@ export default function AchievementsPage() {
   const floorAchievements = achievements.filter((a) => a.category === category.id);
   function selectFloor(index) {
     setFocusedLabel(null);
-    setSearchParams((params) => {
-      params.set('floor', CATEGORIES[index].id);
-      return params;
+    // A fresh URLSearchParams instance, not the mutated-in-place previous
+    // one — react-router bails out of updating when the returned value is
+    // reference-equal to the previous state (see HomePage.jsx for detail).
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set('floor', CATEGORIES[index].id);
+      return next;
     }, { replace: true });
   }
 
