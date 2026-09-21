@@ -4,6 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const cron = require('node-cron');
 const { sendStreakReminders } = require('./lib/streakReminders');
+const { sendAccountabilityReminders } = require('./lib/accountabilityReminders');
 
 const authRoutes = require('./routes/auth');
 const postRoutes = require('./routes/posts');
@@ -14,6 +15,7 @@ const followRoutes = require('./routes/follows');
 const userRoutes = require('./routes/users');
 const blockRoutes = require('./routes/blocks');
 const notificationRoutes = require('./routes/notifications');
+const accountabilityRoutes = require('./routes/accountability');
 
 const app = express();
 const publicDir = path.join(__dirname, '..', 'public');
@@ -30,6 +32,7 @@ app.use('/api/follows', followRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/blocks', blockRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/partners', accountabilityRoutes);
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
@@ -66,4 +69,10 @@ cron.schedule('0 19 * * *', () => {
   sendStreakReminders()
     .then((count) => console.log(`[streak-reminders] sent to ${count} at-risk user(s)`))
     .catch((err) => console.error('[streak-reminders] job failed:', err));
+});
+
+cron.schedule('10 19 * * *', () => {
+  sendAccountabilityReminders()
+    .then((count) => console.log(`[accountability-reminders] sent to ${count} partner(s)`))
+    .catch((err) => console.error('[accountability-reminders] job failed:', err));
 });

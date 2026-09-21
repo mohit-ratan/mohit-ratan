@@ -8,6 +8,7 @@ import FeedList from '../components/FeedList';
 import SideColumn from '../components/SideColumn';
 import FollowListPanel from '../components/FollowListPanel';
 import SuggestedFollows from '../components/SuggestedFollows';
+import AccountabilityWidget from '../components/AccountabilityWidget';
 import Avatar from '../components/Avatar';
 import ComposerModal from '../components/ComposerModal';
 import PostDetailModal from '../components/PostDetailModal';
@@ -238,6 +239,7 @@ export default function HomePage() {
               onCategoryClick={(c) => updateFilters({ category: c, tag: null })}
             />
             {user && <SuggestedFollows onTagClick={openTag} />}
+            {user && <AccountabilityWidget />}
             {user && <FollowListPanel authorId={user.id} />}
           </aside>
         </main>

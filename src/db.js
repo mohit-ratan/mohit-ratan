@@ -97,6 +97,23 @@ pool.query(`
 `).catch((err) => console.error('Could not ensure notifications table exists:', err));
 
 pool.query(`
+  CREATE TABLE IF NOT EXISTS accountability_partners (
+    id VARCHAR(36) PRIMARY KEY,
+    requester_id VARCHAR(36) NOT NULL,
+    partner_id VARCHAR(36) NOT NULL,
+    status ENUM('pending','active') NOT NULL DEFAULT 'pending',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_pair (requester_id, partner_id),
+    FOREIGN KEY (requester_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (partner_id) REFERENCES users(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB
+`).catch((err) => console.error('Could not ensure accountability_partners table exists:', err));
+
+pool.query(
+  "ALTER TABLE notifications MODIFY COLUMN type ENUM('like','comment','follow_accepted','partner_request','partner_accepted','partner_missed') NOT NULL"
+).catch((err) => console.error('Could not extend notifications.type enum:', err));
+
+pool.query(`
   CREATE TABLE IF NOT EXISTS streak_freeze_uses (
     user_id VARCHAR(36) NOT NULL,
     used_on DATE NOT NULL,

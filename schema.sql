@@ -119,11 +119,25 @@ CREATE TABLE IF NOT EXISTS blocks (
   FOREIGN KEY (blocked_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+-- Two users pairing up on staying consistent — accepting turns a pending
+-- request into 'active'; either side can end it, which deletes the row
+-- (same pattern as unfollow), so there's no 'ended' state to track.
+CREATE TABLE IF NOT EXISTS accountability_partners (
+  id            VARCHAR(36) PRIMARY KEY,
+  requester_id  VARCHAR(36) NOT NULL,
+  partner_id    VARCHAR(36) NOT NULL,
+  status        ENUM('pending','active') NOT NULL DEFAULT 'pending',
+  created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_pair (requester_id, partner_id),
+  FOREIGN KEY (requester_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (partner_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS notifications (
   id            VARCHAR(36) PRIMARY KEY,
   recipient_id  VARCHAR(36) NOT NULL,
   actor_id      VARCHAR(36) NOT NULL,
-  type          ENUM('like','comment','follow_accepted') NOT NULL,
+  type          ENUM('like','comment','follow_accepted','partner_request','partner_accepted','partner_missed') NOT NULL,
   post_id       VARCHAR(36) DEFAULT NULL,
   read_at       DATETIME DEFAULT NULL,
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

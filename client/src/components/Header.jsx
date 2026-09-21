@@ -28,6 +28,7 @@ export default function Header({
   const [peopleOpen, setPeopleOpen] = useState(false);
   const [peopleLoading, setPeopleLoading] = useState(false);
   const [requests, setRequests] = useState([]);
+  const [partnerRequests, setPartnerRequests] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [requestsOpen, setRequestsOpen] = useState(false);
   const requestsRef = useRef(null);
@@ -57,10 +58,12 @@ export default function Header({
     function load() {
       Promise.all([
         api.get('/api/follows/requests'),
+        api.get('/api/partners/requests'),
         api.get('/api/notifications'),
-      ]).then(([reqRes, notifRes]) => {
+      ]).then(([reqRes, partnerReqRes, notifRes]) => {
         if (!cancelled) {
           setRequests(reqRes.data.requests);
+          setPartnerRequests(partnerReqRes.data.requests);
           setNotifications(notifRes.data.notifications);
         }
       }).catch(() => {});
@@ -97,6 +100,13 @@ export default function Header({
     }
   }
 
+  async function respondPartnerRequest(id, action) {
+    try {
+      await api.patch(`/api/partners/${id}`, { action });
+      setPartnerRequests((current) => current.filter((r) => r.id !== id));
+    } catch { showToast('Could not update this request. Please try again.', true); }
+  }
+
   const unreadNotifCount = notifications.filter((n) => !n.read).length;
 
   function toggleBell() {
@@ -115,6 +125,9 @@ export default function Header({
     if (n.type === 'like') return `${n.actorName} liked your post`;
     if (n.type === 'comment') return `${n.actorName} commented on your post`;
     if (n.type === 'follow_accepted') return `${n.actorName} accepted your follow request`;
+    if (n.type === 'partner_request') return `${n.actorName} wants to be your accountability partner`;
+    if (n.type === 'partner_accepted') return `${n.actorName} accepted your accountability partner request`;
+    if (n.type === 'partner_missed') return `${n.actorName} didn't post yesterday — check in on them`;
     return `${n.actorName} interacted with you`;
   }
 
@@ -231,7 +244,7 @@ export default function Header({
               onClick={toggleBell}
             >
               <BellIcon />
-              {(requests.length + unreadNotifCount) > 0 && <span className="bell-badge">{requests.length + unreadNotifCount}</span>}
+              {(requests.length + partnerRequests.length + unreadNotifCount) > 0 && <span className="bell-badge">{requests.length + partnerRequests.length + unreadNotifCount}</span>}
             </button>
             {requestsOpen && (
               <div className="me-menu bell-menu">
@@ -274,6 +287,23 @@ export default function Header({
                     ))}
                   </div>
                 )}
+                {partnerRequests.length > 0 && (
+                  <div className="bell-section">
+                    <span className="bell-section-label">Accountability requests</span>
+                    {partnerRequests.map((r) => (
+                      <div key={r.id} className="bell-request-row">
+                        <button type="button" className="people-search-person" onClick={() => { setRequestsOpen(false); navigate(`/profile/${r.id}`); }}>
+                          <Avatar id={r.id} name={r.displayName} photoUrl={r.photoUrl} size={32} />
+                          <span>{r.displayName}</span>
+                        </button>
+                        <div className="follow-request-actions">
+                          <button type="button" className="pill-btn primary" onClick={() => respondPartnerRequest(r.id, 'accept')}>Accept</button>
+                          <button type="button" className="pill-btn" onClick={() => respondPartnerRequest(r.id, 'reject')}>Decline</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 {notifications.length > 0 && (
                   <div className="bell-section">
                     <span className="bell-section-label">Activity</span>
@@ -290,7 +320,7 @@ export default function Header({
                     ))}
                   </div>
                 )}
-                {!requests.length && !justAccepted.length && !notifications.length && (
+                {!requests.length && !justAccepted.length && !partnerRequests.length && !notifications.length && (
                   <div className="people-search-empty">Nothing new yet</div>
                 )}
               </div>

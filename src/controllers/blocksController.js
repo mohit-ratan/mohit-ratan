@@ -13,6 +13,11 @@ async function block(req, res) {
       'DELETE FROM follows WHERE (follower_id = ? AND followee_id = ?) OR (follower_id = ? AND followee_id = ?)',
       [req.userId, blockedId, blockedId, req.userId]
     );
+    // ...and any accountability partnership, pending or active.
+    await pool.query(
+      'DELETE FROM accountability_partners WHERE (requester_id = ? AND partner_id = ?) OR (requester_id = ? AND partner_id = ?)',
+      [req.userId, blockedId, blockedId, req.userId]
+    );
     res.json({ ok: true });
   } catch (err) {
     console.error('block error:', err);

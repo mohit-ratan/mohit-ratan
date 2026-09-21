@@ -33,6 +33,8 @@ export default function ProfilePage() {
   const [viewPost, setViewPost] = useState(null);
   const [followStatus, setFollowStatus] = useState('none');
   const [followLoading, setFollowLoading] = useState(false);
+  const [partnerStatus, setPartnerStatus] = useState('none');
+  const [partnerLoading, setPartnerLoading] = useState(false);
   const [blockedByMe, setBlockedByMe] = useState(false);
   const [blockLoading, setBlockLoading] = useState(false);
 
@@ -54,6 +56,7 @@ export default function ProfilePage() {
       setStreak(profileRes.data.streak);
       setFreezesRemaining(profileRes.data.freezesRemaining ?? 0);
       setFollowStatus(profileRes.data.followStatus);
+      setPartnerStatus(profileRes.data.partnerStatus || 'none');
       setBlockedByMe(!!profileRes.data.blockedByMe);
       setNameDraft(profileRes.data.user.displayName || '');
       setBioDraft(profileRes.data.user.bio || '');
@@ -107,6 +110,30 @@ export default function ProfilePage() {
     }
   }
 
+  async function sendPartnerRequest() {
+    setPartnerLoading(true);
+    try {
+      const { data } = await api.post(`/api/partners/${authorId}`);
+      setPartnerStatus(data.status === 'active' ? 'active' : 'pending_outgoing');
+    } catch (err) {
+      showToast(err.message, true);
+    } finally {
+      setPartnerLoading(false);
+    }
+  }
+
+  async function endPartnership() {
+    setPartnerLoading(true);
+    try {
+      await api.delete(`/api/partners/${authorId}`);
+      setPartnerStatus('none');
+    } catch (err) {
+      showToast(err.message, true);
+    } finally {
+      setPartnerLoading(false);
+    }
+  }
+
   async function handleBlock() {
     if (!window.confirm(`Block ${profile.displayName}? They won't be able to see your posts or follow you, and you won't see theirs.`)) return;
     setBlockLoading(true);
@@ -114,6 +141,7 @@ export default function ProfilePage() {
       await api.post(`/api/blocks/${authorId}`);
       setBlockedByMe(true);
       setFollowStatus('none');
+      setPartnerStatus('none');
       setPosts([]);
       setTrophies([]);
       showToast(`${profile.displayName} has been blocked.`);
@@ -232,6 +260,18 @@ export default function ProfilePage() {
                       )}
                       {!blockedByMe && followStatus === 'accepted' && (
                         <button type="button" className="pill-btn" onClick={removeFollow} disabled={followLoading}>Following</button>
+                      )}
+                      {!blockedByMe && partnerStatus === 'none' && (
+                        <button type="button" className="pill-btn" onClick={sendPartnerRequest} disabled={partnerLoading}>🤝 Partner up</button>
+                      )}
+                      {!blockedByMe && partnerStatus === 'pending_outgoing' && (
+                        <button type="button" className="pill-btn" onClick={endPartnership} disabled={partnerLoading}>Request sent</button>
+                      )}
+                      {!blockedByMe && partnerStatus === 'pending_incoming' && (
+                        <button type="button" className="pill-btn" disabled>Wants to partner up</button>
+                      )}
+                      {!blockedByMe && partnerStatus === 'active' && (
+                        <button type="button" className="pill-btn" onClick={endPartnership} disabled={partnerLoading}>🤝 Partners</button>
                       )}
                       <button type="button" className="pill-btn danger-outline" onClick={blockedByMe ? handleUnblock : handleBlock} disabled={blockLoading}>
                         {blockedByMe ? 'Unblock' : 'Block'}

@@ -1,5 +1,6 @@
 const pool = require('../db');
 const { getFollowStatus, canView } = require('../lib/follows');
+const { getPartnerStatus } = require('../lib/accountability');
 const { uploadMedia, deleteMedia } = require('../lib/storage');
 
 const ACTIVITY_DAYS = 98; // 14 full weeks, matching the heatmap grid
@@ -80,6 +81,7 @@ async function getProfile(req, res) {
     const u = rows[0];
     const { streak, freezesUsedThisMonth, freezesRemaining } = await computeStreak(req.params.id);
     const followStatus = await getFollowStatus(req.userId, req.params.id);
+    const partnerStatus = await getPartnerStatus(req.userId, req.params.id);
     let blockedByMe = false;
     if (req.userId !== req.params.id) {
       const [blockRows] = await pool.query(
@@ -95,6 +97,7 @@ async function getProfile(req, res) {
       freezesUsedThisMonth,
       freezesRemaining,
       followStatus,
+      partnerStatus,
       blockedByMe,
     });
   } catch (err) {
