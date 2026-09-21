@@ -70,11 +70,31 @@ export default function Header({
     return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
+  // Polling refetches only pending requests every 30s, which would wipe an
+  // accepted-but-not-yet-followed-back row before the user can act on it —
+  // so accepted entries move into their own list, untouched by polling.
+  const [justAccepted, setJustAccepted] = useState([]);
+
   async function respondRequest(id, action) {
     try {
       await api.patch(`/api/follows/${id}`, { action });
-      setRequests((current) => current.filter((r) => r.id !== id));
+      setRequests((current) => {
+        if (action === 'accept') {
+          const accepted = current.find((r) => r.id === id);
+          if (accepted) setJustAccepted((j) => [...j, { ...accepted, followBackStatus: 'none' }]);
+        }
+        return current.filter((r) => r.id !== id);
+      });
     } catch { showToast('Could not update this follow request. Please try again.', true); }
+  }
+
+  async function followBackRequest(id) {
+    try {
+      const { data } = await api.post(`/api/follows/${id}`);
+      setJustAccepted((current) => current.map((r) => (r.id === id ? { ...r, followBackStatus: data.status } : r)));
+    } catch {
+      showToast('Could not send your follow request. Please try again.', true);
+    }
   }
 
   const unreadNotifCount = notifications.filter((n) => !n.read).length;
@@ -232,6 +252,28 @@ export default function Header({
                     ))}
                   </div>
                 )}
+                {justAccepted.length > 0 && (
+                  <div className="bell-section">
+                    <span className="bell-section-label">Follow back?</span>
+                    {justAccepted.map((r) => (
+                      <div key={r.id} className="bell-request-row">
+                        <button type="button" className="people-search-person" onClick={() => { setRequestsOpen(false); navigate(`/profile/${r.id}`); }}>
+                          <Avatar id={r.id} name={r.displayName} photoUrl={r.photoUrl} size={32} />
+                          <span>{r.displayName}</span>
+                        </button>
+                        <div className="follow-request-actions">
+                          {r.followBackStatus === 'accepted' ? (
+                            <button type="button" className="pill-btn" disabled>Following</button>
+                          ) : r.followBackStatus === 'pending' ? (
+                            <button type="button" className="pill-btn" disabled>Requested</button>
+                          ) : (
+                            <button type="button" className="pill-btn primary" onClick={() => followBackRequest(r.id)}>Follow back</button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 {notifications.length > 0 && (
                   <div className="bell-section">
                     <span className="bell-section-label">Activity</span>
@@ -248,7 +290,7 @@ export default function Header({
                     ))}
                   </div>
                 )}
-                {!requests.length && !notifications.length && (
+                {!requests.length && !justAccepted.length && !notifications.length && (
                   <div className="people-search-empty">Nothing new yet</div>
                 )}
               </div>

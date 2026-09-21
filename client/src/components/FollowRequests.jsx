@@ -10,16 +10,34 @@ export default function FollowRequests() {
 
   useEffect(() => {
     api.get('/api/follows/requests')
-      .then(({ data }) => setRequests(data.requests))
+      .then(({ data }) => setRequests(data.requests.map((r) => ({ ...r, accepted: false, followBackStatus: 'none' }))))
       .catch((err) => showToast(err.message, true))
       .finally(() => setLoaded(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function respond(id, action) {
+  async function accept(id) {
     try {
-      await api.patch(`/api/follows/${id}`, { action });
+      await api.patch(`/api/follows/${id}`, { action: 'accept' });
+      setRequests((current) => current.map((r) => (r.id === id ? { ...r, accepted: true } : r)));
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  }
+
+  async function decline(id) {
+    try {
+      await api.patch(`/api/follows/${id}`, { action: 'reject' });
       setRequests((current) => current.filter((r) => r.id !== id));
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  }
+
+  async function followBack(id) {
+    try {
+      const { data } = await api.post(`/api/follows/${id}`);
+      setRequests((current) => current.map((r) => (r.id === id ? { ...r, followBackStatus: data.status } : r)));
     } catch (err) {
       showToast(err.message, true);
     }
@@ -36,8 +54,20 @@ export default function FollowRequests() {
             <Avatar id={r.id} name={r.displayName} photoUrl={r.photoUrl} size={40} />
             <span className="follow-request-name">{r.displayName}</span>
             <div className="follow-request-actions">
-              <button type="button" className="pill-btn primary" onClick={() => respond(r.id, 'accept')}>Accept</button>
-              <button type="button" className="pill-btn" onClick={() => respond(r.id, 'reject')}>Decline</button>
+              {r.accepted ? (
+                r.followBackStatus === 'accepted' ? (
+                  <button type="button" className="pill-btn" disabled>Following</button>
+                ) : r.followBackStatus === 'pending' ? (
+                  <button type="button" className="pill-btn" disabled>Requested</button>
+                ) : (
+                  <button type="button" className="pill-btn primary" onClick={() => followBack(r.id)}>Follow back</button>
+                )
+              ) : (
+                <>
+                  <button type="button" className="pill-btn primary" onClick={() => accept(r.id)}>Accept</button>
+                  <button type="button" className="pill-btn" onClick={() => decline(r.id)}>Decline</button>
+                </>
+              )}
             </div>
           </li>
         ))}
