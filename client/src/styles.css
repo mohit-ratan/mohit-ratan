@@ -542,6 +542,14 @@
   .side-col{display:flex;flex-direction:column;gap:16px;position:sticky;top:96px;}
   .side-card{padding:16px 17px;}
   .side-card h4{font-family:var(--font-display);font-size:15.5px;font-weight:600;margin:0 0 12px;}
+  .heatmap-grid{display:flex;gap:3px;overflow-x:auto;padding-bottom:2px;}
+  .heatmap-week{display:flex;flex-direction:column;gap:3px;}
+  .heatmap-cell{width:10px;height:10px;border-radius:2px;background:var(--surface-2);flex-shrink:0;}
+  .heatmap-cell.level-1{background:#ffd8ba;}
+  .heatmap-cell.level-2{background:#ffab73;}
+  .heatmap-cell.level-3{background:#f57c30;}
+  .heatmap-cell.level-4{background:var(--accent);}
+  .heatmap-legend{display:flex;align-items:center;gap:4px;margin-top:10px;font-size:10.5px;color:var(--text-faint);}
   .follow-list-panel h4 span{color:var(--text-faint);font-weight:500;}
   .follow-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;max-height:280px;overflow-y:auto;}
   .follow-list-person{

@@ -10,6 +10,7 @@ import PostDetailModal from '../components/PostDetailModal';
 import TrophyCase from '../components/TrophyCase';
 import FollowRequests from '../components/FollowRequests';
 import FollowListPanel from '../components/FollowListPanel';
+import ActivityHeatmap from '../components/ActivityHeatmap';
 import BlockedAccounts from '../components/BlockedAccounts';
 import { CameraIcon } from '../lib/icons';
 
@@ -291,6 +292,7 @@ export default function ProfilePage() {
             )}
           </section>
           <aside className="side-col">
+            {canView && <ActivityHeatmap authorId={authorId} />}
             {canView && <FollowListPanel authorId={authorId} />}
           </aside>
         </main>

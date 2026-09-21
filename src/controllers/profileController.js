@@ -1,6 +1,8 @@
 const pool = require('../db');
-const { getFollowStatus } = require('../lib/follows');
+const { getFollowStatus, canView } = require('../lib/follows');
 const { uploadMedia, deleteMedia } = require('../lib/storage');
+
+const ACTIVITY_DAYS = 98; // 14 full weeks, matching the heatmap grid
 
 function dateKey(ts) {
   const d = new Date(ts);
@@ -61,6 +63,32 @@ async function getProfile(req, res) {
   }
 }
 
+// Daily post+story counts for the last ~14 weeks, for a GitHub-style
+// consistency heatmap — respects the same privacy rule as everything else.
+async function getActivity(req, res) {
+  try {
+    if (!(await canView(req.userId, req.params.id))) return res.json({ activity: [] });
+    const [rows] = await pool.query(
+      `SELECT DATE(created_at) as d, COUNT(*) as c FROM (
+         SELECT created_at FROM posts WHERE author_id = ? AND created_at >= CURDATE() - INTERVAL ? DAY
+         UNION ALL
+         SELECT created_at FROM stories WHERE author_id = ? AND created_at >= CURDATE() - INTERVAL ? DAY
+       ) combined
+       GROUP BY DATE(created_at)`,
+      [req.params.id, ACTIVITY_DAYS, req.params.id, ACTIVITY_DAYS]
+    );
+    res.json({
+      activity: rows.map((r) => ({
+        date: r.d instanceof Date ? r.d.toISOString().slice(0, 10) : String(r.d).slice(0, 10),
+        count: Number(r.c),
+      })),
+    });
+  } catch (err) {
+    console.error('get activity error:', err);
+    res.status(500).json({ error: 'Could not load activity history.' });
+  }
+}
+
 async function updateProfile(req, res) {
   try {
     const { displayName, bio, isPrivate } = req.body || {};
@@ -105,4 +133,4 @@ async function deletePhoto(req, res) {
   }
 }
 
-module.exports = { getProfile, updateProfile, uploadPhoto, deletePhoto };
+module.exports = { getProfile, getActivity, updateProfile, uploadPhoto, deletePhoto };
