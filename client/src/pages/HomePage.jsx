@@ -30,29 +30,31 @@ function groupStoriesByAuthor(stories) {
 export default function HomePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
 
   const category = ['health', 'wealth', 'relationships'].includes(searchParams.get('category')) ? searchParams.get('category') : 'all';
   const tagFilter = searchParams.get('tag') || null;
   const [searchQuery, setSearchQuery] = useState('');
-  // Always build a fresh URLSearchParams instead of mutating and returning
-  // the same instance — react-router's setSearchParams (like React state
-  // setters generally) bails out of updating when the returned value is
-  // reference-equal to the previous one, so an in-place mutation returned
-  // as-is is silently treated as "nothing changed" and never applied.
-  function setCategory(value) {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      if (value === 'all') next.delete('category'); else next.set('category', value);
-      return next;
-    }, { replace: true });
+  // useSearchParams' own setter turned out to silently no-op in production
+  // for reasons that resisted diagnosis (confirmed: the exact right code was
+  // live, the click handlers fired, yet no URL/state change ever happened,
+  // reproduced across browsers). navigate() is confirmed reliable elsewhere
+  // on this same page, so filter changes go through it directly instead —
+  // one call per logical change, since firing it twice in a row for a
+  // combined category+tag update would just replace history with itself.
+  function updateFilters({ category: nextCategory, tag: nextTag } = {}) {
+    const next = new URLSearchParams(searchParams);
+    if (nextCategory !== undefined) {
+      if (!nextCategory || nextCategory === 'all') next.delete('category'); else next.set('category', nextCategory);
+    }
+    if (nextTag !== undefined) {
+      if (!nextTag) next.delete('tag'); else next.set('tag', nextTag);
+    }
+    const qs = next.toString();
+    navigate(qs ? `/?${qs}` : '/', { replace: true });
   }
   function setTagFilter(value) {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      if (value) next.set('tag', value); else next.delete('tag');
-      return next;
-    }, { replace: true });
+    updateFilters({ tag: value });
   }
   const feedRequest = useRef(0);
   const [feedError, setFeedError] = useState(null);
@@ -143,8 +145,7 @@ export default function HomePage() {
 
   function openTag(tag) {
     setModal(null);
-    setTagFilter(tag);
-    setCategory('all');
+    updateFilters({ tag, category: 'all' });
   }
 
   function openStoryViewer(authorId) {
@@ -176,7 +177,7 @@ export default function HomePage() {
     <>
       <Header
         activeCategory={category}
-        onCategoryChange={(c) => { setCategory(c); setTagFilter(null); }}
+        onCategoryChange={(c) => updateFilters({ category: c, tag: null })}
         counts={counts}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -231,7 +232,7 @@ export default function HomePage() {
               trendingTags={trendingTags}
               counts={counts}
               onTagClick={openTag}
-              onCategoryClick={(c) => { setCategory(c); setTagFilter(null); }}
+              onCategoryClick={(c) => updateFilters({ category: c, tag: null })}
             />
             {user && <SuggestedFollows onTagClick={openTag} />}
             {user && <FollowListPanel authorId={user.id} />}

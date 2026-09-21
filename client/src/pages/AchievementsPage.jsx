@@ -18,7 +18,7 @@ import { CATEGORIES } from '../lib/format';
 export default function AchievementsPage() {
   const { id: authorId } = useParams();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const showToast = useToast();
   const isMe = user?.id === authorId;
@@ -40,14 +40,11 @@ export default function AchievementsPage() {
   const floorAchievements = achievements.filter((a) => a.category === category.id);
   function selectFloor(index) {
     setFocusedLabel(null);
-    // A fresh URLSearchParams instance, not the mutated-in-place previous
-    // one — react-router bails out of updating when the returned value is
-    // reference-equal to the previous state (see HomePage.jsx for detail).
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.set('floor', CATEGORIES[index].id);
-      return next;
-    }, { replace: true });
+    // useSearchParams' setter turned out to silently no-op in production
+    // for reasons that resisted diagnosis even with the exact right code
+    // confirmed live (see HomePage.jsx, which hit the identical symptom) —
+    // navigate() is confirmed reliable, so it's used directly instead.
+    navigate(`/profile/${authorId}/achievements?floor=${CATEGORIES[index].id}`, { replace: true });
   }
 
   const refresh = useCallback(async () => {
