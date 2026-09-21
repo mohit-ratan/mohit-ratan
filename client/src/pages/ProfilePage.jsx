@@ -25,6 +25,7 @@ export default function ProfilePage() {
 
   const [profile, setProfile] = useState(null);
   const [streak, setStreak] = useState(0);
+  const [freezesRemaining, setFreezesRemaining] = useState(0);
   const [posts, setPosts] = useState([]);
   const [trophies, setTrophies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +52,7 @@ export default function ProfilePage() {
       const profileRes = await api.get(`/api/profile/${authorId}`);
       setProfile(profileRes.data.user);
       setStreak(profileRes.data.streak);
+      setFreezesRemaining(profileRes.data.freezesRemaining ?? 0);
       setFollowStatus(profileRes.data.followStatus);
       setBlockedByMe(!!profileRes.data.blockedByMe);
       setNameDraft(profileRes.data.user.displayName || '');
@@ -259,7 +261,7 @@ export default function ProfilePage() {
                   <dl className="profile-metrics">
                     <div><dd>{posts.length}</dd><dt>Posts</dt></div>
                     <div><dd>{trophies.length}</dd><dt>Awards earned</dt></div>
-                    <div><dd>{streak}<span> days</span></dd><dt>Current streak</dt></div>
+                    <div><dd>{streak}<span> days</span></dd><dt>Current streak{isMe && freezesRemaining > 0 && <small className="streak-freeze-inline"> · 🧊 {freezesRemaining} freeze{freezesRemaining === 1 ? '' : 's'} left</small>}</dt></div>
                   </dl>
                   {canView && (
                     <button type="button" className="profile-house-link" onClick={() => navigate(`/profile/${authorId}/achievements`)}>

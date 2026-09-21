@@ -96,4 +96,14 @@ pool.query(`
   ) ENGINE=InnoDB
 `).catch((err) => console.error('Could not ensure notifications table exists:', err));
 
+pool.query(`
+  CREATE TABLE IF NOT EXISTS streak_freeze_uses (
+    user_id VARCHAR(36) NOT NULL,
+    used_on DATE NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, used_on),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB
+`).catch((err) => console.error('Could not ensure streak_freeze_uses table exists:', err));
+
 module.exports = pool;

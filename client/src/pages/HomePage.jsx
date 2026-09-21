@@ -66,6 +66,7 @@ export default function HomePage() {
   const [counts, setCounts] = useState({});
   const [trendingTags, setTrendingTags] = useState([]);
   const [streak, setStreak] = useState(0);
+  const [freezesRemaining, setFreezesRemaining] = useState(0);
   const [loading, setLoading] = useState(true);
 
   // modal is one of: null | {type:'create'} | {type:'addStory'} | {type:'view', post} | {type:'viewStory', authorId, index}
@@ -106,6 +107,7 @@ export default function HomePage() {
     setCounts(countsRes.data.counts);
     setTrendingTags(tagsRes.data.tags);
     setStreak(profileRes.data.streak || 0);
+    setFreezesRemaining(profileRes.data.freezesRemaining ?? 0);
   }, [user]);
 
   useEffect(() => {
@@ -229,6 +231,7 @@ export default function HomePage() {
           <aside className="side-col">
             <SideColumn
               streak={streak}
+              freezesRemaining={freezesRemaining}
               trendingTags={trendingTags}
               counts={counts}
               onTagClick={openTag}

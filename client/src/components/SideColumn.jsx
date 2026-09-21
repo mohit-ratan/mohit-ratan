@@ -1,4 +1,4 @@
-export default function SideColumn({ streak = 0, trendingTags = [], counts = {}, onTagClick, onCategoryClick }) {
+export default function SideColumn({ streak = 0, freezesRemaining = 0, trendingTags = [], counts = {}, onTagClick, onCategoryClick }) {
   const streakMsg = streak > 0
     ? 'Post a photo or video today to keep it going.'
     : 'Share a photo or video today to start a streak.';
@@ -9,6 +9,7 @@ export default function SideColumn({ streak = 0, trendingTags = [], counts = {},
         <h4>🔥 Your streak</h4>
         <div className="streak-display"><span className="n">{streak}</span><span className="u">day{streak === 1 ? '' : 's'}</span></div>
         <div className="about-text">{streakMsg}</div>
+        <div className="streak-freeze-note">🧊 {freezesRemaining} streak freeze{freezesRemaining === 1 ? '' : 's'} left this month</div>
       </div>
       <div className="card side-card">
         <h4>Trending tags</h4>

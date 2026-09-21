@@ -3,33 +3,71 @@ const { getFollowStatus, canView } = require('../lib/follows');
 const { uploadMedia, deleteMedia } = require('../lib/storage');
 
 const ACTIVITY_DAYS = 98; // 14 full weeks, matching the heatmap grid
+const STREAK_FREEZE_MONTHLY_LIMIT = 2;
 
 function dateKey(ts) {
   const d = new Date(ts);
   return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 }
 
-// Consecutive-day streak (posts + stories count), with a one-day grace
-// period: posting yesterday but not yet today still shows an active streak.
+function toSqlDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+// Consecutive-day streak (posts + stories count). Today gets an
+// unconditional, unlimited one-day grace (posting yesterday but not yet
+// today still shows an active streak) — separate from and in addition to
+// the streak-freeze allowance below, which only ever covers a genuinely
+// past missed day, not "haven't gotten to it yet today".
+//
+// A streak freeze auto-covers one missed day at a time, up to
+// STREAK_FREEZE_MONTHLY_LIMIT per calendar month, the first time that gap
+// is encountered — recorded permanently in streak_freeze_uses so it's
+// consumed once, not re-spent (or un-spent) on every recomputation.
 async function computeStreak(authorId) {
   const [postDates] = await pool.query('SELECT created_at FROM posts WHERE author_id = ?', [authorId]);
   const [storyDates] = await pool.query('SELECT created_at FROM stories WHERE author_id = ?', [authorId]);
+  const [freezeRows] = await pool.query('SELECT used_on FROM streak_freeze_uses WHERE user_id = ?', [authorId]);
 
-  const days = new Set();
-  postDates.forEach(r => days.add(dateKey(r.created_at)));
-  storyDates.forEach(r => days.add(dateKey(r.created_at)));
+  const activeDays = new Set();
+  postDates.forEach(r => activeDays.add(dateKey(r.created_at)));
+  storyDates.forEach(r => activeDays.add(dateKey(r.created_at)));
+  freezeRows.forEach(r => activeDays.add(dateKey(r.used_on)));
+
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+  let freezesUsedThisMonth = freezeRows.filter((r) => new Date(r.used_on) >= monthStart).length;
+  const freezesRemaining = () => Math.max(0, STREAK_FREEZE_MONTHLY_LIMIT - freezesUsedThisMonth);
 
   const cursor = new Date();
-  if (!days.has(dateKey(cursor.getTime()))) {
+  if (!activeDays.has(dateKey(cursor.getTime()))) {
     cursor.setDate(cursor.getDate() - 1);
-    if (!days.has(dateKey(cursor.getTime()))) return 0;
+    if (!activeDays.has(dateKey(cursor.getTime()))) {
+      return { streak: 0, freezesUsedThisMonth, freezesRemaining: freezesRemaining() };
+    }
   }
+
   let streak = 0;
-  while (days.has(dateKey(cursor.getTime()))) {
+  while (true) {
+    const key = dateKey(cursor.getTime());
+    if (activeDays.has(key)) {
+      streak++;
+      cursor.setDate(cursor.getDate() - 1);
+      continue;
+    }
+    if (freezesUsedThisMonth >= STREAK_FREEZE_MONTHLY_LIMIT) break;
+    try {
+      await pool.query('INSERT INTO streak_freeze_uses (user_id, used_on) VALUES (?, ?)', [authorId, toSqlDate(cursor)]);
+    } catch {
+      break; // table missing locally, or a genuine race — treat the streak as broken here
+    }
+    freezesUsedThisMonth++;
+    activeDays.add(key);
     streak++;
     cursor.setDate(cursor.getDate() - 1);
   }
-  return streak;
+  return { streak, freezesUsedThisMonth, freezesRemaining: freezesRemaining() };
 }
 
 async function getProfile(req, res) {
@@ -40,7 +78,7 @@ async function getProfile(req, res) {
     );
     if (!rows.length) return res.status(404).json({ error: 'User not found.' });
     const u = rows[0];
-    const streak = await computeStreak(req.params.id);
+    const { streak, freezesUsedThisMonth, freezesRemaining } = await computeStreak(req.params.id);
     const followStatus = await getFollowStatus(req.userId, req.params.id);
     let blockedByMe = false;
     if (req.userId !== req.params.id) {
@@ -54,6 +92,8 @@ async function getProfile(req, res) {
     res.json({
       user: { id: u.id, displayName: u.display_name, bio: u.bio, photoUrl: u.photo_url, isPrivate: !!u.is_private },
       streak,
+      freezesUsedThisMonth,
+      freezesRemaining,
       followStatus,
       blockedByMe,
     });

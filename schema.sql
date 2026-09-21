@@ -132,3 +132,16 @@ CREATE TABLE IF NOT EXISTS notifications (
   FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
   INDEX idx_notifications_recipient (recipient_id, created_at)
 ) ENGINE=InnoDB;
+
+-- A day a streak freeze covered a missed day — on top of the streak
+-- calculation's existing unconditional one-day grace period. Auto-consumed
+-- (up to STREAK_FREEZE_MONTHLY_LIMIT per calendar month) the first time a
+-- gap is detected, then permanent, so re-checking the streak later doesn't
+-- re-spend or un-spend it.
+CREATE TABLE IF NOT EXISTS streak_freeze_uses (
+  user_id     VARCHAR(36) NOT NULL,
+  used_on     DATE NOT NULL,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, used_on),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
