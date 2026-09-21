@@ -1,4 +1,4 @@
-export default function SideColumn({ streak = 0, trendingTags = [], counts = {}, onTagClick }) {
+export default function SideColumn({ streak = 0, trendingTags = [], counts = {}, onTagClick, onCategoryClick }) {
   const streakMsg = streak > 0
     ? 'Post a photo or video today to keep it going.'
     : 'Share a photo or video today to start a streak.';
@@ -24,9 +24,9 @@ export default function SideColumn({ streak = 0, trendingTags = [], counts = {},
       </div>
       <div className="card side-card">
         <h4>Community</h4>
-        <div className="stat-row"><span>🌿 Health</span><b>{counts.health ?? 0}</b></div>
-        <div className="stat-row"><span>💰 Wealth</span><b>{counts.wealth ?? 0}</b></div>
-        <div className="stat-row"><span>❤️ Relationships</span><b>{counts.relationships ?? 0}</b></div>
+        <button type="button" className="stat-row" onClick={() => onCategoryClick?.('health')}><span>🌿 Health</span><b>{counts.health ?? 0}</b></button>
+        <button type="button" className="stat-row" onClick={() => onCategoryClick?.('wealth')}><span>💰 Wealth</span><b>{counts.wealth ?? 0}</b></button>
+        <button type="button" className="stat-row" onClick={() => onCategoryClick?.('relationships')}><span>❤️ Relationships</span><b>{counts.relationships ?? 0}</b></button>
       </div>
       <div className="card side-card">
         <h4>About PackSomeWork</h4>

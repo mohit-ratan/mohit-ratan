@@ -567,7 +567,12 @@
   .trend-item:last-child{border-bottom:none;}
   .trend-item:hover{color:var(--accent);}
   .trend-item .n{color:var(--text-faint);font-size:12px;}
-  .stat-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:var(--text-muted);}
+  .stat-row{
+    display:flex;justify-content:space-between;align-items:center;width:100%;
+    padding:6px 4px;font-size:13px;color:var(--text-muted);
+    background:none;border:none;font-family:inherit;cursor:pointer;border-radius:6px;
+  }
+  .stat-row:hover{background:var(--surface-2);color:var(--text);}
   .stat-row b{color:var(--text);font-family:var(--font-display);font-size:16px;font-weight:600;}
   .about-text{font-size:13px;color:var(--text-muted);line-height:1.6;}
   .streak-card{background:linear-gradient(135deg,#FFF4E8,#FFE8D6);border-color:#FFD9B3;}
