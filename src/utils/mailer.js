@@ -1,7 +1,11 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-// Resend is used when configured; otherwise retain the hosting gateway/SMTP flow.
+// Resend is tried first when configured — it works over plain HTTPS, so it's
+// unaffected by hosts (like GoDaddy Node.js Hosting) that block outbound SMTP
+// entirely. The hosting gateway and then real SMTP are kept as fallbacks: on
+// a host where SMTP genuinely works, or on GoDaddy's own loopback gateway,
+// those still get a chance if Resend isn't configured or its send fails.
 const EMAIL_GATEWAY_URL = 'http://127.0.0.1:2525/api/email/send';
 
 // Strips the small amount of markup our own email templates use so the
@@ -81,7 +85,9 @@ async function sendViaResend({ to, subject, html }) {
       signal: AbortSignal.timeout(15000),
     });
   } catch {
-    // Do not retry through another provider: a timed-out send may be accepted.
+    // A timeout here doesn't guarantee Resend never received it, but the
+    // caller falls back to another transport on any failure — leaving the
+    // user with zero codes is worse than a rare duplicate email.
     throw new Error('Resend connection failed or timed out. Check outbound HTTPS connectivity.');
   }
   const body = await res.json().catch(() => ({}));
@@ -92,23 +98,44 @@ async function sendViaResend({ to, subject, html }) {
   return { provider: 'resend', messageId: body.id };
 }
 
+// Tries Resend, then the hosting gateway, then real SMTP, in that order —
+// each only attempted if the previous one is unconfigured or fails, so a
+// working fallback is always available if you move off a host that needs
+// Resend, or if a configured provider has an outage.
 async function sendMail({ to, subject, html }) {
+  const failures = [];
+
   if (process.env.EMAIL_PROVIDER === 'resend' || process.env.RESEND_API_KEY) {
-    return sendViaResend({ to, subject, html });
+    try {
+      return await sendViaResend({ to, subject, html });
+    } catch (err) {
+      failures.push(`Resend: ${err.message}`);
+    }
   }
-  const gatewayResult = await sendViaGateway({ to, subject, html });
-  if (gatewayResult) return gatewayResult;
+
+  try {
+    const gatewayResult = await sendViaGateway({ to, subject, html });
+    if (gatewayResult) return gatewayResult;
+  } catch (err) {
+    failures.push(`Gateway: ${err.message}`);
+  }
 
   const t = getTransporter();
-  if (!t) {
-    throw new Error('Email delivery unavailable: configure Resend or an available email transport.');
+  if (t) {
+    try {
+      return await t.sendMail({
+        from: process.env.MAIL_FROM || '"PackSomeWork" <no-reply@packsomework.com>',
+        to,
+        subject,
+        html,
+      });
+    } catch (err) {
+      failures.push(`SMTP: ${err.message}`);
+    }
   }
-  return t.sendMail({
-    from: process.env.MAIL_FROM || '"PackSomeWork" <no-reply@packsomework.com>',
-    to,
-    subject,
-    html,
-  });
+
+  const detail = failures.length ? failures.join(' | ') : 'No transport is configured — set RESEND_API_KEY or SMTP_HOST.';
+  throw new Error(`Email delivery failed on every available transport. ${detail}`);
 }
 
 module.exports = { sendMail };
