@@ -7,6 +7,7 @@ import StoriesBar from '../components/StoriesBar';
 import FeedList from '../components/FeedList';
 import SideColumn from '../components/SideColumn';
 import FollowListPanel from '../components/FollowListPanel';
+import SuggestedFollows from '../components/SuggestedFollows';
 import Avatar from '../components/Avatar';
 import ComposerModal from '../components/ComposerModal';
 import PostDetailModal from '../components/PostDetailModal';
@@ -213,6 +214,7 @@ export default function HomePage() {
           </section>
           <aside className="side-col">
             <SideColumn streak={streak} trendingTags={trendingTags} counts={counts} onTagClick={openTag} />
+            {user && <SuggestedFollows />}
             {user && <FollowListPanel authorId={user.id} />}
           </aside>
         </main>
