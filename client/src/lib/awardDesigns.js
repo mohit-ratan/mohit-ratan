@@ -8,9 +8,14 @@ import { CATEGORIES } from './format';
 // Two kinds, one pair per category:
 // - "goal" trophies mirror the real rule in postsController.achievements():
 //   a goal's checklist must be non-empty and every subtask marked done.
+//   Each one uses an icon that stands for its category, not a generic cup.
 // - "consistency" badges are themed to the streak/heatmap mechanic (posting
 //   or sharing stories on consecutive days) rather than a category-specific
-//   counter, since streaks are tracked app-wide today.
+//   counter, since streaks are tracked app-wide today. All three share the
+//   same flame — consistency is the same idea everywhere, just a different
+//   color of fire.
+const GOAL_ICONS = { health: '💪', wealth: '💎', relationships: '🫂' };
+
 export const AWARD_COLLECTIONS = CATEGORIES.map((cat) => ({
   category: cat.id,
   label: cat.label,
@@ -19,7 +24,7 @@ export const AWARD_COLLECTIONS = CATEGORIES.map((cat) => ({
     {
       id: `${cat.id}-goal`,
       kind: 'goal',
-      icon: '🏆',
+      icon: GOAL_ICONS[cat.id],
       name: `${cat.label} Goal Trophy`,
       rule: `Set a goal tagged to ${cat.label}, break it into tasks, and check off every single one. The moment the last task is done, this trophy is added to your Achievement House.`,
     },
@@ -42,4 +47,14 @@ export const AWARD_KIND_COPY = {
     label: 'Consistency badge',
     blurb: "Reflects your ongoing streak, not a single finish line — it stays lit as long as you keep showing up.",
   },
+};
+
+// A rare fourth design: earning every category's Goal Trophy at once. Same
+// "not yet earned" preview treatment as everything else on the page — this
+// is a design idea, not a feature that's wired up to award anything yet.
+export const PLATINUM_AWARD = {
+  id: 'platinum',
+  icon: '🏆',
+  name: 'Platinum Award',
+  rule: "Earn the Health, Wealth, and Relationships Goal Trophies at the same time, and this rare, all-category award is yours — proof you're building the whole life, not just one part of it.",
 };

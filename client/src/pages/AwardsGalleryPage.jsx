@@ -1,21 +1,42 @@
 import { Link } from 'react-router-dom';
 import BrandLogo from '../components/BrandLogo';
 import { useAuth } from '../context/AuthContext';
-import { AWARD_COLLECTIONS, AWARD_KIND_COPY } from '../lib/awardDesigns';
+import { AWARD_COLLECTIONS, AWARD_KIND_COPY, PLATINUM_AWARD } from '../lib/awardDesigns';
 
 function AwardCard({ award, category }) {
   const kindCopy = AWARD_KIND_COPY[award.kind];
   return (
     <article className={`award-card award-card-${category}`}>
-      <div className="award-medallion" aria-hidden="true">
+      <div className="award-medallion-wrap">
         <span className="award-medallion-ring" />
-        <span className="award-medallion-shine" />
-        <span className="award-medallion-icon">{award.icon}</span>
+        <div className="award-medallion">
+          <span className="award-medallion-shine" />
+          <span className="award-medallion-icon">{award.icon}</span>
+        </div>
       </div>
       <span className="award-status-chip">Design preview · not yet earned</span>
       <h3>{award.name}</h3>
       <span className="award-kind-label">{kindCopy.label}</span>
       <p>{award.rule}</p>
+    </article>
+  );
+}
+
+function PlatinumAwardCard() {
+  return (
+    <article className="award-card award-card-platinum">
+      <div className="award-medallion-wrap-platinum">
+        <span className="award-medallion-ring-outer" />
+        <span className="award-medallion-ring-platinum" />
+        <div className="award-medallion-platinum">
+          <span className="award-medallion-holo" />
+          <span className="award-medallion-platinum-icon">{PLATINUM_AWARD.icon}</span>
+        </div>
+      </div>
+      <span className="award-status-chip">Design preview · not yet earned</span>
+      <h3>{PLATINUM_AWARD.name}</h3>
+      <span className="award-kind-label">Ultimate award</span>
+      <p>{PLATINUM_AWARD.rule}</p>
     </article>
   );
 }
@@ -63,6 +84,14 @@ export default function AwardsGalleryPage() {
             </div>
           </section>
         ))}
+
+        <section className="awards-platinum-section" aria-labelledby="awards-platinum-title">
+          <div className="intro-section-heading">
+            <p className="intro-eyebrow">🏆 THE RAREST DESIGN</p>
+            <h2 id="awards-platinum-title">One award for the whole picture</h2>
+          </div>
+          <PlatinumAwardCard />
+        </section>
 
         <section className="awards-legend" aria-labelledby="awards-legend-title">
           <div className="intro-section-heading">
