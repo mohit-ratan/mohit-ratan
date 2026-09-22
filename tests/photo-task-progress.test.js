@@ -22,7 +22,7 @@ function fixture({ done = false, missing = false, fail = false, targetDays = 1 }
       return [{}];
     },
   };
-  const sandbox = { module: { exports: {} }, console: { error() {} }, require: (name) => name === '../lib/access' ? { canViewPost: async () => true } : name === '../db' ? { getConnection: async () => connection } : name === 'uuid' ? { v4: () => 'photo-id' } : name === '../lib/goalProgress' ? require('../src/lib/goalProgress') : name === '../lib/follows' ? { canView: async () => true } : name === '../lib/notifications' ? { notify: async () => {} } : name === '../lib/storage' ? { uploadMedia: async () => '/assets/uploads/small.jpg', deleteMedia: async () => {} } : require(name) };
+  const sandbox = { module: { exports: {} }, console: { error() {} }, require: (name) => name === '../lib/taskCelebration' ? require('../src/lib/taskCelebration') : name === '../lib/access' ? { canViewPost: async () => true } : name === '../db' ? { getConnection: async () => connection } : name === 'uuid' ? { v4: () => 'photo-id' } : name === '../lib/goalProgress' ? require('../src/lib/goalProgress') : name === '../lib/follows' ? { canView: async () => true } : name === '../lib/notifications' ? { notify: async () => {} } : name === '../lib/storage' ? { uploadMedia: async () => '/assets/uploads/small.jpg', deleteMedia: async () => {} } : require(name) };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/controllers/postsController.js'), 'utf8'), sandbox);
   const req = { userId: 'owner', file: { filename: 'photo.jpg', mimetype: 'image/jpeg' }, body: { category: 'health', tag: 'fitness', goalTaskIndex: '0', goalTaskText: 'Run' } };
   const response = { status: 200 };
@@ -39,6 +39,7 @@ test('photo completes its selected task and final task earns an award atomically
 test('another photo for a completed task does not count a second completion', async () => {
   const f = fixture({ done: true }); await f.run();
   assert.equal(f.response.data.taskCompleted, false);
+  assert.equal(f.response.data.celebration, null);
 });
 test('missing or changed tasks cannot be completed', async () => {
   for (const options of [{ missing: true }, {}]) {
@@ -63,10 +64,14 @@ test('each upload adds one day, completion requires target and is capped', async
   const f = fixture({ targetDays: 3 });
   await f.run();
   assert.equal(f.response.data.completedDays, 1);
+  assert.equal(f.response.data.celebration.day, 1);
+  assert.equal(f.response.data.celebration.streakDays, 1);
   assert.equal(f.response.data.goalCompleted, false);
   assert.equal(f.response.data.taskCompleted, false);
   await f.run();
   assert.equal(f.response.data.completedDays, 2);
+  assert.equal(f.response.data.celebration.day, 2);
+  assert.equal(f.response.data.celebration.streakDays, 1);
   assert.equal(f.response.data.goalCompleted, false);
   await f.run();
   assert.equal(f.response.data.completedDays, 3);

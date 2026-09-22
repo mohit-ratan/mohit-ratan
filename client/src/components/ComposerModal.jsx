@@ -1,3 +1,4 @@
+import { useCelebration } from '../context/CelebrationContext';
 import useDialog from '../hooks/useDialog';
 import { useEffect, useRef, useState } from 'react';
 import api from '../api';
@@ -16,6 +17,7 @@ const VIBE_ITEMS = [{ id: '', emoji: '⚪', label: 'No look' }, ...LOOK_RECIPES]
 // picker and the endpoint/labels used.
 export default function ComposerModal({ kind, onClose, onCreated, initialGoalTask, initialGoal }) {
   const { user } = useAuth();
+  const celebrate = useCelebration();
   const showToast = useToast();
   const fileInputRef = useRef(null);
   const lookRequest = useRef(0);
@@ -188,6 +190,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
       if (isPost) form.append('visibility', visibility);
       if (isPost) form.append('aspectRatio', aspectRatio);
       if (isPost && selectedTask) {
+        form.append('timeZone', Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
         form.append('goalTaskIndex', taskIndex);
         form.append('goalTaskText', selectedTask.text);
         form.append('goalTaskId', selectedTask.id);
@@ -207,9 +210,10 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
         },
       });
 
-      showToast(data.goalCompleted ? '🏆 Goal complete! Your award is in your Achievement House.' : data.targetDays ? `Photo posted — ${data.completedDays} of ${data.targetDays} days complete!` : isPost ? 'Posted!' : 'Added to your story!');
+      if (!data.celebration) showToast(data.goalCompleted ? '🏆 Goal complete! Your award is in your Achievement House.' : data.targetDays ? `Photo posted — ${data.completedDays} of ${data.targetDays} days complete!` : isPost ? 'Posted!' : 'Added to your story!');
       onCreated?.(data.story ? { story: { ...data.story, authorId: user.id, authorName: user.displayName, authorPhotoUrl: user.photoUrl } } : undefined);
       onClose();
+      if (data.celebration) celebrate({ ...data.celebration, postId: data.id });
     } catch (err) {
       showToast(`Couldn't ${isPost ? 'post' : 'share your story'}: ${err.message || 'please try again'}`, true);
     } finally {

@@ -60,7 +60,7 @@ async function upsert(req, res) {
         if (previous) used.add(previous.id);
         const days = targetDays(t.targetDays);
         const completedDays = Math.min(days, previous?.completedDays || 0);
-        return { id: previous?.id || uuidv4(), text: t.text.trim().slice(0, 140), targetDays: days, completedDays, done: completedDays >= days };
+        return { ...(previous ? { streakTimeZone: previous.streakTimeZone, lastProgressDate: previous.lastProgressDate, streakDays: previous.streakDays } : {}), id: previous?.id || uuidv4(), text: t.text.trim().slice(0, 140), targetDays: days, completedDays, done: completedDays >= days };
       });
     if (existing.length) {
       await connection.query('UPDATE goals SET target_date = ?, subtasks = ? WHERE id = ?', [

@@ -16,18 +16,21 @@ test('editing duration preserves server progress, rejects forged counts and give
   const connection = {
     beginTransaction: async () => {}, commit: async () => {}, rollback: async () => {}, release() {},
     query: async (sql, args) => {
-      if (sql.startsWith('SELECT')) return [[{ id: 'goal', subtasks: [{ id: 'task', text: 'Run', targetDays: 3, completedDays: 2, done: false }] }]];
+      if (sql.startsWith('SELECT')) return [[{ id: 'goal', subtasks: [{ id: 'task', text: 'Run', targetDays: 3, completedDays: 2, done: false, streakDays: 2, lastProgressDate: '2026-09-22', streakTimeZone: 'Asia/Kolkata' }] }]];
       saved = JSON.parse(args[1]); return [{}];
     },
   };
   const sandbox = { module: { exports: {} }, console, require: (name) => name === '../lib/follows' ? { canView: async () => true } : name === '../db' ? { query: async () => [[{ found: 1 }]], getConnection: async () => connection } : name === 'uuid' ? { v4: () => 'new-task' } : name === '../lib/goalProgress' ? require('../src/lib/goalProgress') : require(name) };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/controllers/goalsController.js'), 'utf8'), sandbox);
-  const req = { userId: 'owner', params: { tag: 'fitness' }, body: { subtasks: [{ id: 'task', text: 'Run', targetDays: 10, completedDays: 10, done: true }, { text: 'Walk', targetDays: 5, completedDays: 5, done: true }] } };
+  const req = { userId: 'owner', params: { tag: 'fitness' }, body: { subtasks: [{ id: 'task', text: 'Run', targetDays: 10, completedDays: 10, done: true, streakDays: 999, lastProgressDate: '2099-01-01' }, { text: 'Walk', targetDays: 5, completedDays: 5, done: true }] } };
   const res = { json() {}, status() { return this; } };
   await sandbox.module.exports.upsert(req, res);
   assert.equal(saved[0].completedDays, 2);
   assert.equal(saved[0].targetDays, 10);
   assert.equal(saved[0].done, false);
+  assert.equal(saved[0].streakDays, 2);
+  assert.equal(saved[0].lastProgressDate, '2026-09-22');
+  assert.equal(saved[0].streakTimeZone, 'Asia/Kolkata');
   assert.equal(saved[1].completedDays, 0);
   assert.equal(saved[1].done, false);
 });

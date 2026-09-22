@@ -1,6 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const { canViewPost } = require('../lib/access');
+const { recordTaskCheckIn, celebrationLevel } = require('../lib/taskCelebration');
 const { targetDays, normalizeTasks } = require('../lib/goalProgress');
 const { canView } = require('../lib/follows');
 const { notify } = require('../lib/notifications');
@@ -256,13 +257,20 @@ async function create(req, res) {
           [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0, visibility, aspectRatio]
         );
         const wasDone = subtasks[index].done;
+        const checkIn = recordTaskCheckIn(subtasks[index], req.body.timeZone);
         subtasks[index].completedDays = Math.min(subtasks[index].targetDays, subtasks[index].completedDays + 1);
         subtasks[index].done = subtasks[index].completedDays >= subtasks[index].targetDays;
         const taskCompleted = !wasDone && subtasks[index].done;
         subtasks[index].photoPostId = id;
         await connection.query('UPDATE goals SET subtasks = ? WHERE id = ?', [JSON.stringify(subtasks), rows[0].id]);
         await connection.commit();
-        return res.json({ ok: true, id, taskCompleted, completedDays: subtasks[index].completedDays, targetDays: subtasks[index].targetDays, goalCompleted: subtasks.every((task) => task.done) });
+        const goalCompleted = subtasks.every((task) => task.done);
+        const celebration = checkIn ? {
+          ...checkIn, day: subtasks[index].completedDays, targetDays: subtasks[index].targetDays,
+          taskName: subtasks[index].text, tag: cleanTag, taskCompleted, goalCompleted,
+          level: celebrationLevel(checkIn.streakDays, taskCompleted, goalCompleted),
+        } : null;
+        return res.json({ ok: true, id, taskCompleted, completedDays: subtasks[index].completedDays, targetDays: subtasks[index].targetDays, goalCompleted, celebration });
       } catch (error) {
         await connection.rollback();
         throw error;
