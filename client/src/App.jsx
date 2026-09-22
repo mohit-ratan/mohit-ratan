@@ -11,6 +11,7 @@ import RecoveryPage from './pages/RecoveryPage';
 import PrivacyPage from './pages/PrivacyPage';
 import AccountPage from './pages/AccountPage';
 import ProfilePage from './pages/ProfilePage';
+import AwardsGalleryPage from './pages/AwardsGalleryPage';
 
 // The three.js/r3f/drei stack is ~1MB — code-split so only the 3D routes
 // pay that cost instead of it loading on every page (feed, login, etc).
@@ -47,6 +48,7 @@ export default function App() {
       <Route path="/reset-password" element={<RecoveryPage key="reset" mode="reset-password" />} />
       <Route path="/resend-verification" element={<RecoveryPage key="resend" mode="resend-verification" />} />
       <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/awards" element={<AwardsGalleryPage />} />
       <Route path="/account" element={<RequireAuth><AccountPage /></RequireAuth>} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
