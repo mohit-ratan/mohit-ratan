@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../api';
 import { goalStatusLabel, taskProgress, tasksProgress } from '../lib/format';
 
-export default function PostGoalPanel({ post }) {
+export default function PostGoalPanel({ post, isMe, onUploadTask }) {
   const [result, setResult] = useState({ loading: true, goal: null, error: null });
   const [retry, setRetry] = useState(0);
   useEffect(() => {
@@ -29,11 +29,23 @@ export default function PostGoalPanel({ post }) {
       <div className="goal-task-summary"><span>{progress.completed} / {progress.target} task days logged</span><strong>{percent}%</strong></div>
       <progress value={progress.completed} max={progress.target || 1} aria-label="Goal progress" />
       <ul className="post-goal-tasks">
-        {goal.subtasks.map((task) => {
+        {goal.subtasks.map((task, index) => {
           const { completed, target } = taskProgress(task);
           return <li key={task.id}>
             <div><strong>{task.done ? '✓ ' : ''}{task.text}</strong><span>{completed} / {target} days</span></div>
-            <progress value={completed} max={target} aria-label={`${task.text} progress`} />
+            <div className="post-goal-task-row">
+              <progress value={completed} max={target} aria-label={`${task.text} progress`} />
+              {isMe && !task.done && (
+                <button
+                  type="button"
+                  className="goal-task-photo"
+                  aria-label={`Upload photo for ${task.text}`}
+                  onClick={() => onUploadTask({ tag: post.tag, category: post.category, index })}
+                >
+                  ＋ Photo
+                </button>
+              )}
+            </div>
           </li>;
         })}
       </ul>

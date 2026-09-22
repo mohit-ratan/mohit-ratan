@@ -1224,7 +1224,9 @@
 .post-goal-panel .goal-task-summary{margin-top:12px;}
 .post-goal-panel progress{display:block;width:100%;height:6px;margin:8px 0 0;accent-color:var(--floor-color,#355a43);}
 .post-goal-tasks{list-style:none;padding:0;margin:16px 0;display:flex;flex-direction:column;gap:13px;}
-.post-goal-tasks li>div{display:flex;justify-content:space-between;gap:12px;font-size:12px;}
+.post-goal-tasks li>div:first-child{display:flex;justify-content:space-between;gap:12px;font-size:12px;}
+.post-goal-task-row{display:flex;align-items:center;gap:8px;margin-top:8px;}
+.post-goal-task-row progress{flex:1;margin:0;}
 .post-goal-tasks strong{font-weight:500;overflow-wrap:anywhere;min-width:0;}
 .post-goal-tasks li span{font-size:10px;color:#74816d;white-space:nowrap;}
 .post-goal-link{font-size:11px;color:#355a43;font-weight:600;text-decoration:none;}
