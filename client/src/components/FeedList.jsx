@@ -2,7 +2,7 @@ import { useState } from 'react';
 import api, { mediaUrl } from '../api';
 import { CAT_MAP, timeAgo, truncate } from '../lib/format';
 import { pickLookRecipe } from '../lib/looks';
-import { HeartIcon, CommentIcon, VideoIcon, SparkleIcon } from '../lib/icons';
+import { HeartIcon, CommentIcon, VideoIcon } from '../lib/icons';
 import Avatar from './Avatar';
 
 const ASPECT_RATIOS = { square: '1 / 1', portrait: '4 / 5', landscape: '16 / 9' };
@@ -56,7 +56,6 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
           <div className={`text-card ${cat.id}`}><span className="reveal-text">{cat.label}</span></div>
         )}
         {isVideo && <span className="tile-badge"><VideoIcon /></span>}
-        {isImage && post.aiStyled && <span className="styled-badge"><SparkleIcon />Filtered</span>}
         {isImage && post.vibe && !post.aiStyled && <span className="vibe-chip">✨ {truncate(post.vibe, 34)}</span>}
       </button>
       <div className="feed-card-actions">

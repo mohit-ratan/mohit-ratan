@@ -1,7 +1,7 @@
 import { mediaUrl } from '../api';
 import { CAT_MAP, truncate } from '../lib/format';
 import { pickLookRecipe } from '../lib/looks';
-import { HeartIcon, CommentIcon, VideoIcon, SparkleIcon } from '../lib/icons';
+import { HeartIcon, CommentIcon, VideoIcon } from '../lib/icons';
 import Avatar from './Avatar';
 
 function postWord(p) {
@@ -33,7 +33,6 @@ function GridTile({ post, onOpen, onOpenAuthor, showAuthor }) {
             <span className="reveal-text">{truncate(postWord(post) || cat.label, 90)}</span>
           </div>
         )}
-        {badgeHtml && <span className="styled-badge"><SparkleIcon />Filtered</span>}
         {vibeHtml && <span className="vibe-chip">✨ {truncate(post.vibe, 26)}</span>}
         {captionSource && (
           <div className="tile-caption"><span className="reveal-text">{truncate(captionSource, 54)}</span></div>

@@ -8,7 +8,7 @@ import { pickLookRecipe } from '../lib/looks';
 import Avatar from './Avatar';
 import EditPostModal from './EditPostModal';
 import PostGoalPanel from './PostGoalPanel';
-import { HeartIcon, SparkleIcon } from '../lib/icons';
+import { HeartIcon } from '../lib/icons';
 
 export default function PostDetailModal({ post, onClose, onChanged, onDeleted, onOpenAuthor, onOpenTag }) {
   const { user } = useAuth();
@@ -144,11 +144,9 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
             </>
           ) : isImage ? (
             <>
-              {post.aiStyled ? (
-                <span className="styled-badge"><SparkleIcon />Filter — {truncate(post.vibe || '', 24)}</span>
-              ) : post.vibe ? (
+              {!post.aiStyled && post.vibe && (
                 <span className="vibe-chip">✨ {truncate(post.vibe, 34)}</span>
-              ) : null}
+              )}
               <img src={mediaUrl(post.mediaUrl)} alt={post.tag ? `Post for #${post.tag}` : 'Post'} style={!post.aiStyled && filter ? { filter } : undefined} />
             </>
           ) : (
