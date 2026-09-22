@@ -46,7 +46,7 @@ export default function VerifyEmailPage() {
         {status === 'ok' && <div className="auth-success">{message}</div>}
         {status === 'error' && <div className="auth-error">{message}</div>}
         <div className="auth-switch" style={{ marginTop: 20 }}>
-          <Link to="/login">Go to sign in</Link>
+          <Link to="/login">Go to sign in</Link>{status === 'error' && <> · <Link to="/resend-verification">Send a new verification link</Link></>}
         </div>
       </div>
     </div>

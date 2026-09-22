@@ -97,8 +97,8 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {error && <div className="auth-error" style={{ marginBottom: 14 }}>{error}</div>}
-        {message && mode === 'otp' && <div className="auth-success" style={{ marginBottom: 14 }}>{message}</div>}
+        {error && <div role="alert" className="auth-error" style={{ marginBottom: 14 }}>{error}</div>}
+        {message && mode === 'otp' && <div role="status" className="auth-success" style={{ marginBottom: 14 }}>{message}</div>}
 
         {mode === 'password' ? (
           <form className="auth-form" onSubmit={handlePasswordSubmit}>
@@ -106,6 +106,7 @@ export default function LoginPage() {
               <label htmlFor="email">Email</label>
               <input
                 id="email"
+                autoComplete="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -117,6 +118,7 @@ export default function LoginPage() {
               <label htmlFor="password">Password</label>
               <input
                 id="password"
+                autoComplete="current-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -154,6 +156,8 @@ export default function LoginPage() {
                 id="code"
                 type="text"
                 inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]{6}"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 placeholder="000000"
@@ -170,6 +174,7 @@ export default function LoginPage() {
           </form>
         )}
 
+        <div className="auth-switch"><Link to="/forgot-password">Forgot password?</Link> · <Link to="/resend-verification">Resend verification email</Link></div>
         <div className="auth-switch">
           New here? <Link to="/register">Create an account</Link>
         </div>

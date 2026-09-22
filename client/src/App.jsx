@@ -7,6 +7,9 @@ import VerifyEmailPage from './pages/VerifyEmailPage';
 import MobileNav from './components/MobileNav';
 import HomePage from './pages/HomePage';
 import LandingPage from './pages/LandingPage';
+import RecoveryPage from './pages/RecoveryPage';
+import PrivacyPage from './pages/PrivacyPage';
+import AccountPage from './pages/AccountPage';
 import ProfilePage from './pages/ProfilePage';
 
 // The three.js/r3f/drei stack is ~1MB — code-split so only the 3D routes
@@ -40,6 +43,11 @@ export default function App() {
   return (
     <>
     <Routes>
+      <Route path="/forgot-password" element={<RecoveryPage key="forgot" mode="forgot-password" />} />
+      <Route path="/reset-password" element={<RecoveryPage key="reset" mode="reset-password" />} />
+      <Route path="/resend-verification" element={<RecoveryPage key="resend" mode="resend-verification" />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/account" element={<RequireAuth><AccountPage /></RequireAuth>} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/verify" element={<VerifyEmailPage />} />

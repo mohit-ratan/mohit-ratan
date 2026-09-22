@@ -6,7 +6,7 @@ const path = require('node:path');
 
 async function readGoal(rows) {
   let response;
-  const sandbox = { module: { exports: {} }, console, require: (name) => name === '../db' ? { query: async (sql, args) => {
+  const sandbox = { module: { exports: {} }, console, require: (name) => name === '../lib/follows' ? { canView: async () => true } : name === '../db' ? { query: async (sql, args) => {
     assert.deepEqual(Array.from(args), ['post-author', 'fitness']);
     return [rows];
   } } : name === 'uuid' ? { v4: () => 'id' } : name === '../lib/goalProgress' ? require('../src/lib/goalProgress') : require(name) };

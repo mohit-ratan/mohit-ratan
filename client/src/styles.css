@@ -1351,3 +1351,14 @@ button.story-ring{border:0;cursor:pointer;}
 .intro-skip{position:absolute;top:-100px;left:12px;background:white;padding:12px;z-index:100;}.intro-skip:focus{top:12px;}
 @media(max-width:900px){.intro-hero{gap:35px;padding-top:55px;}.intro-example-art{height:245px;}.intro-house-section{margin-inline:24px;padding:40px;gap:35px;}.intro-nav nav{gap:20px;}.intro-area{padding:22px;}}
 @media(max-width:680px){.intro-nav{padding:20px;gap:12px;}.intro-brand{font-size:18px;gap:5px;}.intro-brand svg{width:29px;}.intro-nav nav{gap:14px;font-size:12px;}.intro-nav .intro-how-link,.intro-nav .intro-button-small{display:none;}.intro-hero{grid-template-columns:1fr;padding:40px 24px 60px;gap:45px;}.intro-hero h1{font-size:57px;}.intro-lead{font-size:15px;}.intro-actions{gap:20px;}.intro-preview{max-width:440px;width:100%;margin:auto;transform:none;}.intro-example-art{height:250px;}.intro-areas,.intro-how{padding:45px 24px;}.intro-section-heading h2{font-size:34px;}.intro-area-grid,.intro-steps{grid-template-columns:1fr;gap:18px;}.intro-area-icon{margin-bottom:15px;}.intro-area-example{margin-top:18px;}.intro-steps{gap:28px;}.intro-steps h3{margin-top:12px;}.intro-house-section{grid-template-columns:1fr;padding:30px 22px;margin:20px 16px 30px;gap:35px;}.intro-house-copy h2{font-size:35px;}.intro-final{padding:40px 24px 60px;}.intro-final h2{font-size:36px;}.intro-footer{padding:24px;flex-wrap:wrap;gap:18px;}.intro-footer p{width:100%;order:3;}}
+.information-page{max-width:760px;margin:40px auto;padding:24px;line-height:1.8;overflow-wrap:anywhere;}
+.information-page h1{font-family:var(--font-display);font-size:38px;line-height:1.2;}
+.information-page h2{font-size:22px;margin-top:32px;}
+.information-page section{margin:30px 0;padding:24px;background:white;border:1px solid var(--border);border-radius:18px;}
+.information-page select,.information-page textarea{width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fffaf5;font:inherit;}
+.information-page a{color:var(--accent);text-decoration:underline;}
+@media(max-width:680px){.information-page{margin:10px auto;padding:20px;}.information-page section{padding:18px;}}
+.first-goal-guide{padding:24px;margin-bottom:24px;border:1px solid var(--border);border-radius:18px;background:#fff8ef;}
+.first-goal-guide h2{font-family:var(--font-display);font-size:28px;margin:8px 0 20px;}
+.first-goal-guide select{padding:12px;border:1px solid var(--border);border-radius:10px;background:white;font:inherit;}
+.first-goal-guide p,.first-goal-guide small{font-size:13px;line-height:1.6;}

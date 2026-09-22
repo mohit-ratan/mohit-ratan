@@ -35,3 +35,6 @@ npm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Generated copy of the sharing image; source lives under client/public.
+public/brand/share.png

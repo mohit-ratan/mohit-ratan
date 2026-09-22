@@ -1,5 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
+const { canViewPost } = require('../lib/access');
 const { targetDays, normalizeTasks } = require('../lib/goalProgress');
 const { canView } = require('../lib/follows');
 const { notify } = require('../lib/notifications');
@@ -75,7 +76,7 @@ const PAGE_SIZE = 30;
 // The "can this viewer actually see this post" rule — shared by the feed
 // query and the counts/trending-tags queries below it, so a post never gets
 // counted or surfaced as trending for someone who can't actually open it.
-const VISIBLE_TO_VIEWER_SQL = `(p.visibility = 'public' OR p.author_id = ? OR u.is_private = 0 OR EXISTS(
+const VISIBLE_TO_VIEWER_SQL = `(p.visibility = 'public' OR p.author_id = ? OR EXISTS(
   SELECT 1 FROM follows f WHERE f.follower_id = ? AND f.followee_id = p.author_id AND f.status = 'accepted'
 )) AND NOT EXISTS (
   SELECT 1 FROM blocks b WHERE (b.blocker_id = ? AND b.blocked_id = p.author_id) OR (b.blocker_id = p.author_id AND b.blocked_id = ?)
@@ -167,9 +168,9 @@ async function achievements(req, res) {
               (SELECT COUNT(*) FROM comments cm WHERE cm.post_id = p.id) as comment_count,
               EXISTS(SELECT 1 FROM post_likes pl2 WHERE pl2.post_id = p.id AND pl2.user_id = ?) as liked_by_me
        FROM posts p JOIN users u ON u.id = p.author_id
-       WHERE p.author_id = ? AND p.tag IS NOT NULL AND p.tag <> ''
+       WHERE p.author_id = ? AND p.tag IS NOT NULL AND p.tag <> '' AND ${VISIBLE_TO_VIEWER_SQL}
        ORDER BY p.created_at ASC`,
-      [req.userId, authorId]
+      [req.userId, authorId, req.userId, req.userId, req.userId, req.userId]
     );
 
     const byTag = new Map();
@@ -369,6 +370,7 @@ async function remove(req, res) {
 
 async function like(req, res) {
   try {
+    if (!(await canViewPost(req.userId, req.params.id))) return res.status(404).json({ error: 'Post not found.' });
     const { id } = req.params;
     const [existing] = await pool.query(
       'SELECT 1 FROM post_likes WHERE post_id = ? AND user_id = ?',
@@ -390,6 +392,7 @@ async function like(req, res) {
 
 async function listComments(req, res) {
   try {
+    if (!(await canViewPost(req.userId, req.params.id))) return res.status(404).json({ error: 'Post not found.' });
     const [rows] = await pool.query(
       `SELECT c.*, u.display_name FROM comments c JOIN users u ON u.id = c.author_id
        WHERE c.post_id = ? ORDER BY c.created_at ASC`,
@@ -412,6 +415,7 @@ async function listComments(req, res) {
 
 async function addComment(req, res) {
   try {
+    if (!(await canViewPost(req.userId, req.params.id))) return res.status(404).json({ error: 'Post not found.' });
     const { text } = req.body || {};
     if (!text || !text.trim()) return res.status(400).json({ error: 'Comment cannot be empty.' });
     const id = uuidv4();
@@ -430,9 +434,10 @@ async function addComment(req, res) {
 
 async function updateComment(req, res) {
   try {
+    if (!(await canViewPost(req.userId, req.params.id))) return res.status(404).json({ error: 'Post not found.' });
     const { text } = req.body || {};
     if (!text || !text.trim()) return res.status(400).json({ error: 'Comment cannot be empty.' });
-    const [rows] = await pool.query('SELECT author_id FROM comments WHERE id = ?', [req.params.commentId]);
+    const [rows] = await pool.query('SELECT author_id FROM comments WHERE id = ? AND post_id = ?', [req.params.commentId, req.params.id]);
     if (!rows.length) return res.status(404).json({ error: 'Comment not found.' });
     if (rows[0].author_id !== req.userId) return res.status(403).json({ error: 'You can only edit your own comments.' });
     await pool.query('UPDATE comments SET text = ? WHERE id = ?', [text.trim().slice(0, 500), req.params.commentId]);
@@ -445,10 +450,11 @@ async function updateComment(req, res) {
 
 async function deleteComment(req, res) {
   try {
-    const [rows] = await pool.query('SELECT author_id FROM comments WHERE id = ?', [req.params.commentId]);
+    if (!(await canViewPost(req.userId, req.params.id))) return res.status(404).json({ error: 'Post not found.' });
+    const [rows] = await pool.query('SELECT author_id FROM comments WHERE id = ? AND post_id = ?', [req.params.commentId, req.params.id]);
     if (!rows.length) return res.status(404).json({ error: 'Comment not found.' });
     if (rows[0].author_id !== req.userId) return res.status(403).json({ error: 'You can only delete your own comments.' });
-    await pool.query('DELETE FROM comments WHERE id = ?', [req.params.commentId]);
+    await pool.query('DELETE FROM comments WHERE id = ? AND post_id = ?', [req.params.commentId, req.params.id]);
     res.json({ ok: true });
   } catch (err) {
     console.error('delete comment error:', err);

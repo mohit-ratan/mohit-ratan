@@ -20,7 +20,7 @@ test('editing duration preserves server progress, rejects forged counts and give
       saved = JSON.parse(args[1]); return [{}];
     },
   };
-  const sandbox = { module: { exports: {} }, console, require: (name) => name === '../db' ? { query: async () => [[{ found: 1 }]], getConnection: async () => connection } : name === 'uuid' ? { v4: () => 'new-task' } : name === '../lib/goalProgress' ? require('../src/lib/goalProgress') : require(name) };
+  const sandbox = { module: { exports: {} }, console, require: (name) => name === '../lib/follows' ? { canView: async () => true } : name === '../db' ? { query: async () => [[{ found: 1 }]], getConnection: async () => connection } : name === 'uuid' ? { v4: () => 'new-task' } : name === '../lib/goalProgress' ? require('../src/lib/goalProgress') : require(name) };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/controllers/goalsController.js'), 'utf8'), sandbox);
   const req = { userId: 'owner', params: { tag: 'fitness' }, body: { subtasks: [{ id: 'task', text: 'Run', targetDays: 10, completedDays: 10, done: true }, { text: 'Walk', targetDays: 5, completedDays: 5, done: true }] } };
   const res = { json() {}, status() { return this; } };

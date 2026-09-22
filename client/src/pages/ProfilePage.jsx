@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -313,6 +313,7 @@ export default function ProfilePage() {
             </div>
             {isMe && <FollowRequests />}
             {isMe && <BlockedAccounts />}
+            {isMe && <p><Link to="/account">Account & help →</Link> · <Link to="/privacy">Privacy information</Link></p>}
             {canView ? (
               <>
                 <div className="profile-posts-heading"><h2>{isMe ? 'Your moments' : 'Moments'}</h2><span>{posts.length} {posts.length === 1 ? 'post' : 'posts'}</span></div>

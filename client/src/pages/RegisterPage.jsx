@@ -44,10 +44,10 @@ export default function RegisterPage() {
           <>
             <div className="auth-success">{message}</div>
             <p className="auth-note" style={{ marginTop: 14 }}>
-              Didn't get the email? Check spam, or wait a minute and try registering again.
+              Didn't get the email? Check spam or request a new verification link below.
             </p>
             <div className="auth-switch">
-              <Link to="/login">Back to sign in</Link>
+              <Link to="/resend-verification">Resend verification email</Link> · <Link to="/login">Back to sign in</Link>
             </div>
           </>
         ) : (

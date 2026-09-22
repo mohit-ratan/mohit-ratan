@@ -1,11 +1,13 @@
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
+const { canView } = require('../lib/follows');
 const { targetDays, normalizeTasks } = require('../lib/goalProgress');
 
 // Goals belong to an author's tag, so every post in that journey shows the same progress.
 async function get(req, res) {
   try {
     const authorId = req.query.authorId || req.userId;
+    if (!(await canView(req.userId, authorId))) return res.status(404).json({ error: 'Goal not found.' });
     const [rows] = await pool.query(
       'SELECT target_date, subtasks FROM goals WHERE author_id = ? AND tag = ?',
       [authorId, req.params.tag]

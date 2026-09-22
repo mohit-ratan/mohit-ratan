@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
+import FirstGoalGuide from '../components/FirstGoalGuide';
 import StoriesBar from '../components/StoriesBar';
 import FeedList from '../components/FeedList';
 import SideColumn from '../components/SideColumn';
@@ -59,6 +60,7 @@ export default function HomePage() {
   }
   const feedRequest = useRef(0);
   const [feedError, setFeedError] = useState(null);
+  const [moreError, setMoreError] = useState(null);
   const [storyError, setStoryError] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -69,11 +71,15 @@ export default function HomePage() {
   const [streak, setStreak] = useState(0);
   const [freezesRemaining, setFreezesRemaining] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [hasGoals, setHasGoals] = useState(null);
+  const loadGoalStatus = useCallback(() => api.get('/api/posts/achievements', { params: { authorId: user.id } }).then(({ data }) => setHasGoals(data.goals.length + data.achievements.length > 0)).catch(() => {}), [user.id]);
+  useEffect(() => { loadGoalStatus(); }, [loadGoalStatus]);
 
   // modal is one of: null | {type:'create'} | {type:'addStory'} | {type:'view', post} | {type:'viewStory', authorId, index}
   const [modal, setModal] = useState(null);
 
   const loadPosts = useCallback(async (offset = 0) => {
+    setMoreError(null);
     const request = ++feedRequest.current;
     if (offset === 0) { setLoading(true); setFeedError(null); } else { setLoadingMore(true); }
     try {
@@ -85,7 +91,9 @@ export default function HomePage() {
       setPosts((current) => (offset === 0 ? data.posts : [...current, ...data.posts]));
       setHasMore(data.hasMore);
     } catch (error) {
-      if (request === feedRequest.current && offset === 0) setFeedError(error.message);
+      if (request === feedRequest.current) {
+        if (offset === 0) setFeedError(error.message); else setMoreError(error.message);
+      }
     } finally {
       if (request === feedRequest.current) { setLoading(false); setLoadingMore(false); }
     }
@@ -121,10 +129,11 @@ export default function HomePage() {
 
   const refreshAfterChange = useCallback((result) => {
     if (result?.story) setStories((current) => [...current.filter((s) => s.id !== result.story.id), result.story]);
+    loadGoalStatus();
     loadPosts().catch(() => {});
     loadStories().catch(() => {});
     loadMeta().catch(() => {});
-  }, [loadPosts, loadStories, loadMeta]);
+  }, [loadPosts, loadStories, loadMeta, loadGoalStatus]);
 
   const visiblePosts = useMemo(() => {
     let list = posts;
@@ -190,6 +199,7 @@ export default function HomePage() {
         <main className="layout">
           <section className="feed-col">
             <div className="feed-intro"><div><span className="house-eyebrow">A LITTLE PROGRESS, EVERY DAY</span><h1>Your daily chapter.</h1><p>Share a moment. Build a habit. Celebrate the work.</p></div><button className="house-enter-btn" type="button" onClick={() => navigate(`/profile/${user.id}/achievements`)}>My goals ↗</button></div>
+            {hasGoals === false && <FirstGoalGuide onStart={goal => setModal({ type: 'create', goal })} />}
             {storyError && <div className="inline-error" role="alert">Statuses couldn’t refresh. <button type="button" onClick={loadStories}>Retry</button></div>}
             <StoriesBar
               stories={stories}
@@ -209,7 +219,7 @@ export default function HomePage() {
             )}
             <div className="feed-section-title"><h2>{searchQuery ? 'Search results' : category === 'all' ? 'Latest moments' : `${category[0].toUpperCase()}${category.slice(1)} moments`}</h2><span>{!loading && !feedError ? `${visiblePosts.length} posts` : ''}</span></div>
             {loading && <div className="feed-skeleton" role="status" aria-label="Loading posts">{[0,1,2,3,4,5].map((i) => <span key={i} />)}</div>}
-            {feedError && <div className="card empty-state" role="alert"><h3>We couldn’t load your feed</h3><p>{feedError}</p><button className="house-enter-btn" type="button" onClick={loadPosts}>Try again</button></div>}
+            {feedError && <div className="card empty-state" role="alert"><h3>We couldn’t load your feed</h3><p>{feedError}</p><button className="house-enter-btn" type="button" onClick={() => loadPosts(0)}>Try again</button></div>}
             {!loading && !feedError && (
               <FeedList
                 posts={visiblePosts}
@@ -223,6 +233,7 @@ export default function HomePage() {
             )}
             {!loading && !feedError && hasMore && (
               <div className="feed-load-more">
+                {moreError && <p role="alert">Couldn’t load more posts. Please try again.</p>}
                 <button type="button" className="house-enter-btn" disabled={loadingMore} onClick={() => loadPosts(posts.length)}>
                   {loadingMore ? 'Loading…' : 'Load more'}
                 </button>
@@ -246,7 +257,7 @@ export default function HomePage() {
       </div>
 
       {modal?.type === 'create' && (
-        <ComposerModal kind="post" onClose={() => setModal(null)} onCreated={refreshAfterChange} />
+        <ComposerModal kind="post" initialGoal={modal.goal} onClose={() => setModal(null)} onCreated={refreshAfterChange} />
       )}
       {modal?.type === 'addStory' && (
         <ComposerModal kind="story" onClose={() => setModal(null)} onCreated={refreshAfterChange} />

@@ -79,7 +79,8 @@ async function getProfile(req, res) {
     );
     if (!rows.length) return res.status(404).json({ error: 'User not found.' });
     const u = rows[0];
-    const { streak, freezesUsedThisMonth, freezesRemaining } = await computeStreak(req.params.id);
+    const { streak, freezesUsedThisMonth, freezesRemaining } = await canView(req.userId, req.params.id)
+      ? await computeStreak(req.params.id) : { streak: 0, freezesUsedThisMonth: 0, freezesRemaining: 0 };
     const followStatus = await getFollowStatus(req.userId, req.params.id);
     const partnerStatus = await getPartnerStatus(req.userId, req.params.id);
     let blockedByMe = false;

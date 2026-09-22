@@ -14,7 +14,7 @@ const VIBE_ITEMS = [{ id: '', emoji: '⚪', label: 'No look' }, ...LOOK_RECIPES]
 // One modal used for both "Create post" (kind="post") and "Add to your
 // story" (kind="story") — the two flows only differ by the category
 // picker and the endpoint/labels used.
-export default function ComposerModal({ kind, onClose, onCreated, initialGoalTask }) {
+export default function ComposerModal({ kind, onClose, onCreated, initialGoalTask, initialGoal }) {
   const { user } = useAuth();
   const showToast = useToast();
   const fileInputRef = useRef(null);
@@ -35,12 +35,12 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
   }
 
   const [media, setMedia] = useState(null); // { file, originalFile, previewUrl, kind: 'image'|'video', styled }
-  const [chosenCat, setChosenCat] = useState(initialGoalTask?.category || CATEGORIES[0].id);
+  const [chosenCat, setChosenCat] = useState(initialGoalTask?.category || initialGoal?.category || CATEGORIES[0].id);
   const [visibility, setVisibility] = useState('friends');
   const [aspectRatio, setAspectRatio] = useState('square');
   const [chosenVibeId, setChosenVibeId] = useState('');
   const [vibeLabel, setVibeLabel] = useState('');
-  const [tagRaw, setTagRaw] = useState(initialGoalTask?.tag || '');
+  const [tagRaw, setTagRaw] = useState(initialGoalTask?.tag || initialGoal?.tag || '');
   const [availableGoals, setAvailableGoals] = useState([]);
   const [taskIndex, setTaskIndex] = useState(initialGoalTask ? String(initialGoalTask.index) : '');
   const [generating, setGenerating] = useState(false);
@@ -48,7 +48,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
   const dialogRef = useDialog(onClose, submitting);
   const [existingTags, setExistingTags] = useState(null); // Set, or null while loading
   const [goalTargetDate, setGoalTargetDate] = useState('');
-  const [goalSubtasks, setGoalSubtasks] = useState([]);
+  const [goalSubtasks, setGoalSubtasks] = useState(initialGoal?.subtasks || []);
 
   const isPost = kind === 'post';
   const title = isPost ? 'Create post' : 'Add to your story';
@@ -157,6 +157,10 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
       return;
     }
 
+    if (initialGoal && !isNewTag) {
+      showToast('Choose a new, unused tag for your first goal.', true);
+      return;
+    }
     if (taskIndex !== '' && (!selectedTask || media.kind !== 'image')) {
       showToast('Choose a goal task and upload a photo to record progress.', true);
       return;
