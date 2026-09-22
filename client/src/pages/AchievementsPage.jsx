@@ -29,7 +29,7 @@ export default function AchievementsPage() {
   const [profile, setProfile] = useState(null);
   const [achievements, setAchievements] = useState([]);
   const [goals, setGoals] = useState([]);
-  const [trifecta, setTrifecta] = useState(null);
+  const [superpack, setSuperPack] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeAchievement, setActiveAchievement] = useState(null);
   const [focusedLabel, setFocusedLabel] = useState(null);
@@ -58,7 +58,7 @@ export default function AchievementsPage() {
       setProfile(profileRes.data.user);
       setAchievements(achievementsRes.data.achievements);
       setGoals(achievementsRes.data.goals);
-      setTrifecta(achievementsRes.data.trifecta || null);
+      setSuperPack(achievementsRes.data.superpack || null);
     } catch (err) {
       setError(err.message);
       showToast(err.message, true);
@@ -94,15 +94,15 @@ export default function AchievementsPage() {
             <h1>A home for your achievements.</h1>
             <p>Complete every task in a goal to earn an award for your floor.</p>
           </header>
-          {trifecta?.earned && (
-            <div className="trifecta-earned-card" role="note">
-              <div className="trifecta-earned-medallion" aria-hidden="true">
-                <span className="trifecta-earned-holo" />
+          {superpack?.earned && (
+            <div className="superpack-earned-card" role="note">
+              <div className="superpack-earned-medallion" aria-hidden="true">
+                <span className="superpack-earned-holo" />
                 <span>🏆</span>
               </div>
               <div>
-                <span className="award-status-chip">Earned{trifecta.earnedAt ? ` · ${new Date(trifecta.earnedAt).toLocaleDateString()}` : ''}</span>
-                <h2>Trifecta Award</h2>
+                <span className="award-status-chip">Earned{superpack.earnedAt ? ` · ${new Date(superpack.earnedAt).toLocaleDateString()}` : ''}</span>
+                <h2>SuperPack Award</h2>
                 <p>A completed goal in Health, Wealth, and Relationships, all at once — the whole picture, not just one part of it.</p>
               </div>
             </div>

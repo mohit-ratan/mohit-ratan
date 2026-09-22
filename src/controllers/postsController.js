@@ -6,7 +6,7 @@ const { targetDays, normalizeTasks } = require('../lib/goalProgress');
 const { canView } = require('../lib/follows');
 const { notify } = require('../lib/notifications');
 const { uploadMedia, deleteMedia } = require('../lib/storage');
-const { checkAndAwardTrifecta, trifectaStatus, TRIFECTA_CATEGORIES } = require('../lib/trifecta');
+const { checkAndAwardSuperPack, superpackStatus, SUPERPACK_CATEGORIES } = require('../lib/superpackAward');
 
 function mediaTypeFromMime(mime) {
   return mime && mime.startsWith('video') ? 'video' : 'image';
@@ -208,13 +208,13 @@ async function achievements(req, res) {
 
     // Tagged posts track progress; only a finished, non-empty checklist earns an award.
     const earnedList = achievementList.filter((a) => a.goal?.completed);
-    const trifecta = await trifectaStatus(authorId);
-    trifecta.categories = TRIFECTA_CATEGORIES.filter((c) => earnedList.some((a) => a.category === c));
+    const superpack = await superpackStatus(authorId);
+    superpack.categories = SUPERPACK_CATEGORIES.filter((c) => earnedList.some((a) => a.category === c));
     res.json({
       achievements: earnedList,
       goals: achievementList.filter((a) => a.goal && !a.goal.completed),
       tags: achievementList.map((a) => a.tag),
-      trifecta,
+      superpack,
     });
   } catch (err) {
     console.error('achievements error:', err);
@@ -271,14 +271,14 @@ async function create(req, res) {
         await connection.commit();
         const goalCompleted = subtasks.every((task) => task.done);
         // Only worth the extra query when this check-in just finished a
-        // goal — otherwise the trifecta condition can't have changed.
-        const trifectaEarned = goalCompleted && await checkAndAwardTrifecta(req.userId);
+        // goal — otherwise the superpack condition can't have changed.
+        const superpackEarned = goalCompleted && await checkAndAwardSuperPack(req.userId);
         const celebration = checkIn ? {
           ...checkIn, day: subtasks[index].completedDays, targetDays: subtasks[index].targetDays,
-          taskName: subtasks[index].text, tag: cleanTag, taskCompleted, goalCompleted, trifectaEarned,
+          taskName: subtasks[index].text, tag: cleanTag, taskCompleted, goalCompleted, superpackEarned,
           level: celebrationLevel(checkIn.streakDays, taskCompleted, goalCompleted),
         } : null;
-        return res.json({ ok: true, id, taskCompleted, completedDays: subtasks[index].completedDays, targetDays: subtasks[index].targetDays, goalCompleted, trifectaEarned, celebration });
+        return res.json({ ok: true, id, taskCompleted, completedDays: subtasks[index].completedDays, targetDays: subtasks[index].targetDays, goalCompleted, superpackEarned, celebration });
       } catch (error) {
         await connection.rollback();
         throw error;

@@ -1,8 +1,8 @@
 const pool = require('../db');
 const { normalizeTasks } = require('./goalProgress');
 
-const TRIFECTA_CATEGORIES = ['health', 'wealth', 'relationships'];
-const TRIFECTA_AWARD_ID = 'trifecta';
+const SUPERPACK_CATEGORIES = ['health', 'wealth', 'relationships'];
+const SUPERPACK_AWARD_ID = 'superpack';
 
 // Categories the author has at least one *completed* goal in — same rule
 // as a single Goal Trophy (see postsController.achievements()), just
@@ -32,10 +32,10 @@ async function completedGoalCategories(authorId) {
   return categories;
 }
 
-async function trifectaStatus(authorId) {
+async function superpackStatus(authorId) {
   const [rows] = await pool.query(
     'SELECT earned_at FROM special_awards WHERE user_id = ? AND award_id = ?',
-    [authorId, TRIFECTA_AWARD_ID]
+    [authorId, SUPERPACK_AWARD_ID]
   );
   if (rows.length) return { earned: true, earnedAt: new Date(rows[0].earned_at).getTime() };
   return { earned: false, earnedAt: null };
@@ -45,21 +45,21 @@ async function trifectaStatus(authorId) {
 // Persists the award (once, via the primary key) the first time all three
 // categories have a completed goal — later calls are cheap no-ops once
 // it's already recorded.
-async function checkAndAwardTrifecta(userId) {
+async function checkAndAwardSuperPack(userId) {
   const [existing] = await pool.query(
     'SELECT 1 FROM special_awards WHERE user_id = ? AND award_id = ?',
-    [userId, TRIFECTA_AWARD_ID]
+    [userId, SUPERPACK_AWARD_ID]
   );
   if (existing.length) return false;
 
   const categories = await completedGoalCategories(userId);
-  if (!TRIFECTA_CATEGORIES.every((c) => categories.has(c))) return false;
+  if (!SUPERPACK_CATEGORIES.every((c) => categories.has(c))) return false;
 
   const [result] = await pool.query(
     'INSERT IGNORE INTO special_awards (user_id, award_id) VALUES (?, ?)',
-    [userId, TRIFECTA_AWARD_ID]
+    [userId, SUPERPACK_AWARD_ID]
   );
   return result.affectedRows > 0;
 }
 
-module.exports = { TRIFECTA_CATEGORIES, TRIFECTA_AWARD_ID, completedGoalCategories, trifectaStatus, checkAndAwardTrifecta };
+module.exports = { SUPERPACK_CATEGORIES, SUPERPACK_AWARD_ID, completedGoalCategories, superpackStatus, checkAndAwardSuperPack };

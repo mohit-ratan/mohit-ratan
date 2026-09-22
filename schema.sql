@@ -153,7 +153,7 @@ CREATE TABLE IF NOT EXISTS notifications (
 -- gap is detected, then permanent, so re-checking the streak later doesn't
 -- re-spend or un-spend it.
 -- Cross-category awards that don't belong to any single goal — right now
--- just the Trifecta Award (award_id = 'trifecta'), earned the first time a
+-- just the SuperPack Award (award_id = 'superpack'), earned the first time a
 -- member has a completed goal in all three categories at once. Recorded
 -- permanently (INSERT IGNORE) so it's granted exactly once, even though
 -- the underlying condition is re-checked on every relevant goal completion.

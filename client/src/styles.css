@@ -643,21 +643,21 @@
     font-size:10.5px;font-weight:600;color:var(--text-muted);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
   }
-  .trophy-badge-trifecta:hover,.trophy-badge-trifecta:focus-visible{box-shadow:0 0 0 2px #d7b56a;}
-  .trophy-badge-trifecta .trophy-badge-tag{color:#a8791f;font-weight:700;}
-  .trophy-badge-trifecta-medallion{
+  .trophy-badge-superpack:hover,.trophy-badge-superpack:focus-visible{box-shadow:0 0 0 2px #d7b56a;}
+  .trophy-badge-superpack .trophy-badge-tag{color:#a8791f;font-weight:700;}
+  .trophy-badge-superpack-medallion{
     position:relative;width:34px;height:34px;border-radius:50%;overflow:hidden;
     display:grid;place-items:center;font-size:19px;
     background:linear-gradient(135deg,#eceef2,#9a9aa6 45%,#eceef2 70%,#75757f);
     box-shadow:0 3px 8px rgba(0,0,0,.3),inset 0 1px 2px rgba(255,255,255,.7);
   }
-  .trophy-badge-trifecta-medallion>span{position:relative;z-index:2;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4));}
-  .trophy-badge-trifecta-holo{
+  .trophy-badge-superpack-medallion>span{position:relative;z-index:2;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4));}
+  .trophy-badge-superpack-holo{
     position:absolute;inset:0;mix-blend-mode:overlay;opacity:.85;
     background:conic-gradient(from 0deg,#ff9a9e,#fecfef,#a1c4fd,#c2e9fb,#fbc2eb,#ff9a9e);
     animation:award-holo-spin 5s linear infinite;
   }
-  @media(prefers-reduced-motion:reduce){.trophy-badge-trifecta-holo{animation:none;}}
+  @media(prefers-reduced-motion:reduce){.trophy-badge-superpack-holo{animation:none;}}
 
   /* ---------- 3D house/rooms (react-three-fiber) ---------- */
   .three-page{position:fixed;inset:0;background:#0a0e14;}
@@ -994,30 +994,30 @@
 .house-eyebrow{font-size:10px;letter-spacing:2px;font-weight:700;color:#63766b;}
 .achievement-house-intro h1{font-family:var(--font-display);font-size:clamp(30px,4vw,46px);font-weight:500;letter-spacing:-1.4px;margin:12px 0;}
 .achievement-house-intro p,.house-gallery>p{color:#6c7971;font-size:14px;line-height:1.7;}
-.trifecta-earned-card{
+.superpack-earned-card{
   max-width:640px;margin:0 auto 32px;padding:22px 26px;border-radius:20px;
   display:flex;align-items:center;gap:18px;text-align:left;
   background:radial-gradient(120% 160% at 0% 0%,#2c2c34,#0e0e12 70%);
   border:1px solid #3d3d48;color:#f4f1ea;
   box-shadow:0 14px 36px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.06);
 }
-.trifecta-earned-medallion{
+.superpack-earned-medallion{
   position:relative;flex-shrink:0;width:64px;height:64px;border-radius:50%;overflow:hidden;
   display:grid;place-items:center;font-size:30px;
   background:linear-gradient(135deg,#eceef2,#9a9aa6 45%,#eceef2 70%,#75757f);
   box-shadow:0 6px 16px rgba(0,0,0,.4),inset 0 2px 3px rgba(255,255,255,.7);
 }
-.trifecta-earned-medallion>span:last-child{position:relative;z-index:2;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4));}
-.trifecta-earned-holo{
+.superpack-earned-medallion>span:last-child{position:relative;z-index:2;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4));}
+.superpack-earned-holo{
   position:absolute;inset:0;mix-blend-mode:overlay;opacity:.85;
   background:conic-gradient(from 0deg,#ff9a9e,#fecfef,#a1c4fd,#c2e9fb,#fbc2eb,#ff9a9e);
   animation:award-holo-spin 5s linear infinite;
 }
-.trifecta-earned-card .award-status-chip{background:rgba(255,255,255,.09);color:#d8d2c4;}
-.trifecta-earned-card h2{font-family:var(--font-display);font-size:21px;font-weight:600;margin:6px 0 4px;color:#fff;}
-.trifecta-earned-card p{color:#bdb7aa;font-size:13px;line-height:1.6;margin:0;}
-@media(prefers-reduced-motion:reduce){.trifecta-earned-holo{animation:none;}}
-@media(max-width:680px){.trifecta-earned-card{flex-direction:column;text-align:center;padding:20px;}}
+.superpack-earned-card .award-status-chip{background:rgba(255,255,255,.09);color:#d8d2c4;}
+.superpack-earned-card h2{font-family:var(--font-display);font-size:21px;font-weight:600;margin:6px 0 4px;color:#fff;}
+.superpack-earned-card p{color:#bdb7aa;font-size:13px;line-height:1.6;margin:0;}
+@media(prefers-reduced-motion:reduce){.superpack-earned-holo{animation:none;}}
+@media(max-width:680px){.superpack-earned-card{flex-direction:column;text-align:center;padding:20px;}}
 .achievement-house-layout{display:grid;grid-template-columns:1.1fr 1fr;gap:65px;align-items:center;}
 .house-scene{padding:8px 12px 0;}
 .house-roof{height:105px;background:#39594a;clip-path:polygon(50% 0,100% 89%,100% 100%,0 100%,0 89%);display:flex;align-items:flex-end;justify-content:center;padding-bottom:17px;}
@@ -1450,28 +1450,28 @@ button.story-ring{border:0;cursor:pointer;}
 .award-kind-label{font-size:11px;font-weight:700;color:#9c390f;text-transform:uppercase;letter-spacing:.03em;}
 .award-card p{font-size:13.5px;line-height:1.7;color:#6c5c50;margin-top:2px;}
 
-/* ---- trifecta: the rare "earn every category" showcase ---- */
-.awards-trifecta-section{max-width:1240px;margin:auto;padding:60px 40px 70px;border-top:1px solid #eee8e0;text-align:center;}
-.awards-trifecta-section .intro-eyebrow{color:#a8791f;}
-.award-card-trifecta{
+/* ---- superpack: the rare "earn every category" showcase ---- */
+.awards-superpack-section{max-width:1240px;margin:auto;padding:60px 40px 70px;border-top:1px solid #eee8e0;text-align:center;}
+.awards-superpack-section .intro-eyebrow{color:#a8791f;}
+.award-card-superpack{
   max-width:400px;margin:30px auto 0;padding:44px 30px 34px;border-radius:26px;text-align:center;
   background:radial-gradient(120% 140% at 50% -10%,#2c2c34,#0e0e12 70%);
   border:1px solid #3d3d48;color:#f4f1ea;
   box-shadow:0 18px 50px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06);
 }
-.award-card-trifecta .award-status-chip{background:rgba(255,255,255,.09);color:#d8d2c4;}
-.award-card-trifecta h3{color:#fff;font-size:22px;}
-.award-card-trifecta .award-kind-label{color:#dcb865;}
-.award-card-trifecta p{color:#bdb7aa;}
-.award-medallion-wrap-trifecta{position:relative;width:136px;height:136px;margin:0 auto 18px;animation:award-float 5s ease-in-out infinite;}
+.award-card-superpack .award-status-chip{background:rgba(255,255,255,.09);color:#d8d2c4;}
+.award-card-superpack h3{color:#fff;font-size:22px;}
+.award-card-superpack .award-kind-label{color:#dcb865;}
+.award-card-superpack p{color:#bdb7aa;}
+.award-medallion-wrap-superpack{position:relative;width:136px;height:136px;margin:0 auto 18px;animation:award-float 5s ease-in-out infinite;}
 .award-medallion-ring-outer{position:absolute;inset:-9px;border-radius:50%;border:1px solid rgba(255,255,255,.2);animation:award-spin 14s linear infinite reverse;}
-.award-medallion-ring-trifecta{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,255,255,.4);animation:award-spin 7s linear infinite;}
-.award-medallion-trifecta{
+.award-medallion-ring-superpack{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,255,255,.4);animation:award-spin 7s linear infinite;}
+.award-medallion-superpack{
   position:absolute;inset:12px;border-radius:50%;overflow:hidden;display:grid;place-items:center;
   background:linear-gradient(135deg,#eceef2,#9a9aa6 45%,#eceef2 70%,#75757f);
   box-shadow:0 10px 24px rgba(0,0,0,.5),inset 0 2px 3px rgba(255,255,255,.7);
 }
-.award-medallion-trifecta-icon{position:relative;z-index:2;font-size:48px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.4));}
+.award-medallion-superpack-icon{position:relative;z-index:2;font-size:48px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.4));}
 .award-medallion-holo{
   position:absolute;inset:0;mix-blend-mode:overlay;opacity:.85;
   background:conic-gradient(from 0deg,#ff9a9e,#fecfef,#a1c4fd,#c2e9fb,#fbc2eb,#ff9a9e);
@@ -1486,10 +1486,10 @@ button.story-ring{border:0;cursor:pointer;}
 .awards-legend-item p{font-size:13.5px;line-height:1.7;color:#75665a;}
 @media(prefers-reduced-motion:reduce){
   .award-medallion-wrap,.award-medallion-ring,.award-medallion-shine,
-  .award-medallion-wrap-trifecta,.award-medallion-ring-outer,.award-medallion-ring-trifecta,.award-medallion-holo{animation:none;}
+  .award-medallion-wrap-superpack,.award-medallion-ring-outer,.award-medallion-ring-superpack,.award-medallion-holo{animation:none;}
 }
 @media(max-width:680px){
-  .awards-hero,.awards-collection,.awards-legend,.awards-trifecta-section{padding-inline:24px;}
+  .awards-hero,.awards-collection,.awards-legend,.awards-superpack-section{padding-inline:24px;}
   .awards-grid,.awards-legend-grid{grid-template-columns:1fr;}
 }
 
@@ -1509,24 +1509,24 @@ button.story-ring{border:0;cursor:pointer;}
 .task-party-card{position:relative;z-index:1;width:min(100%,460px);padding:40px 32px 28px;text-align:center;border-radius:28px;background:radial-gradient(ellipse at top,#ffdfae,transparent 62%),#fffaf3;border:1px solid #fff0d8;box-shadow:0 24px 100px #0005;animation:task-party-enter .45s cubic-bezier(.2,.8,.3,1) both;}
 .task-party-close{position:absolute;top:12px;right:12px;border:0;border-radius:50%;width:36px;height:36px;background:#fff9;color:#775039;font-size:17px;cursor:pointer;}
 .task-party-eyebrow{display:block;margin:7px 12px 24px;color:#963809;font-size:10px;letter-spacing:.17em;font-weight:700;}
-.task-party-trifecta{
+.task-party-superpack{
   display:flex;align-items:center;gap:10px;margin:-10px 12px 18px;padding:10px 14px;border-radius:14px;
   background:radial-gradient(120% 160% at 0% 0%,#2c2c34,#0e0e12 70%);color:#d8d2c4;
   font-size:11.5px;font-weight:600;text-align:left;
 }
-.task-party-trifecta-medallion{
+.task-party-superpack-medallion{
   position:relative;flex-shrink:0;width:38px;height:38px;border-radius:50%;overflow:hidden;
   display:grid;place-items:center;font-size:18px;
   background:linear-gradient(135deg,#eceef2,#9a9aa6 45%,#eceef2 70%,#75757f);
   box-shadow:0 3px 8px rgba(0,0,0,.4),inset 0 1px 2px rgba(255,255,255,.7);
 }
-.task-party-trifecta-medallion>span:last-child{position:relative;z-index:2;}
-.task-party-trifecta-holo{
+.task-party-superpack-medallion>span:last-child{position:relative;z-index:2;}
+.task-party-superpack-holo{
   position:absolute;inset:0;mix-blend-mode:overlay;opacity:.85;
   background:conic-gradient(from 0deg,#ff9a9e,#fecfef,#a1c4fd,#c2e9fb,#fbc2eb,#ff9a9e);
   animation:award-holo-spin 5s linear infinite;
 }
-@media(prefers-reduced-motion:reduce){.task-party-trifecta-holo{animation:none;}}
+@media(prefers-reduced-motion:reduce){.task-party-superpack-holo{animation:none;}}
 .task-party-medal{display:flex;flex-direction:column;justify-content:center;align-items:center;width:160px;height:160px;margin:0 auto 22px;border:5px solid #ffc778;border-radius:50%;background:linear-gradient(145deg,#ed6f1e,#b63308);color:white;box-shadow:0 0 0 7px #ffd79955,0 14px 35px #c94b132a;}
 .task-party-medal>span{font-size:11px;font-weight:600;letter-spacing:.22em;}
 .task-party-medal strong{font-size:clamp(46px,13vw,68px);line-height:1.1;letter-spacing:-3px;animation:task-party-number .65s cubic-bezier(.2,1.5,.5,1) both;font-variant-numeric:tabular-nums;}
