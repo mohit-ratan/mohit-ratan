@@ -49,12 +49,17 @@ export const AWARD_KIND_COPY = {
   },
 };
 
-// A rare fourth design: earning every category's Goal Trophy at once. Same
-// "not yet earned" preview treatment as everything else on the page — this
-// is a design idea, not a feature that's wired up to award anything yet.
-export const PLATINUM_AWARD = {
-  id: 'platinum',
+// A rare fourth design: earning every category's Goal Trophy at once. This
+// one IS real — src/lib/trifecta.js (backend) grants it the moment a
+// member has a completed goal in health, wealth, and relationships all at
+// once, recorded permanently in the special_awards table. The gallery
+// still shows it with the same generic "not yet earned" preview treatment
+// as everything else here, since this page never checks the viewer's own
+// progress — the real, personalized version of this award lives in each
+// member's own Achievement House.
+export const TRIFECTA_AWARD = {
+  id: 'trifecta',
   icon: '🏆',
-  name: 'Platinum Award',
+  name: 'Trifecta Award',
   rule: "Earn the Health, Wealth, and Relationships Goal Trophies at the same time, and this rare, all-category award is yours — proof you're building the whole life, not just one part of it.",
 };

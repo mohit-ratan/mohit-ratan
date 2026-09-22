@@ -28,6 +28,7 @@ export default function ProfilePage() {
   const [freezesRemaining, setFreezesRemaining] = useState(0);
   const [posts, setPosts] = useState([]);
   const [trophies, setTrophies] = useState([]);
+  const [trifecta, setTrifecta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [viewPost, setViewPost] = useState(null);
@@ -70,9 +71,11 @@ export default function ProfilePage() {
         ]);
         setPosts(postsRes.data.posts);
         setTrophies(achievementsRes.data.achievements.filter((a) => a.goal?.completed));
+        setTrifecta(achievementsRes.data.trifecta || null);
       } else {
         setPosts([]);
         setTrophies([]);
+        setTrifecta(null);
       }
     } catch (err) {
       setLoadError(err.message);
@@ -103,6 +106,7 @@ export default function ProfilePage() {
       setFollowStatus('none');
       setPosts([]);
       setTrophies([]);
+      setTrifecta(null);
     } catch (err) {
       showToast(err.message, true);
     } finally {
@@ -144,6 +148,7 @@ export default function ProfilePage() {
       setPartnerStatus('none');
       setPosts([]);
       setTrophies([]);
+      setTrifecta(null);
       showToast(`${profile.displayName} has been blocked.`);
     } catch (err) {
       showToast(err.message, true);
@@ -317,7 +322,7 @@ export default function ProfilePage() {
             {canView ? (
               <>
                 <div className="profile-posts-heading"><h2>{isMe ? 'Your moments' : 'Moments'}</h2><span>{posts.length} {posts.length === 1 ? 'post' : 'posts'}</span></div>
-                <TrophyCase trophies={trophies} authorId={authorId} />
+                <TrophyCase trophies={trophies} authorId={authorId} trifecta={trifecta} />
                 <PostGrid
                   posts={posts}
                   onOpen={setViewPost}

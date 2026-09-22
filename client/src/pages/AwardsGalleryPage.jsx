@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import BrandLogo from '../components/BrandLogo';
 import { useAuth } from '../context/AuthContext';
-import { AWARD_COLLECTIONS, AWARD_KIND_COPY, PLATINUM_AWARD } from '../lib/awardDesigns';
+import { AWARD_COLLECTIONS, AWARD_KIND_COPY, TRIFECTA_AWARD } from '../lib/awardDesigns';
 
 function AwardCard({ award, category }) {
   const kindCopy = AWARD_KIND_COPY[award.kind];
@@ -22,21 +22,21 @@ function AwardCard({ award, category }) {
   );
 }
 
-function PlatinumAwardCard() {
+function TrifectaAwardCard() {
   return (
-    <article className="award-card award-card-platinum">
-      <div className="award-medallion-wrap-platinum">
+    <article className="award-card award-card-trifecta">
+      <div className="award-medallion-wrap-trifecta">
         <span className="award-medallion-ring-outer" />
-        <span className="award-medallion-ring-platinum" />
-        <div className="award-medallion-platinum">
+        <span className="award-medallion-ring-trifecta" />
+        <div className="award-medallion-trifecta">
           <span className="award-medallion-holo" />
-          <span className="award-medallion-platinum-icon">{PLATINUM_AWARD.icon}</span>
+          <span className="award-medallion-trifecta-icon">{TRIFECTA_AWARD.icon}</span>
         </div>
       </div>
       <span className="award-status-chip">Design preview · not yet earned</span>
-      <h3>{PLATINUM_AWARD.name}</h3>
+      <h3>{TRIFECTA_AWARD.name}</h3>
       <span className="award-kind-label">Ultimate award</span>
-      <p>{PLATINUM_AWARD.rule}</p>
+      <p>{TRIFECTA_AWARD.rule}</p>
     </article>
   );
 }
@@ -85,12 +85,12 @@ export default function AwardsGalleryPage() {
           </section>
         ))}
 
-        <section className="awards-platinum-section" aria-labelledby="awards-platinum-title">
+        <section className="awards-trifecta-section" aria-labelledby="awards-trifecta-title">
           <div className="intro-section-heading">
             <p className="intro-eyebrow">🏆 THE RAREST DESIGN</p>
-            <h2 id="awards-platinum-title">One award for the whole picture</h2>
+            <h2 id="awards-trifecta-title">One award for the whole picture</h2>
           </div>
-          <PlatinumAwardCard />
+          <TrifectaAwardCard />
         </section>
 
         <section className="awards-legend" aria-labelledby="awards-legend-title">

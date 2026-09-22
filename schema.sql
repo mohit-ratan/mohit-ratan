@@ -152,6 +152,19 @@ CREATE TABLE IF NOT EXISTS notifications (
 -- (up to STREAK_FREEZE_MONTHLY_LIMIT per calendar month) the first time a
 -- gap is detected, then permanent, so re-checking the streak later doesn't
 -- re-spend or un-spend it.
+-- Cross-category awards that don't belong to any single goal — right now
+-- just the Trifecta Award (award_id = 'trifecta'), earned the first time a
+-- member has a completed goal in all three categories at once. Recorded
+-- permanently (INSERT IGNORE) so it's granted exactly once, even though
+-- the underlying condition is re-checked on every relevant goal completion.
+CREATE TABLE IF NOT EXISTS special_awards (
+  user_id     VARCHAR(36) NOT NULL,
+  award_id    VARCHAR(40) NOT NULL,
+  earned_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, award_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS streak_freeze_uses (
   user_id     VARCHAR(36) NOT NULL,
   used_on     DATE NOT NULL,

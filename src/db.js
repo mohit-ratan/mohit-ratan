@@ -114,6 +114,16 @@ pool.query(
 ).catch((err) => console.error('Could not extend notifications.type enum:', err));
 
 pool.query(`
+  CREATE TABLE IF NOT EXISTS special_awards (
+    user_id VARCHAR(36) NOT NULL,
+    award_id VARCHAR(40) NOT NULL,
+    earned_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, award_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB
+`).catch((err) => console.error('Could not ensure special_awards table exists:', err));
+
+pool.query(`
   CREATE TABLE IF NOT EXISTS streak_freeze_uses (
     user_id VARCHAR(36) NOT NULL,
     used_on DATE NOT NULL,
