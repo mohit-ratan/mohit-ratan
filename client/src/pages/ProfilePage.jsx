@@ -89,16 +89,20 @@ export default function ProfilePage() {
   useEffect(() => { load(); }, [load]);
 
   // The header's streak badge is always "my own streak", regardless of
-  // whose profile I'm looking at — fetch it separately when viewing
-  // someone else's, since `streak` above holds THEIR streak instead.
+  // whose profile I'm looking at. While isMe is true, `streak` already IS
+  // my own streak — reuse it directly instead of re-fetching, so leaving
+  // my own profile for someone else's has it on hand immediately with no
+  // flash back to 0. Only a genuinely fresh session (landing on someone
+  // else's profile before ever visiting my own) needs the extra fetch.
   useEffect(() => {
-    if (isMe || !user) return;
+    if (isMe) { setMyStreak(streak); return; }
+    if (!user) return;
     let cancelled = false;
     api.get(`/api/profile/${user.id}`)
       .then(({ data }) => { if (!cancelled) setMyStreak(data.streak); })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [isMe, user]);
+  }, [isMe, user, streak]);
 
   const headerStreak = isMe ? streak : myStreak;
 
