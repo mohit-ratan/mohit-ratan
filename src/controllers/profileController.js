@@ -25,20 +25,36 @@ function toSqlDate(d) {
 // STREAK_FREEZE_MONTHLY_LIMIT per calendar month, the first time that gap
 // is encountered — recorded permanently in streak_freeze_uses so it's
 // consumed once, not re-spent (or un-spent) on every recomputation.
+function startOfLocalDay(ts) {
+  const d = new Date(ts);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+}
+
 async function computeStreak(authorId) {
   const [postDates] = await pool.query('SELECT created_at FROM posts WHERE author_id = ?', [authorId]);
   const [storyDates] = await pool.query('SELECT created_at FROM stories WHERE author_id = ?', [authorId]);
   const [freezeRows] = await pool.query('SELECT used_on FROM streak_freeze_uses WHERE user_id = ?', [authorId]);
 
+  const realDayTimestamps = [...postDates, ...storyDates].map((r) => startOfLocalDay(r.created_at));
+  if (!realDayTimestamps.length) return { streak: 0, freezesUsedThisMonth: 0, freezesRemaining: STREAK_FREEZE_MONTHLY_LIMIT };
+  // A freeze can only bridge a gap BETWEEN real activity — it must never
+  // extend a streak into days before the account's very first post/story,
+  // or a brand-new user's single upload would auto-freeze its way to a
+  // multi-day streak out of nothing.
+  const earliestActiveMs = realDayTimestamps.reduce((min, ts) => Math.min(min, ts), Infinity);
+
   const activeDays = new Set();
   postDates.forEach(r => activeDays.add(dateKey(r.created_at)));
   storyDates.forEach(r => activeDays.add(dateKey(r.created_at)));
-  freezeRows.forEach(r => activeDays.add(dateKey(r.used_on)));
+  // Freeze rows from before this fix may have recorded invalid pre-history
+  // freezes; only honor ones that actually fall on/after the real start.
+  const validFreezeRows = freezeRows.filter((r) => startOfLocalDay(r.used_on) >= earliestActiveMs);
+  validFreezeRows.forEach(r => activeDays.add(dateKey(r.used_on)));
 
   const monthStart = new Date();
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
-  let freezesUsedThisMonth = freezeRows.filter((r) => new Date(r.used_on) >= monthStart).length;
+  let freezesUsedThisMonth = validFreezeRows.filter((r) => new Date(r.used_on) >= monthStart).length;
   const freezesRemaining = () => Math.max(0, STREAK_FREEZE_MONTHLY_LIMIT - freezesUsedThisMonth);
 
   const cursor = new Date();
@@ -50,7 +66,7 @@ async function computeStreak(authorId) {
   }
 
   let streak = 0;
-  while (true) {
+  while (startOfLocalDay(cursor.getTime()) >= earliestActiveMs) {
     const key = dateKey(cursor.getTime());
     if (activeDays.has(key)) {
       streak++;
@@ -177,4 +193,4 @@ async function deletePhoto(req, res) {
   }
 }
 
-module.exports = { getProfile, getActivity, updateProfile, uploadPhoto, deletePhoto };
+module.exports = { getProfile, getActivity, updateProfile, uploadPhoto, deletePhoto, computeStreak };

@@ -25,6 +25,7 @@ export default function ProfilePage() {
 
   const [profile, setProfile] = useState(null);
   const [streak, setStreak] = useState(0);
+  const [myStreak, setMyStreak] = useState(0);
   const [freezesRemaining, setFreezesRemaining] = useState(0);
   const [posts, setPosts] = useState([]);
   const [trophies, setTrophies] = useState([]);
@@ -86,6 +87,20 @@ export default function ProfilePage() {
   }, [authorId, showToast]);
 
   useEffect(() => { load(); }, [load]);
+
+  // The header's streak badge is always "my own streak", regardless of
+  // whose profile I'm looking at — fetch it separately when viewing
+  // someone else's, since `streak` above holds THEIR streak instead.
+  useEffect(() => {
+    if (isMe || !user) return;
+    let cancelled = false;
+    api.get(`/api/profile/${user.id}`)
+      .then(({ data }) => { if (!cancelled) setMyStreak(data.streak); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [isMe, user]);
+
+  const headerStreak = isMe ? streak : myStreak;
 
   async function sendFollowRequest() {
     setFollowLoading(true);
@@ -238,7 +253,7 @@ export default function ProfilePage() {
 
   return (
     <>
-      <Header streak={isMe ? streak : 0} counts={{}} />
+      <Header streak={headerStreak} counts={{}} />
       <div className="wrap">
         <main className="layout">
           <section className="feed-col">
