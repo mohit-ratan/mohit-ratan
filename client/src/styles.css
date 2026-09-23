@@ -1570,3 +1570,18 @@ button.story-ring{border:0;cursor:pointer;}
 .journal-form textarea { width: 100%; padding: 16px; border: 1px solid #ead7c8; border-radius: 14px; font: inherit; resize: vertical; }
 .journal-photo { max-width: 100%; max-height: 520px; object-fit: contain; border-radius: 16px; }
 .journal-note { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Group feed shortcuts and match journal controls to the orange palette. */
+.feed-intro-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-shrink:0;}
+.feed-intro-actions .house-enter-btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;margin:0;}
+.journal-file-input{width:100%;min-width:0;font:inherit;color:var(--text-muted);}
+.journal-file-input::file-selector-button{padding:11px 18px;margin-right:14px;border:1px solid var(--border);border-radius:999px;background:var(--accent-soft);color:var(--accent-deep);font:inherit;font-weight:600;cursor:pointer;transition:background .15s;}
+.journal-file-input:not(:disabled)::file-selector-button:hover{background:#ffdcc2;}
+.journal-file-input:disabled{opacity:.6;cursor:not-allowed;}
+.journal-file-input:disabled::file-selector-button{cursor:not-allowed;}
+.journal-file-input:focus-visible,.journal-form textarea:focus{outline:2px solid var(--accent);outline-offset:3px;border-color:var(--accent);}
+.journal-save-btn{justify-self:end;min-height:46px;padding:12px 28px;border:1px solid var(--accent);border-radius:999px;background:var(--accent);color:var(--accent-contrast);font:inherit;font-weight:700;cursor:pointer;transition:background .15s;}
+.journal-save-btn:not(:disabled):hover{background:var(--accent-hover);border-color:var(--accent-hover);}
+.journal-save-btn:disabled{background:var(--accent-soft);border-color:var(--border);color:var(--text-muted);cursor:not-allowed;}
+@media(max-width:900px){.feed-intro{flex-wrap:wrap;}.feed-intro-actions{justify-content:flex-start;flex-wrap:wrap;}}
+@media(max-width:480px){.feed-intro-actions{display:grid;grid-template-columns:1fr 1fr;width:100%;gap:10px;}.journal-save-btn{width:100%;}.journal-file-input::file-selector-button{padding:10px 14px;margin-right:8px;}}

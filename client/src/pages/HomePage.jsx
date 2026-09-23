@@ -198,7 +198,7 @@ export default function HomePage() {
       <div className="wrap">
         <main className="layout">
           <section className="feed-col">
-            <div className="feed-intro"><div><span className="house-eyebrow">A LITTLE PROGRESS, EVERY DAY</span><h1>Your daily chapter.</h1><p>Share a moment. Build a habit. Celebrate the work.</p></div><button className="house-enter-btn" type="button" onClick={() => navigate(`/profile/${user.id}/achievements`)}>My goals ↗</button><button className="house-enter-btn" onClick={() => navigate('/today')}>Today’s tasks →</button></div>
+            <div className="feed-intro"><div><span className="house-eyebrow">A LITTLE PROGRESS, EVERY DAY</span><h1>Your daily chapter.</h1><p>Share a moment. Build a habit. Celebrate the work.</p></div><div className="feed-intro-actions"><button className="house-enter-btn" type="button" onClick={() => navigate(`/profile/${user.id}/achievements`)}>My goals ↗</button><button className="house-enter-btn" onClick={() => navigate('/today')}>Today’s tasks →</button></div></div>
             {hasGoals === false && <FirstGoalGuide onStart={goal => setModal({ type: 'create', goal })} />}
             {storyError && <div className="inline-error" role="alert">Statuses couldn’t refresh. <button type="button" onClick={loadStories}>Retry</button></div>}
             <StoriesBar

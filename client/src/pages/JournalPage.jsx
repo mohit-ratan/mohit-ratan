@@ -49,9 +49,9 @@ export default function JournalPage() {
     {data && !data.enabled && <section className="daily-panel"><h2>Your journal is being prepared</h2><p>Private journal encryption must be configured before reflections can be saved.</p></section>}
     {data?.enabled && <><section className="daily-panel"><h2>How did today feel?</h2><p>These reflections and attached copies of photos are private to your account. A photo already shared in the feed remains public.</p>
       <form onSubmit={save} className="journal-form"><label>Your reflection<textarea required maxLength={2000} rows={5} value={note} onChange={e=>setNote(e.target.value)} placeholder="One small win, something you learned, or what you’ll try tomorrow…" /></label><small>{note.length}/2000 characters</small>
-        <label>Private photo (optional)<input type="file" accept="image/*" disabled={!data.photosEnabled} onChange={e=>setFile(e.target.files?.[0]||null)} /></label>
+        <label>Private photo (optional)<input className="journal-file-input" type="file" accept="image/*" disabled={!data.photosEnabled} onChange={e=>setFile(e.target.files?.[0]||null)} /></label>
         {!data.photosEnabled && <small>Private photo storage is not configured yet. Text reflections are available.</small>}
-        <button className="house-enter-btn" disabled={busy || !note.trim()}>{busy?'Saving…':'Save reflection'}</button></form>{notice&&<p role="status">{notice}</p>}</section>
+        <button className="journal-save-btn" disabled={busy || !note.trim()}>{busy?'Saving…':'Save reflection'}</button></form>{notice&&<p role="status">{notice}</p>}</section>
       {!data.entries.length && <p>Your first reflection starts here.</p>}
       {data.entries.map(entry=><article className="daily-panel" key={entry.id}><div className="daily-section-title"><time dateTime={new Date(entry.createdAt).toISOString()}>{new Date(entry.createdAt).toLocaleString()}</time><button disabled={busy} onClick={()=>remove(entry.id)}>Delete</button></div><p className="journal-note">{entry.note}</p>{entry.hasPhoto&&<PrivatePhoto id={entry.id}/>}</article>)}
       {data.nextBefore&&<button disabled={busy} onClick={async()=>{setBusy(true);await load(data.nextBefore);setBusy(false);}}>Older reflections</button>}</>}
