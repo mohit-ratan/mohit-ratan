@@ -1,4 +1,5 @@
 const crypto=require('crypto');
+const {datedMediaPath}=require('./mediaPath');
 const {S3Client,PutObjectCommand,GetObjectCommand,DeleteObjectCommand}=require('@aws-sdk/client-s3');
 const sharp=require('sharp');
 const PREFIX='private-journal:';
@@ -14,7 +15,7 @@ async function savePhoto(file,userId,id){
   if(!file.mimetype?.startsWith('image/')||file.buffer.length>10*1024*1024)throw new Error('Choose an image up to 10 MB.');
   // Decode/re-encode: strip metadata and never serve uploaded SVG/HTML as active content.
   const buffer=await sharp(file.buffer,{limitInputPixels:40000000}).rotate().resize({width:1600,height:1600,fit:'inside',withoutEnlargement:true}).flatten({background:'#fff'}).jpeg({quality:85}).toBuffer();
-  const objectKey=`journal/${crypto.randomUUID()}.bin`;
+  const objectKey=datedMediaPath('journal',`${crypto.randomUUID()}.bin`);
   await storage().send(new PutObjectCommand({Bucket:process.env.R2_PRIVATE_BUCKET,Key:objectKey,Body:encrypt(buffer,`${userId}:${id}:photo`),ContentType:'application/octet-stream'}));
   return PREFIX+objectKey;
 }

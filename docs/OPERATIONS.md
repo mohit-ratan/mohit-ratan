@@ -93,3 +93,7 @@ import tool as a migration. The release only adds tables at startup.
 - Existing feed photos retain their existing visibility/storage behavior. A private journal copy does not remove an already shared feed photo. The journal remains unavailable until its key is configured; photo attachment remains unavailable until its private bucket is configured.
 - Deleting a journal entry queues its photo for the existing media cleanup job; deleting an account also queues all its journal photos. Keep bucket credentials available until cleanup is finished.
 - After hosting deployment, verify `/today`, opt into a reminder with a test account, and confirm actual email delivery. Verify journal text/photo save and delete with two accounts and confirm the other account cannot access the private photo endpoint. These live provider checks are not performed by the local test suite.
+
+## Upload folders
+
+New uploads use UTC upload dates in their object keys: `posts/YYYY/MM/DD/<uuid>.<ext>`, `stories/YYYY/MM/DD/<uuid>.<ext>`, and `avatars/YYYY/MM/DD/<uuid>.<ext>`. Private encrypted journal photos use `journal/YYYY/MM/DD/<uuid>.bin` in the separate private bucket. No additional environment settings or manual folder creation are needed. Existing objects stay at their original paths; stored URLs and deletion references continue to work.

@@ -12,7 +12,7 @@ test('recap uses local dates, excludes old events and counts distinct completed 
  assert.equal(longestStreak(['2026-09-21','2026-09-21','2026-09-22','2026-09-24']),2);
 });
 test('journal encryption rejects tampering and another owner/context',()=>{
- const sandbox={module:{exports:{}},Buffer,process:{env:{JOURNAL_ENCRYPTION_KEY:'ab'.repeat(32)}},require:n=>n==='sharp'?()=>{}:n==='@aws-sdk/client-s3'?{}:require(n)};
+ const sandbox={module:{exports:{}},Buffer,process:{env:{JOURNAL_ENCRYPTION_KEY:'ab'.repeat(32)}},require:n=>n==='./mediaPath'?require('../src/lib/mediaPath'):n==='sharp'?()=>{}:n==='@aws-sdk/client-s3'?{}:require(n)};
  vm.runInNewContext(fs.readFileSync('src/lib/journalStorage.js','utf8'),sandbox);
  const storage=sandbox.module.exports, encrypted=storage.encrypt(Buffer.from('private thought'),'owner:entry:note');
  assert.equal(storage.decrypt(encrypted,'owner:entry:note').toString(),'private thought');

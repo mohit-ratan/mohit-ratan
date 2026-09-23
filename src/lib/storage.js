@@ -1,6 +1,7 @@
 const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { v4: uuidv4 } = require('uuid');
 const sharp = require('sharp');
+const { datedMediaPath } = require('./mediaPath');
 
 // Cloudflare R2 speaks the S3 API, so the standard AWS SDK works against it
 // once pointed at the account's R2 endpoint — this is why uploaded media
@@ -51,7 +52,7 @@ async function compressImageIfLarge(buffer, mimetype) {
 async function uploadMedia(buffer, originalName, mimetype, folder) {
   const compressed = await compressImageIfLarge(buffer, mimetype);
   const ext = compressed.ext || (originalName || '').match(/\.[a-zA-Z0-9]+$/)?.[0]?.slice(0, 10) || '';
-  const key = `${folder}/${uuidv4()}${ext}`;
+  const key = datedMediaPath(folder, `${uuidv4()}${ext}`);
   await client.send(new PutObjectCommand({
     Bucket: bucket,
     Key: key,
