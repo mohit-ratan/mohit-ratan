@@ -57,7 +57,7 @@ export default function TaskListEditor({ tasks, onChange, depth = 0 }) {
             </div>
             {depth === 0 && (
               <div className="task-editor-subtask-toggle">
-                <button type="button" className="goal-add-btn" onClick={() => toggleExpanded(index)}>
+                <button type="button" className="goal-add-btn goal-add-btn-subtask" onClick={() => toggleExpanded(index)}>
                   {isExpanded ? 'Hide subtasks' : subtasks.length ? `Subtasks (${subtasks.length}) ▾` : '+ Add subtask (optional)'}
                 </button>
               </div>
@@ -71,7 +71,7 @@ export default function TaskListEditor({ tasks, onChange, depth = 0 }) {
         );
       })}
       {tasks.length < MAX_TASKS && (
-        <button type="button" className="goal-add-btn" onClick={add}>{depth === 0 ? '+ Add task' : '+ Add subtask'}</button>
+        <button type="button" className={`goal-add-btn${depth > 0 ? ' goal-add-btn-subtask' : ''}`} onClick={add}>{depth === 0 ? '+ Add task' : '+ Add subtask'}</button>
       )}
     </div>
   );

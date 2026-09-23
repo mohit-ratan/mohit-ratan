@@ -836,6 +836,8 @@
     font-weight:600;font-size:12.5px;cursor:pointer;padding:0;
   }
   .goal-add-btn:hover{color:var(--accent-hover);}
+  .goal-add-btn-subtask{color:var(--text-muted);}
+  .goal-add-btn-subtask:hover{color:var(--text);}
 
   .task-list-editor{display:flex;flex-direction:column;gap:8px;}
   .task-editor-item{display:flex;flex-direction:column;gap:4px;}
