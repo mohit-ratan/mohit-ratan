@@ -138,6 +138,26 @@ async function trendingTags(req, res) {
   }
 }
 
+// Tags matching a search query (for the header search bar) — visibility
+// scoped the same way as everywhere else, so a tag only shows if the
+// viewer can actually see at least one post carrying it.
+async function searchTags(req, res) {
+  try {
+    const q = (req.query.q || '').trim().replace(/^#/, '').toLowerCase().slice(0, 24);
+    if (!q) return res.json({ tags: [] });
+    const [rows] = await pool.query(
+      `SELECT p.tag, COUNT(*) as count FROM posts p JOIN users u ON u.id = p.author_id
+       WHERE p.tag LIKE ? AND ${VISIBLE_TO_VIEWER_SQL}
+       GROUP BY p.tag ORDER BY count DESC LIMIT 8`,
+      [`%${q}%`, req.userId, req.userId, req.userId, req.userId]
+    );
+    res.json({ tags: rows.map(r => ({ tag: r.tag, count: Number(r.count) })) });
+  } catch (err) {
+    console.error('search tags error:', err);
+    res.status(500).json({ error: 'Could not search tags.' });
+  }
+}
+
 async function categoryCounts(req, res) {
   try {
     const [rows] = await pool.query(
@@ -489,4 +509,4 @@ async function deleteComment(req, res) {
   }
 }
 
-module.exports = { list, trendingTags, categoryCounts, achievements, create, update, remove, like, listComments, addComment, updateComment, deleteComment };
+module.exports = { list, trendingTags, searchTags, categoryCounts, achievements, create, update, remove, like, listComments, addComment, updateComment, deleteComment };

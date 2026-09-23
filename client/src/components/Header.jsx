@@ -27,6 +27,8 @@ export default function Header({
   const [people, setPeople] = useState([]);
   const [peopleOpen, setPeopleOpen] = useState(false);
   const [peopleLoading, setPeopleLoading] = useState(false);
+  const [tagResults, setTagResults] = useState([]);
+  const [tagsLoading, setTagsLoading] = useState(false);
   const [requests, setRequests] = useState([]);
   const [partnerRequests, setPartnerRequests] = useState([]);
   const [notifications, setNotifications] = useState([]);
@@ -143,16 +145,26 @@ export default function Header({
   useEffect(() => {
     const q = effectiveSearch.trim();
     let cancelled = false;
-    if (!q) { setPeople([]); setPeopleLoading(false); return; }
+    if (!q) { setPeople([]); setPeopleLoading(false); setTagResults([]); setTagsLoading(false); return; }
     setPeopleLoading(true);
+    setTagsLoading(true);
     const timer = setTimeout(() => {
       api.get('/api/users/search', { params: { q } })
         .then(({ data }) => { if (!cancelled) setPeople(data.users); })
         .catch(() => { if (!cancelled) setPeople([]); })
         .finally(() => { if (!cancelled) setPeopleLoading(false); });
+      api.get('/api/posts/search-tags', { params: { q: q.replace(/^#/, '') } })
+        .then(({ data }) => { if (!cancelled) setTagResults(data.tags); })
+        .catch(() => { if (!cancelled) setTagResults([]); })
+        .finally(() => { if (!cancelled) setTagsLoading(false); });
     }, 300);
     return () => { cancelled = true; clearTimeout(timer); };
   }, [effectiveSearch]);
+
+  function openTagResult(tag) {
+    setPeopleOpen(false);
+    navigate(`/?tag=${encodeURIComponent(tag)}`);
+  }
 
   async function sendFollowRequest(id) {
     try {
@@ -208,6 +220,21 @@ export default function Header({
           </button>
           {peopleOpen && effectiveSearch.trim() && (
             <div className="people-search-dropdown">
+              {(tagsLoading ? true : tagResults.length > 0) && (
+                <div className="people-search-section">
+                  <span className="people-search-section-label">Tags</span>
+                  {tagsLoading ? (
+                    <div className="people-search-empty">Searching…</div>
+                  ) : (
+                    tagResults.map((t) => (
+                      <button type="button" key={t.tag} className="people-search-tag" onClick={() => openTagResult(t.tag)}>
+                        <span>#{t.tag}</span><span className="people-search-tag-count">{t.count}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+              {!tagsLoading && tagResults.length > 0 && <div className="people-search-section-label">People</div>}
               {peopleLoading ? (
                 <div className="people-search-empty">Searching…</div>
               ) : people.length ? (
@@ -229,7 +256,7 @@ export default function Header({
                   </div>
                 ))
               ) : (
-                <div className="people-search-empty">No people found for "{effectiveSearch.trim()}"</div>
+                !tagsLoading && !tagResults.length && <div className="people-search-empty">No people or tags found for "{effectiveSearch.trim()}"</div>
               )}
             </div>
           )}
