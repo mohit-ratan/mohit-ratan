@@ -1,7 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const { canView } = require('../lib/follows');
-const { targetDays, normalizeTasks } = require('../lib/goalProgress');
+const { normalizeTasks, buildUpdatedTaskList } = require('../lib/goalProgress');
 
 // Goals belong to an author's tag, so every post in that journey shows the same progress.
 async function get(req, res) {
@@ -51,17 +51,7 @@ async function upsert(req, res) {
     await connection.beginTransaction();
     const [existing] = await connection.query('SELECT id, subtasks FROM goals WHERE author_id = ? AND tag = ? FOR UPDATE', [req.userId, tag]);
     const saved = normalizeTasks(existing[0]?.subtasks);
-    const used = new Set();
-    const subtasks = subtasksRaw
-      .filter((t) => t && typeof t.text === 'string' && t.text.trim())
-      .slice(0, 15)
-      .map((t) => {
-        const previous = saved.find((task) => task.id === t.id && !used.has(task.id));
-        if (previous) used.add(previous.id);
-        const days = targetDays(t.targetDays);
-        const completedDays = Math.min(days, previous?.completedDays || 0);
-        return { ...(previous ? { streakTimeZone: previous.streakTimeZone, lastProgressDate: previous.lastProgressDate, streakDays: previous.streakDays } : {}), id: previous?.id || uuidv4(), text: t.text.trim().slice(0, 140), targetDays: days, completedDays, done: completedDays >= days };
-      });
+    const subtasks = buildUpdatedTaskList(subtasksRaw, saved);
     if (existing.length) {
       await connection.query('UPDATE goals SET target_date = ?, subtasks = ? WHERE id = ?', [
         targetDate || null, JSON.stringify(subtasks), existing[0].id,

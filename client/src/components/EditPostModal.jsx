@@ -3,11 +3,11 @@ import { useEffect, useState } from 'react';
 import api, { mediaUrl } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { CATEGORIES } from '../lib/format';
+import { CATEGORIES, hasInvalidTaskDays } from '../lib/format';
 import { LOOK_RECIPES, getRecipeById, pickLookRecipe } from '../lib/looks';
 import GoalTemplatePicker from './GoalTemplatePicker';
+import TaskListEditor from './TaskListEditor';
 
-const MAX_SUBTASKS = 15;
 const VIBE_ITEMS = [{ id: '', emoji: '⚪', label: 'No look' }, ...LOOK_RECIPES];
 
 // Edits category/vibe/tag for an existing post — deliberately not built on
@@ -49,19 +49,8 @@ export default function EditPostModal({ post, onClose, onSaved }) {
     setVibeLabel(recipe ? recipe.label : '');
   }
 
-  function addSubtask() {
-    if (goalSubtasks.length >= MAX_SUBTASKS) return;
-    setGoalSubtasks((s) => [...s, { text: '', targetDays: 1 }]);
-  }
-  function updateSubtask(i, text) {
-    setGoalSubtasks((s) => s.map((t, idx) => (idx === i ? { ...t, text: text.slice(0, 140) } : t)));
-  }
-  function removeSubtask(i) {
-    setGoalSubtasks((s) => s.filter((_, idx) => idx !== i));
-  }
-
   async function handleSubmit() {
-    if (goalSubtasks.some((task) => task.text.trim() && (!Number.isInteger(Number(task.targetDays)) || Number(task.targetDays) < 1 || Number(task.targetDays) > 3650))) {
+    if (hasInvalidTaskDays(goalSubtasks)) {
       showToast('Enter a whole number of days from 1 to 3650 for each task.', true);
       return;
     }
@@ -186,22 +175,7 @@ export default function EditPostModal({ post, onClose, onSaved }) {
                   value={goalTargetDate}
                   onChange={(e) => setGoalTargetDate(e.target.value)}
                 />
-                {goalSubtasks.map((task, i) => (
-                  <div className="goal-subtask-row" key={i}>
-                    <input
-                      type="text"
-                      placeholder={`Subtask ${i + 1}`}
-                      maxLength={140}
-                      value={task.text}
-                      onChange={(e) => updateSubtask(i, e.target.value)}
-                    />
-                    <label className="task-days-input">Days<input type="number" min="1" max="3650" value={task.targetDays} onChange={(e) => setGoalSubtasks((tasks) => tasks.map((t, index) => index === i ? { ...t, targetDays: e.target.value } : t))} /></label>
-                    <button type="button" className="goal-remove-btn" onClick={() => removeSubtask(i)}>✕</button>
-                  </div>
-                ))}
-                {goalSubtasks.length < MAX_SUBTASKS && (
-                  <button type="button" className="goal-add-btn" onClick={addSubtask}>+ Add subtask</button>
-                )}
+                <TaskListEditor tasks={goalSubtasks} onChange={setGoalSubtasks} />
               </div>
             )}
           </div>

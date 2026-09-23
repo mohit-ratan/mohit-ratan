@@ -2,12 +2,11 @@ import useDialog from '../hooks/useDialog';
 import { useState } from 'react';
 import api from '../api';
 import { useToast } from '../context/ToastContext';
-import { CAT_MAP, goalStatusLabel } from '../lib/format';
+import { CAT_MAP, goalStatusLabel, hasInvalidTaskDays } from '../lib/format';
 import PostGrid from './PostGrid';
 import PostDetailModal from './PostDetailModal';
 import GoalTemplatePicker from './GoalTemplatePicker';
-
-const MAX_SUBTASKS = 15;
+import TaskListEditor from './TaskListEditor';
 
 // Shows the full gallery of posts behind one achievement (tag). Matches
 // PostDetailModal's chrome (.modal-backdrop/.modal-box) but isn't built on
@@ -29,19 +28,8 @@ export default function AchievementDetailModal({ achievement, isMe, onChanged, o
     setEditSubtasks(goal?.subtasks ? goal.subtasks.map((t) => ({ ...t })) : []);
     setEditingGoal(true);
   }
-  function addEditSubtask() {
-    if (editSubtasks.length >= MAX_SUBTASKS) return;
-    setEditSubtasks((s) => [...s, { text: '', targetDays: 1, completedDays: 0, done: false }]);
-  }
-  function updateEditSubtask(i, text) {
-    setEditSubtasks((s) => s.map((t, idx) => (idx === i ? { ...t, text: text.slice(0, 140) } : t)));
-  }
-  function removeEditSubtask(i) {
-    setEditSubtasks((s) => s.filter((_, idx) => idx !== i));
-  }
-
   async function saveGoal() {
-    if (editSubtasks.some((task) => task.text.trim() && (!Number.isInteger(Number(task.targetDays ?? 1)) || Number(task.targetDays ?? 1) < 1 || Number(task.targetDays ?? 1) > 3650))) {
+    if (hasInvalidTaskDays(editSubtasks)) {
       showToast('Enter a whole number of days from 1 to 3650 for each task.', true);
       return;
     }
@@ -100,22 +88,7 @@ export default function AchievementDetailModal({ achievement, isMe, onChanged, o
                   value={editDate || ''}
                   onChange={(e) => setEditDate(e.target.value)}
                 />
-                {editSubtasks.map((t, i) => (
-                  <div className="goal-subtask-row" key={i}>
-                    <input
-                      type="text"
-                      placeholder={`Subtask ${i + 1}`}
-                      maxLength={140}
-                      value={t.text}
-                      onChange={(e) => updateEditSubtask(i, e.target.value)}
-                    />
-                    <label className="task-days-input">Days<input type="number" min="1" max="3650" value={t.targetDays || 1} onChange={(e) => setEditSubtasks((tasks) => tasks.map((task, index) => index === i ? { ...task, targetDays: e.target.value } : task))} /></label>
-                    <button type="button" className="goal-remove-btn" onClick={() => removeEditSubtask(i)}>✕</button>
-                  </div>
-                ))}
-                {editSubtasks.length < MAX_SUBTASKS && (
-                  <button type="button" className="goal-add-btn" onClick={addEditSubtask}>+ Add subtask</button>
-                )}
+                <TaskListEditor tasks={editSubtasks} onChange={setEditSubtasks} />
                 <div className="goal-edit-actions">
                   <button type="button" className="pill-btn primary" disabled={savingGoal} onClick={saveGoal}>
                     {savingGoal ? 'Saving…' : 'Save goal'}
@@ -142,6 +115,18 @@ export default function AchievementDetailModal({ achievement, isMe, onChanged, o
                           <span aria-label={t.done ? 'Completed' : 'In progress'}>{t.done ? '✓' : '○'}</span>
                           <span className={t.done ? 'goal-subtask-done' : ''}>{t.text} · {t.completedDays || 0}/{t.targetDays || 1} days</span>
                         </label>
+                        {t.subtasks?.length > 0 && (
+                          <ul className="goal-subtask-list goal-subtask-list-nested">
+                            {t.subtasks.map((sub, si) => (
+                              <li key={si}>
+                                <label className={isMe ? '' : 'goal-subtask-readonly'}>
+                                  <span aria-label={sub.done ? 'Completed' : 'In progress'}>{sub.done ? '✓' : '○'}</span>
+                                  <span className={sub.done ? 'goal-subtask-done' : ''}>{sub.text} · {sub.completedDays || 0}/{sub.targetDays || 1} days</span>
+                                </label>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                       </li>
                     ))}
                   </ul>

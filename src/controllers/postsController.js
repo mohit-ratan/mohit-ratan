@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const { canViewPost } = require('../lib/access');
 const { recordTaskCheckIn, celebrationLevel } = require('../lib/taskCelebration');
-const { targetDays, normalizeTasks } = require('../lib/goalProgress');
+const { normalizeTasks, buildFreshTaskList } = require('../lib/goalProgress');
 const { canView } = require('../lib/follows');
 const { notify } = require('../lib/notifications');
 const { uploadMedia, deleteMedia } = require('../lib/storage');
@@ -248,13 +248,22 @@ async function create(req, res) {
       if (!/^\d+$/.test(String(req.body.goalTaskIndex)) || !Number.isSafeInteger(index)) {
         return res.status(400).json({ error: 'Choose a valid goal task.' });
       }
+      const hasSubtaskIndex = req.body.goalSubtaskIndex !== undefined && req.body.goalSubtaskIndex !== '';
+      const subtaskIndex = hasSubtaskIndex ? Number(req.body.goalSubtaskIndex) : null;
+      if (hasSubtaskIndex && (!/^\d+$/.test(String(req.body.goalSubtaskIndex)) || !Number.isSafeInteger(subtaskIndex))) {
+        return res.status(400).json({ error: 'Choose a valid goal subtask.' });
+      }
       await ensureMemberTables();
       const connection = await pool.getConnection();
       try {
         await connection.beginTransaction();
         const [rows] = await connection.query('SELECT id, subtasks FROM goals WHERE author_id = ? AND tag = ? FOR UPDATE', [req.userId, cleanTag]);
-        const subtasks = normalizeTasks(rows[0]?.subtasks);
-        if (!Array.isArray(subtasks) || !subtasks[index] || subtasks[index].text !== req.body.goalTaskText || (req.body.goalTaskId && subtasks[index].id !== req.body.goalTaskId)) {
+        const tasks = normalizeTasks(rows[0]?.subtasks);
+        const parentTask = tasks[index];
+        // A subtask index targets one nested level under the chosen task;
+        // otherwise the task itself is the thing being checked in on.
+        const target = hasSubtaskIndex ? parentTask?.subtasks?.[subtaskIndex] : parentTask;
+        if (!Array.isArray(tasks) || !parentTask || !target || target.text !== req.body.goalTaskText || (req.body.goalTaskId && target.id !== req.body.goalTaskId)) {
           await connection.rollback();
           return res.status(409).json({ error: 'This goal task has changed. Reopen the uploader and choose it again.' });
         }
@@ -263,25 +272,28 @@ async function create(req, res) {
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0, visibility, aspectRatio]
         );
-        const wasDone = subtasks[index].done;
-        const checkIn = recordTaskCheckIn(subtasks[index], req.body.timeZone);
-        subtasks[index].completedDays = Math.min(subtasks[index].targetDays, subtasks[index].completedDays + 1);
-        subtasks[index].done = subtasks[index].completedDays >= subtasks[index].targetDays;
-        const taskCompleted = !wasDone && subtasks[index].done;
-        subtasks[index].photoPostId = id;
-        await connection.query('UPDATE goals SET subtasks = ? WHERE id = ?', [JSON.stringify(subtasks), rows[0].id]);
-        const goalCompleted = subtasks.every((task) => task.done);
-        if (checkIn) await recordCheckIn(connection, { postId: id, userId: req.userId, tag: cleanTag, task: subtasks[index], category, goalCompleted });
+        const wasDone = target.done;
+        const checkIn = recordTaskCheckIn(target, req.body.timeZone);
+        target.completedDays = Math.min(target.targetDays, target.completedDays + 1);
+        target.done = target.completedDays >= target.targetDays;
+        const taskCompleted = !wasDone && target.done;
+        target.photoPostId = id;
+        await connection.query('UPDATE goals SET subtasks = ? WHERE id = ?', [JSON.stringify(tasks), rows[0].id]);
+        // A goal's completion — and the trifecta check below — only ever
+        // looks at top-level tasks; subtasks are optional extra tracking
+        // underneath a task and never gate it or the goal.
+        const goalCompleted = tasks.every((task) => task.done);
+        if (checkIn) await recordCheckIn(connection, { postId: id, userId: req.userId, tag: cleanTag, task: target, category, goalCompleted });
         await connection.commit();
         // Only worth the extra query when this check-in just finished a
         // goal — otherwise the trifecta condition can't have changed.
         const trifectaEarned = goalCompleted && await checkAndAwardTrifecta(req.userId);
         const celebration = checkIn ? {
-          ...checkIn, day: subtasks[index].completedDays, targetDays: subtasks[index].targetDays,
-          taskName: subtasks[index].text, tag: cleanTag, taskCompleted, goalCompleted, trifectaEarned,
+          ...checkIn, day: target.completedDays, targetDays: target.targetDays,
+          taskName: target.text, tag: cleanTag, taskCompleted, goalCompleted, trifectaEarned,
           level: celebrationLevel(checkIn.streakDays, taskCompleted, goalCompleted),
         } : null;
-        return res.json({ ok: true, id, taskCompleted, completedDays: subtasks[index].completedDays, targetDays: subtasks[index].targetDays, goalCompleted, trifectaEarned, celebration });
+        return res.json({ ok: true, id, taskCompleted, completedDays: target.completedDays, targetDays: target.targetDays, goalCompleted, trifectaEarned, celebration });
       } catch (error) {
         await connection.rollback();
         throw error;
@@ -311,13 +323,9 @@ async function create(req, res) {
 
 async function maybeCreateGoal(authorId, tag, goalTargetDate, goalSubtasksRaw) {
   if (!tag || !(goalTargetDate || goalSubtasksRaw)) return;
-  let subtaskTexts = [];
-  try { subtaskTexts = JSON.parse(goalSubtasksRaw || '[]'); } catch { subtaskTexts = []; }
-  const subtasks = (Array.isArray(subtaskTexts) ? subtaskTexts : [])
-    .map((t) => typeof t === 'string' ? { text: t } : t)
-    .filter((t) => t && typeof t.text === 'string' && t.text.trim())
-    .slice(0, 15)
-    .map((t) => ({ id: uuidv4(), text: t.text.trim().slice(0, 140), targetDays: targetDays(t.targetDays), completedDays: 0, done: false }));
+  let taskInput = [];
+  try { taskInput = JSON.parse(goalSubtasksRaw || '[]'); } catch { taskInput = []; }
+  const subtasks = buildFreshTaskList(taskInput);
   await pool.query(
     `INSERT IGNORE INTO goals (id, author_id, tag, target_date, subtasks)
      VALUES (?, ?, ?, ?, ?)`,

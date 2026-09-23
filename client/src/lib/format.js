@@ -92,3 +92,14 @@ export function tasksProgress(tasks) {
     return { target: total.target + progress.target, completed: total.completed + progress.completed };
   }, { target: 0, completed: 0 });
 }
+
+// Recurses into each task's optional subtasks — used while editing a
+// draft task list (composer, edit post, achievement detail) to validate
+// every level before saving.
+export function hasInvalidTaskDays(tasks) {
+  return tasks.some((task) => {
+    const days = Number(task.targetDays ?? 1);
+    const invalid = !!task.text?.trim() && (!Number.isInteger(days) || days < 1 || days > 3650);
+    return invalid || hasInvalidTaskDays(task.subtasks || []);
+  });
+}

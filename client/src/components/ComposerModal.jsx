@@ -4,13 +4,12 @@ import { useEffect, useRef, useState } from 'react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { CATEGORIES } from '../lib/format';
+import { CATEGORIES, hasInvalidTaskDays } from '../lib/format';
 import { LOOK_RECIPES, getRecipeById, applyLookToImage } from '../lib/looks';
 import { cropImageToFrame, ASPECT_RATIO_NUMBERS } from '../lib/crop';
 import GoalTemplatePicker from './GoalTemplatePicker';
 import PhotoCropper from './PhotoCropper';
-
-const MAX_SUBTASKS = 15;
+import TaskListEditor from './TaskListEditor';
 
 const VIBE_ITEMS = [{ id: '', emoji: '⚪', label: 'No look' }, ...LOOK_RECIPES];
 
@@ -48,6 +47,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
   const [tagRaw, setTagRaw] = useState(initialGoalTask?.tag || initialGoal?.tag || '');
   const [availableGoals, setAvailableGoals] = useState([]);
   const [taskIndex, setTaskIndex] = useState(initialGoalTask ? String(initialGoalTask.index) : '');
+  const [subtaskIndex, setSubtaskIndex] = useState(initialGoalTask?.subtaskIndex !== undefined ? String(initialGoalTask.subtaskIndex) : '');
   const [generating, setGenerating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const dialogRef = useDialog(onClose, submitting);
@@ -59,8 +59,18 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
   const title = isPost ? 'Create post' : 'Add to your story';
   const normalizedTag = tagRaw.replace(/^#/, '').toLowerCase().slice(0, 24);
   const linkedGoal = availableGoals.find((item) => item.tag === normalizedTag);
-  const selectedTask = taskIndex !== '' ? linkedGoal?.goal.subtasks[Number(taskIndex)] : null;
+  const linkedTask = taskIndex !== '' ? linkedGoal?.goal.subtasks[Number(taskIndex)] : null;
+  const selectedTask = subtaskIndex !== '' ? linkedTask?.subtasks?.[Number(subtaskIndex)] : linkedTask;
+  const taskSelectValue = taskIndex === '' ? '' : subtaskIndex !== '' ? `${taskIndex}:${subtaskIndex}` : taskIndex;
   const isNewTag = isPost && !!normalizedTag && !!existingTags && !existingTags.has(normalizedTag);
+
+  function selectGoalTask(value) {
+    if (!value) { setTaskIndex(''); setSubtaskIndex(''); return; }
+    const [t, s] = value.split(':');
+    setTaskIndex(t);
+    setSubtaskIndex(s !== undefined ? s : '');
+    setChosenCat(linkedGoal.category);
+  }
 
   useEffect(() => {
     if (!isPost || !user) return;
@@ -70,17 +80,6 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
       .catch(() => { if (!cancelled) showToast('Could not load your goals. Close and reopen the editor to try again.', true); });
     return () => { cancelled = true; };
   }, [isPost, user, showToast]);
-
-  function addSubtask() {
-    if (goalSubtasks.length >= MAX_SUBTASKS) return;
-    setGoalSubtasks((s) => [...s, { text: '', targetDays: 1 }]);
-  }
-  function updateSubtask(i, text) {
-    setGoalSubtasks((s) => s.map((t, idx) => (idx === i ? { ...t, text: text.slice(0, 140) } : t)));
-  }
-  function removeSubtask(i) {
-    setGoalSubtasks((s) => s.filter((_, idx) => idx !== i));
-  }
 
   function handleFileChange(e) {
     const file = e.target.files[0];
@@ -176,7 +175,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
       showToast('Choose a goal task and upload a photo to record progress.', true);
       return;
     }
-    if (goalSubtasks.some((task) => task.text.trim() && (!Number.isInteger(Number(task.targetDays ?? 1)) || Number(task.targetDays ?? 1) < 1 || Number(task.targetDays ?? 1) > 3650))) {
+    if (hasInvalidTaskDays(goalSubtasks)) {
       showToast('Enter a whole number of days from 1 to 3650 for each task.', true);
       return;
     }
@@ -207,6 +206,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
       if (isPost && selectedTask) {
         form.append('timeZone', Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
         form.append('goalTaskIndex', taskIndex);
+        if (subtaskIndex !== '') form.append('goalSubtaskIndex', subtaskIndex);
         form.append('goalTaskText', selectedTask.text);
         form.append('goalTaskId', selectedTask.id);
       }
@@ -358,7 +358,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                 maxLength={24}
                 placeholder="One word or hashtag (optional) — e.g. #grateful"
                 value={tagRaw}
-                onChange={(e) => { setTagRaw(e.target.value); setTaskIndex(''); }}
+                onChange={(e) => { setTagRaw(e.target.value); setTaskIndex(''); setSubtaskIndex(''); }}
               />
               <span className="tag-hint">Just one word — no caption needed.</span>
             </div>
@@ -366,7 +366,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
               <label className="goal-setup-label" htmlFor="photo-goal">Update a goal with this photo</label>
               <select id="photo-goal" value={linkedGoal?.tag || ''} onChange={(e) => {
                 const item = availableGoals.find((goal) => goal.tag === e.target.value);
-                setTagRaw(item?.tag || ''); setTaskIndex('');
+                setTagRaw(item?.tag || ''); setTaskIndex(''); setSubtaskIndex('');
                 if (item) setChosenCat(item.category);
               }}>
                 <option value="">No goal selected</option>
@@ -374,11 +374,18 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
               </select>
               {linkedGoal && <>
                 <label htmlFor="photo-task">Which task is this photo for?</label>
-                <select id="photo-task" value={taskIndex} onChange={(e) => { setTaskIndex(e.target.value); setChosenCat(linkedGoal.category); }}>
+                <select id="photo-task" value={taskSelectValue} onChange={(e) => selectGoalTask(e.target.value)}>
                   <option value="">Post without updating a task</option>
-                  {linkedGoal.goal.subtasks.map((task, index) => <option key={index} value={index}>{task.done ? '✓ ' : ''}{task.text} ({task.completedDays || 0}/{task.targetDays || 1} days)</option>)}
+                  {linkedGoal.goal.subtasks.map((task, tIndex) => (
+                    <optgroup key={tIndex} label={task.text || `Task ${tIndex + 1}`}>
+                      <option value={String(tIndex)}>{task.done ? '✓ ' : ''}{task.text} ({task.completedDays || 0}/{task.targetDays || 1} days)</option>
+                      {(task.subtasks || []).map((sub, sIndex) => (
+                        <option key={sIndex} value={`${tIndex}:${sIndex}`}>↳ {sub.done ? '✓ ' : ''}{sub.text} ({sub.completedDays || 0}/{sub.targetDays || 1} days)</option>
+                      ))}
+                    </optgroup>
+                  ))}
                 </select>
-                <span className="tag-hint">Each photo adds one day of progress to this task, up to its target. Multiple uploads on the same day each count.</span>
+                <span className="tag-hint">Each photo adds one day of progress to this task or subtask, up to its target. Multiple uploads on the same day each count.</span>
               </>}
             </div>}
             {isNewTag && (
@@ -396,22 +403,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                   value={goalTargetDate}
                   onChange={(e) => setGoalTargetDate(e.target.value)}
                 />
-                {goalSubtasks.map((task, i) => (
-                  <div className="goal-subtask-row" key={i}>
-                    <input
-                      type="text"
-                      placeholder={`Subtask ${i + 1}`}
-                      maxLength={140}
-                      value={task.text}
-                      onChange={(e) => updateSubtask(i, e.target.value)}
-                    />
-                    <label className="task-days-input">Days<input type="number" min="1" max="3650" value={task.targetDays} onChange={(e) => setGoalSubtasks((tasks) => tasks.map((t, index) => index === i ? { ...t, targetDays: e.target.value } : t))} /></label>
-                    <button type="button" className="goal-remove-btn" onClick={() => removeSubtask(i)}>✕</button>
-                  </div>
-                ))}
-                {goalSubtasks.length < MAX_SUBTASKS && (
-                  <button type="button" className="goal-add-btn" onClick={addSubtask}>+ Add subtask</button>
-                )}
+                <TaskListEditor tasks={goalSubtasks} onChange={setGoalSubtasks} />
               </div>
             )}
           </fieldset>

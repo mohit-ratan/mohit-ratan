@@ -45,7 +45,32 @@ export default function GoalOverview({ goals, onOpen, onUploadTask }) {
                     <div className="goal-task-summary goal-progress-label"><span>{checked} of {days} task days logged</span><strong>{percent}%</strong></div>
                     <progress className="goal-progress-bar" value={checked} max={days || 1} aria-label={`#${item.tag} task progress`} aria-valuetext={`${checked} of ${days} task days logged, ${percent}%`} />
                     {taskCount ? <ul className="goal-summary-tasks">{item.goal.subtasks.map((task, index) => (
-                      <li key={index} className={task.done ? 'is-complete' : ''}><span aria-label={task.done ? 'Completed' : 'Pending'}>{task.done ? '✓' : '○'}</span><span className="task-progress-copy">{task.text}<small>{taskProgress(task).completed} / {taskProgress(task).target} days · {Math.round(taskProgress(task).completed / taskProgress(task).target * 100)}%</small><progress value={taskProgress(task).completed} max={taskProgress(task).target} aria-label={`${task.text} progress`} /></span>{!task.done && <button type="button" className="goal-task-photo" aria-label={`Upload photo for ${task.text}`} onClick={() => onUploadTask({ tag: item.tag, category: item.category, index })}>＋ Photo</button>}</li>
+                      <li key={index} className={task.done ? 'is-complete' : ''}>
+                        <div className="goal-summary-task-row">
+                          <span aria-label={task.done ? 'Completed' : 'Pending'}>{task.done ? '✓' : '○'}</span>
+                          <span className="task-progress-copy">
+                            {task.text}
+                            <small>{taskProgress(task).completed} / {taskProgress(task).target} days · {Math.round(taskProgress(task).completed / taskProgress(task).target * 100)}%</small>
+                            <progress value={taskProgress(task).completed} max={taskProgress(task).target} aria-label={`${task.text} progress`} />
+                          </span>
+                          {!task.done && <button type="button" className="goal-task-photo" aria-label={`Upload photo for ${task.text}`} onClick={() => onUploadTask({ tag: item.tag, category: item.category, index })}>＋ Photo</button>}
+                        </div>
+                        {task.subtasks?.length > 0 && (
+                          <ul className="goal-summary-tasks-nested">
+                            {task.subtasks.map((sub, subIndex) => (
+                              <li key={subIndex} className={sub.done ? 'is-complete' : ''}>
+                                <span aria-label={sub.done ? 'Completed' : 'Pending'}>{sub.done ? '✓' : '○'}</span>
+                                <span className="task-progress-copy">
+                                  {sub.text}
+                                  <small>{taskProgress(sub).completed} / {taskProgress(sub).target} days · {Math.round(taskProgress(sub).completed / taskProgress(sub).target * 100)}%</small>
+                                  <progress value={taskProgress(sub).completed} max={taskProgress(sub).target} aria-label={`${sub.text} progress`} />
+                                </span>
+                                {!sub.done && <button type="button" className="goal-task-photo" aria-label={`Upload photo for ${sub.text}`} onClick={() => onUploadTask({ tag: item.tag, category: item.category, index, subtaskIndex: subIndex })}>＋ Photo</button>}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </li>
                     ))}</ul> : <p className="goal-category-empty">Add tasks to start working toward an award.</p>}
                     <button type="button" className="house-enter-btn" onClick={() => onOpen(item)}>{item.goal.completed ? 'View achievement' : 'Manage tasks'} →</button>
                   </article>

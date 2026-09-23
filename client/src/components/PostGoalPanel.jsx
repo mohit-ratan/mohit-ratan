@@ -46,6 +46,29 @@ export default function PostGoalPanel({ post, isMe, onUploadTask }) {
                 </button>
               )}
             </div>
+            {task.subtasks?.length > 0 && (
+              <ul className="post-goal-tasks-nested">
+                {task.subtasks.map((sub, subIndex) => {
+                  const subProgress = taskProgress(sub);
+                  return <li key={sub.id}>
+                    <div><strong>{sub.done ? '✓ ' : ''}{sub.text}</strong><span>{subProgress.completed} / {subProgress.target} days</span></div>
+                    <div className="post-goal-task-row">
+                      <progress value={subProgress.completed} max={subProgress.target} aria-label={`${sub.text} progress`} />
+                      {isMe && !sub.done && (
+                        <button
+                          type="button"
+                          className="goal-task-photo"
+                          aria-label={`Upload photo for ${sub.text}`}
+                          onClick={() => onUploadTask({ tag: post.tag, category: post.category, index, subtaskIndex: subIndex })}
+                        >
+                          ＋ Photo
+                        </button>
+                      )}
+                    </div>
+                  </li>;
+                })}
+              </ul>
+            )}
           </li>;
         })}
       </ul>
