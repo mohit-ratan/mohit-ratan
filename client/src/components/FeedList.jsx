@@ -68,7 +68,7 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
       </div>
       {post.goalProgress?.target > 0 && (
         <button type="button" className={`feed-card-progress house-floor-${post.category}`} onClick={() => onOpen(post)}>
-          <span>🎯 {post.goalProgress.completed}/{post.goalProgress.target} days</span>
+          <span>🎯 {post.goalProgress.completed}/{post.goalProgress.target} task days</span>
           <progress value={post.goalProgress.completed} max={post.goalProgress.target} aria-label="Goal progress" />
         </button>
       )}
