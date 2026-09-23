@@ -245,7 +245,7 @@ export default function ProfilePage() {
   if (loading || !profile) {
     return (
       <>
-        <Header streak={0} counts={{}} />
+        <Header streak={headerStreak} counts={{}} />
         <div className="wrap"><main className="layout"><section className="feed-col"><div className="card empty-state"><p>Loading…</p></div></section></main></div>
       </>
     );
