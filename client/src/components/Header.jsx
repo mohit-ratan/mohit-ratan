@@ -80,9 +80,9 @@ export default function Header({
 
   async function respondRequest(id, action) {
     try {
-      await api.patch(`/api/follows/${id}`, { action });
+      const { data } = await api.patch(`/api/follows/${id}`, { action });
       setRequests((current) => {
-        if (action === 'accept') {
+        if (action === 'accept' && !data.alreadyFollowingBack) {
           const accepted = current.find((r) => r.id === id);
           if (accepted) setJustAccepted((j) => [...j, { ...accepted, followBackStatus: 'none' }]);
         }

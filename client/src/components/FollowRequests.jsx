@@ -18,8 +18,12 @@ export default function FollowRequests() {
 
   async function accept(id) {
     try {
-      await api.patch(`/api/follows/${id}`, { action: 'accept' });
-      setRequests((current) => current.map((r) => (r.id === id ? { ...r, accepted: true } : r)));
+      const { data } = await api.patch(`/api/follows/${id}`, { action: 'accept' });
+      if (data.alreadyFollowingBack) {
+        setRequests((current) => current.filter((r) => r.id !== id));
+      } else {
+        setRequests((current) => current.map((r) => (r.id === id ? { ...r, accepted: true } : r)));
+      }
     } catch (err) {
       showToast(err.message, true);
     }

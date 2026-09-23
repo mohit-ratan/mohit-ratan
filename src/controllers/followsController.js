@@ -82,12 +82,20 @@ async function respond(req, res) {
         [followerId, req.userId]
       );
       await notify(followerId, req.userId, 'follow_accepted');
-    } else {
-      await pool.query(
-        'DELETE FROM follows WHERE follower_id = ? AND followee_id = ?',
-        [followerId, req.userId]
+      // If I already follow them back (e.g. they were following-back a
+      // request I originally sent), this pair is already mutual — the
+      // "follow back?" prompt would be pointless, so tell the client not
+      // to show it.
+      const [alreadyMutual] = await pool.query(
+        "SELECT 1 FROM follows WHERE follower_id = ? AND followee_id = ? AND status = 'accepted'",
+        [req.userId, followerId]
       );
+      return res.json({ ok: true, alreadyFollowingBack: alreadyMutual.length > 0 });
     }
+    await pool.query(
+      'DELETE FROM follows WHERE follower_id = ? AND followee_id = ?',
+      [followerId, req.userId]
+    );
     res.json({ ok: true });
   } catch (err) {
     console.error('respond to follow error:', err);
