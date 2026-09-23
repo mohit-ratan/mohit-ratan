@@ -1049,6 +1049,17 @@
 .house-enter-btn{border:1px solid #ced8cd;background:#fff;color:#355c45;border-radius:8px;padding:11px 16px;font-size:12px;font-weight:600;cursor:pointer;}
 .house-enter-btn:hover{background:#eef3eb;}
 .house-enter-btn:disabled{opacity:.6;cursor:wait;}
+.house-enter-btn.today-tasks-btn{
+  background:linear-gradient(135deg,var(--accent),#e0650f);
+  border-color:var(--accent);color:#fff;
+  animation:today-tasks-pulse 2.4s ease-in-out infinite;
+}
+.house-enter-btn.today-tasks-btn:hover{background:linear-gradient(135deg,var(--accent-hover),#c4530c);color:#fff;}
+@keyframes today-tasks-pulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(199,71,12,.45);}
+  50%{box-shadow:0 0 0 7px rgba(199,71,12,0);}
+}
+@media(prefers-reduced-motion:reduce){.today-tasks-btn{animation:none;}}
 .feed-load-more{display:flex;justify-content:center;margin-top:16px;}
 .house-achievements{margin-top:24px;display:flex;flex-direction:column;gap:10px;max-height:410px;overflow:auto;}
 .house-achievement{display:flex;align-items:center;gap:13px;background:white;border:1px solid #e1e6dc;border-radius:12px;padding:10px;text-align:left;cursor:pointer;color:inherit;}
