@@ -6,7 +6,9 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { CATEGORIES } from '../lib/format';
 import { LOOK_RECIPES, getRecipeById, applyLookToImage } from '../lib/looks';
+import { cropImageToFrame, ASPECT_RATIO_NUMBERS } from '../lib/crop';
 import GoalTemplatePicker from './GoalTemplatePicker';
+import PhotoCropper from './PhotoCropper';
 
 const MAX_SUBTASKS = 15;
 
@@ -40,6 +42,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
   const [chosenCat, setChosenCat] = useState(initialGoalTask?.category || initialGoal?.category || CATEGORIES[0].id);
   const [visibility, setVisibility] = useState('friends');
   const [aspectRatio, setAspectRatio] = useState('square');
+  const [pan, setPan] = useState({ x: 50, y: 50 });
   const [chosenVibeId, setChosenVibeId] = useState('');
   const [vibeLabel, setVibeLabel] = useState('');
   const [tagRaw, setTagRaw] = useState(initialGoalTask?.tag || initialGoal?.tag || '');
@@ -96,7 +99,13 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
       styled: false,
     };
     updatePreview(nextMedia);
+    setPan({ x: 50, y: 50 });
     applySelectedLook(nextMedia, chosenVibeId);
+  }
+
+  function chooseAspect(value) {
+    setAspectRatio(value);
+    setPan({ x: 50, y: 50 });
   }
 
   function removeMedia() {
@@ -182,6 +191,12 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
         const blob = await applyLookToImage(media.file, { filter: 'none' });
         if (blob.size < media.file.size) uploadFile = new File([blob], 'status.jpg', { type: 'image/jpeg' });
       }
+      // Bakes in exactly the crop the person chose in the reposition tool —
+      // GIFs are skipped since a canvas crop would freeze the animation.
+      if (isPost && media.kind === 'image' && media.file.type !== 'image/gif') {
+        const blob = await cropImageToFrame(media.file, ASPECT_RATIO_NUMBERS[aspectRatio], pan);
+        uploadFile = new File([blob], 'cropped.jpg', { type: 'image/jpeg' });
+      }
       form.append('media', uploadFile);
       form.append('vibe', vibeLabel.slice(0, 60));
       form.append('tag', normalizedTag);
@@ -234,6 +249,8 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
             <div className="modal-media-pane">
               {media.kind === 'video' ? (
                 <video src={media.previewUrl} controls style={{ filter: getRecipeById(chosenVibeId)?.filter }} />
+              ) : isPost && media.file.type !== 'image/gif' ? (
+                <PhotoCropper src={media.previewUrl} aspect={ASPECT_RATIO_NUMBERS[aspectRatio]} pan={pan} onPanChange={setPan} />
               ) : (
                 <img src={media.previewUrl} alt="Selected media" />
               )}
@@ -322,9 +339,9 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
               <div className="visibility-choice-row">
                 <label className="composer-field-label">Photo shape</label>
                 <div className="visibility-choice-options">
-                  <button type="button" className={`visibility-choice${aspectRatio === 'square' ? ' chosen' : ''}`} onClick={() => setAspectRatio('square')}>⬜ Square</button>
-                  <button type="button" className={`visibility-choice${aspectRatio === 'portrait' ? ' chosen' : ''}`} onClick={() => setAspectRatio('portrait')}>📱 Portrait</button>
-                  <button type="button" className={`visibility-choice${aspectRatio === 'landscape' ? ' chosen' : ''}`} onClick={() => setAspectRatio('landscape')}>🖼️ Landscape</button>
+                  <button type="button" className={`visibility-choice${aspectRatio === 'square' ? ' chosen' : ''}`} onClick={() => chooseAspect('square')}>⬜ Square</button>
+                  <button type="button" className={`visibility-choice${aspectRatio === 'portrait' ? ' chosen' : ''}`} onClick={() => chooseAspect('portrait')}>📱 Portrait</button>
+                  <button type="button" className={`visibility-choice${aspectRatio === 'landscape' ? ' chosen' : ''}`} onClick={() => chooseAspect('landscape')}>🖼️ Landscape</button>
                 </div>
               </div>
             )}
