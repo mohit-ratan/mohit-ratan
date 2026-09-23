@@ -45,6 +45,7 @@ test('security and recovery against isolated local MySQL', { skip: process.env.P
     const { requireAuth } = load('src/middleware/auth.js');
     const account = load('src/controllers/accountController.js');
     await security.ensureSecurityTables();
+    await load('src/lib/memberFeatures.js').ensureMemberTables();
     const bcrypt = require('bcryptjs');
     const passwordHash = await bcrypt.hash('test-password', 4);
     for (const id of ['owner', 'follower', 'stranger', 'blocked']) await pool.query('INSERT INTO users (id,email,password_hash,display_name,email_verified) VALUES (?,?,?,?,1)', [id, `${id}@example.test`, passwordHash, id]);
@@ -54,6 +55,42 @@ test('security and recovery against isolated local MySQL', { skip: process.env.P
     await pool.query("INSERT INTO goals (id,author_id,tag,subtasks) VALUES ('goal','owner','walk',?)", [JSON.stringify([{ id: 'task', text: 'Walk', targetDays: 7, completedDays: 2 }])]);
     function response() { return { statusCode: 200, headers: {}, status(n) { this.statusCode = n; return this; }, json(v) { this.body = v; return this; }, set(k,v) { this.headers[k] = v; return this; } }; }
     async function call(fn, body = {}, extra = {}) { const res = response(); await fn({ body, query: {}, params: {}, ...extra }, res); return res; }
+    await t.test('check-in ledger and permanent seven-day category award are transactional', async () => {
+      const features=load('src/lib/memberFeatures.js');
+      const connection=await pool.getConnection();
+      try {
+        await connection.beginTransaction();
+        await features.recordCheckIn(connection,{postId:'public',userId:'owner',tag:'walk',task:{id:'task',lastProgressDate:'2026-09-23',streakDays:7},category:'health',goalCompleted:false});
+        await connection.rollback();
+        const [empty]=await pool.query('SELECT * FROM task_checkins');assert.equal(empty.length,0);
+        await connection.beginTransaction();
+        await features.recordCheckIn(connection,{postId:'public',userId:'owner',tag:'walk',task:{id:'task',lastProgressDate:'2026-09-23',streakDays:7},category:'health',goalCompleted:false});
+        await connection.commit();
+        const [earned]=await pool.query('SELECT * FROM category_consistency WHERE user_id=?',['owner']);
+        assert.equal(earned[0].best_streak,7);assert.ok(earned[0].earned_at);
+      } finally {connection.release();}
+    });
+    await t.test('journal encryption and ownership across real database operations', async () => {
+      env.JOURNAL_ENCRYPTION_KEY = crypto.randomBytes(32).toString('hex');
+      const journal = load('src/controllers/journalController.js');
+      const saved = await call(journal.create, {note:'My private reflection'}, {userId:'owner'});
+      assert.equal(saved.statusCode,200);
+      const id=saved.body.id;
+      const [rows]=await pool.query('SELECT note FROM journal_entries WHERE id=?',[id]);
+      assert.ok(!rows[0].note.includes('My private reflection'));
+      const own=await call(journal.list,{}, {userId:'owner'});
+      assert.equal(own.body.entries[0].note,'My private reflection');
+      const other=await call(journal.list,{}, {userId:'stranger'});
+      assert.equal(other.body.entries.length,0);
+      const photo=await call(journal.photo,{}, {userId:'stranger',params:{id}});
+      assert.equal(photo.statusCode,404);
+      await call(journal.remove,{}, {userId:'stranger',params:{id}});
+      const retained=await call(journal.list,{}, {userId:'owner'});
+      assert.equal(retained.body.entries.length,1);
+      await call(journal.remove,{}, {userId:'owner',params:{id}});
+      const removed=await call(journal.list,{}, {userId:'owner'});
+      assert.equal(removed.body.entries.length,0);
+    });
     await t.test('owner/follower/stranger/blocked visibility matrix and direct endpoint denial', async () => {
       for (const [viewer, allowed] of [['owner',true],['follower',true],['stranger',false],['blocked',false]]) {
         assert.equal(await canViewPost(viewer, 'private'), allowed);

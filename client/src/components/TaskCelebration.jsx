@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import useDialog from '../hooks/useDialog';
 
 const colors = ['#ff7733', '#ffd166', '#ed626a', '#fff4d8', '#73b7a1', '#a48ce0'];
@@ -45,6 +46,7 @@ export default function TaskCelebration({ celebration, onClose }) {
         <p className="task-party-award">Your Trifecta Award is waiting in your Achievement House, alongside this goal's own trophy.</p>
       ) : goalCompleted && <p className="task-party-award">Your award is waiting in your Achievement House.</p>}
       <button className="task-party-continue" type="button" onClick={onClose}>{goalCompleted ? 'Enjoy the win →' : 'Keep the momentum →'}</button>
+      <Link to="/journal" onClick={onClose}>Reflect on this win privately →</Link>
       <small className="task-party-note">{streakDays === 1 ? 'Check in again tomorrow to build your streak.' : 'Same-day uploads add progress; each calendar day counts once toward your streak.'}</small>
     </section>
   </div>;

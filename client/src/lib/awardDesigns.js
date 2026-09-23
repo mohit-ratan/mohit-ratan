@@ -9,11 +9,8 @@ import { CATEGORIES } from './format';
 // - "goal" trophies mirror the real rule in postsController.achievements():
 //   a goal's checklist must be non-empty and every subtask marked done.
 //   Each one uses an icon that stands for its category, not a generic cup.
-// - "consistency" badges are themed to the streak/heatmap mechanic (posting
-//   or sharing stories on consecutive days) rather than a category-specific
-//   counter, since streaks are tracked app-wide today. All three share the
-//   same flame — consistency is the same idea everywhere, just a different
-//   color of fire.
+// - Consistency badges require seven consecutive days on the same category task.
+//   Personal unlock progress is shown on /today.
 const GOAL_ICONS = { health: '💪', wealth: '💎', relationships: '🫂' };
 
 export const AWARD_COLLECTIONS = CATEGORIES.map((cat) => ({
@@ -33,7 +30,7 @@ export const AWARD_COLLECTIONS = CATEGORIES.map((cat) => ({
       kind: 'consistency',
       icon: '🔥',
       name: `${cat.label} Consistency Badge`,
-      rule: `Keep your daily streak going with photos or stories, especially in ${cat.label.toLowerCase()}. The longer the streak, the brighter this badge glows on your consistency heatmap.`,
+      rule: `Check in with a photo for the same ${cat.label.toLowerCase()} task on 7 consecutive calendar days. Multiple photos on one day count once toward the streak. Once earned, your badge stays unlocked.`,
     },
   ],
 }));
@@ -45,7 +42,7 @@ export const AWARD_KIND_COPY = {
   },
   consistency: {
     label: 'Consistency badge',
-    blurb: "Reflects your ongoing streak, not a single finish line — it stays lit as long as you keep showing up.",
+    blurb: "Earned after a 7-day streak on a task in this category. The badge stays earned when the streak ends.",
   },
 };
 

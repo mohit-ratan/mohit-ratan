@@ -82,3 +82,14 @@ import tool as a migration. The release only adds tables at startup.
   database and removes it afterwards; never loads .env. Covers real transactions,
   parallel OTP/reset consumption, limits, privacy, session revocation, and deletion.
 - `npm run build`: production frontend compilation.
+
+## Daily progress and private journal rollout
+
+- `/today`: owner-only tasks, rolling seven-day recap, opt-in email reminder settings, and award progress. `/journal`: owner-only reflections. The public awards gallery remains `/awards`.
+- New tables are created on startup. Task-photo check-ins are recorded atomically with task progress. Historical upload timestamps are not backfilled. Weekly goal completions count distinct goal tags. A category consistency badge is permanently earned by a seven-calendar-day streak on the same task; multiple same-day photos increase task progress but not streak length.
+- Personal task reminders default OFF. Users choose time and IANA timezone. The job checks every five minutes and claims at most one email per user/local day, including across multiple workers. Failed or uncertain sends are not retried automatically that day. `DISABLE_REMINDERS=true` disables this job. Existing accountability-partner reminders are separate.
+- To enable journal text, set `JOURNAL_ENCRYPTION_KEY` in production Secrets to a securely generated 32-byte random value encoded as 64 hex characters. Back up this key securely. Do not reuse JWT_SECRET or rotate the journal key without migrating existing encrypted entries.
+- To enable private journal photos, create a separate R2 bucket, disable both its public development URL and custom domains, give the existing R2 credentials access, and set `R2_PRIVATE_BUCKET` to its name. It must differ from the public media bucket. Notes and photo copies use authenticated AES-256-GCM encryption; the server decrypts only after owner authentication. This is server-side encryption, not end-to-end encryption. Photo responses are no-store and use authenticated blob fetching, never public URLs.
+- Existing feed photos retain their existing visibility/storage behavior. A private journal copy does not remove an already shared feed photo. The journal remains unavailable until its key is configured; photo attachment remains unavailable until its private bucket is configured.
+- Deleting a journal entry queues its photo for the existing media cleanup job; deleting an account also queues all its journal photos. Keep bucket credentials available until cleanup is finished.
+- After hosting deployment, verify `/today`, opt into a reminder with a test account, and confirm actual email delivery. Verify journal text/photo save and delete with two accounts and confirm the other account cannot access the private photo endpoint. These live provider checks are not performed by the local test suite.

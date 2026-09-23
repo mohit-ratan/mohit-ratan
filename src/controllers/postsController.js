@@ -1,3 +1,4 @@
+const { ensureMemberTables, recordCheckIn } = require('../lib/memberFeatures');
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const { canViewPost } = require('../lib/access');
@@ -247,6 +248,7 @@ async function create(req, res) {
       if (!/^\d+$/.test(String(req.body.goalTaskIndex)) || !Number.isSafeInteger(index)) {
         return res.status(400).json({ error: 'Choose a valid goal task.' });
       }
+      await ensureMemberTables();
       const connection = await pool.getConnection();
       try {
         await connection.beginTransaction();
@@ -268,8 +270,9 @@ async function create(req, res) {
         const taskCompleted = !wasDone && subtasks[index].done;
         subtasks[index].photoPostId = id;
         await connection.query('UPDATE goals SET subtasks = ? WHERE id = ?', [JSON.stringify(subtasks), rows[0].id]);
-        await connection.commit();
         const goalCompleted = subtasks.every((task) => task.done);
+        if (checkIn) await recordCheckIn(connection, { postId: id, userId: req.userId, tag: cleanTag, task: subtasks[index], category, goalCompleted });
+        await connection.commit();
         // Only worth the extra query when this check-in just finished a
         // goal — otherwise the trifecta condition can't have changed.
         const trifectaEarned = goalCompleted && await checkAndAwardTrifecta(req.userId);

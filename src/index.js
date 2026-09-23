@@ -3,7 +3,11 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const cron = require('node-cron');
-const { sendStreakReminders } = require('./lib/streakReminders');
+const { sendPersonalReminders } = require('./lib/personalReminders');
+const { ensureMemberTables } = require('./lib/memberFeatures');
+const memberController = require('./controllers/memberController');
+const journalController = require('./controllers/journalController');
+const { uploadSingle } = require('./upload');
 const { sendAccountabilityReminders } = require('./lib/accountabilityReminders');
 
 const authRoutes = require('./routes/auth');
@@ -43,6 +47,12 @@ app.use(express.json());
 
 app.delete('/api/account', requireAuth, rateLimit('delete-account', 5, 900), deleteAccount);
 app.post('/api/support', requireAuth, rateLimit('support', 5, 3600), report);
+app.get('/api/journal', requireAuth, journalController.list);
+app.post('/api/journal', requireAuth, rateLimit('journal', 30, 3600), uploadSingle('photo'), journalController.create);
+app.get('/api/journal/:id/photo', requireAuth, journalController.photo);
+app.delete('/api/journal/:id', requireAuth, journalController.remove);
+app.get('/api/member/dashboard', requireAuth, memberController.dashboard);
+app.put('/api/member/preferences', requireAuth, memberController.preferences);
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/stories', storyRoutes);
@@ -73,7 +83,7 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 4000;
-ensureSecurityTables().then(() => {
+Promise.all([ensureSecurityTables(), ensureMemberTables()]).then(() => {
   app.listen(PORT, () => console.log(`PackSomeWork listening on port ${PORT}`));
   drainMediaDeletionQueue().catch(err => console.error('Media cleanup failed:', err.code));
 }).catch(err => { console.error('Security schema initialization failed:', err.code); poolShutdown(); process.exit(1); });
@@ -83,12 +93,9 @@ cron.schedule('*/15 * * * *', () => {
   require('./db').query('DELETE FROM auth_rate_limits WHERE expires_at < NOW() - INTERVAL 1 DAY').catch(err => console.error('Rate cleanup failed:', err.code));
 });
 
-// Daily at 19:00 server time — no per-user timezone data exists yet, so
-// this is one fixed time for everyone rather than each user's own evening.
-if (process.env.DISABLE_REMINDERS !== 'true') cron.schedule('0 19 * * *', () => {
-  sendStreakReminders()
-    .then((count) => console.log(`[streak-reminders] sent to ${count} at-risk user(s)`))
-    .catch((err) => console.error('[streak-reminders] job failed:', err));
+// Personal reminders are opt-in and evaluated in each member's timezone.
+if (process.env.DISABLE_REMINDERS !== 'true') cron.schedule('*/5 * * * *', () => {
+  sendPersonalReminders().catch(err => console.error('Personal reminders failed:', err.code));
 });
 
 if (process.env.DISABLE_REMINDERS !== 'true') cron.schedule('10 19 * * *', () => {

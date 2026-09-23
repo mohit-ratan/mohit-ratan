@@ -2,6 +2,8 @@ const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const { transaction, ensureSecurityTables } = require('../lib/authSecurity');
+const { ensureMemberTables } = require('../lib/memberFeatures');
+const journalStorage = require('../lib/journalStorage');
 const { deleteMedia } = require('../lib/storage');
 
 async function drainMediaDeletionQueue() {
@@ -9,7 +11,8 @@ async function drainMediaDeletionQueue() {
   const [rows] = await pool.query('SELECT url FROM media_deletion_queue ORDER BY created_at LIMIT 100');
   for (const row of rows) {
     try {
-      await deleteMedia(row.url);
+      if (row.url.startsWith(journalStorage.PREFIX)) await journalStorage.removePhoto(row.url);
+      else await deleteMedia(row.url);
       await pool.query('DELETE FROM media_deletion_queue WHERE url = ?', [row.url]);
     } catch (err) { console.error('Media cleanup pending:', err.code || err.name); }
   }
@@ -18,10 +21,13 @@ async function deleteAccount(req, res) {
   try {
     const password = req.body?.password;
     if (req.body?.confirmation !== 'DELETE' || typeof password !== 'string') return res.status(400).json({ error: 'Enter your password and type DELETE to confirm.' });
+    await ensureMemberTables();
     const removed = await transaction(async db => {
       const [users] = await db.query('SELECT password_hash, photo_url FROM users WHERE id = ? FOR UPDATE', [req.userId]);
       if (!users.length || !(await bcrypt.compare(password, users[0].password_hash))) return false;
       const [media] = await db.query('SELECT media_url AS url FROM posts WHERE author_id = ? UNION SELECT media_url AS url FROM stories WHERE author_id = ?', [req.userId, req.userId]);
+      const [journalMedia] = await db.query('SELECT media_key AS url FROM journal_entries WHERE user_id=? AND media_key IS NOT NULL', [req.userId]);
+      media.push(...journalMedia);
       if (users[0].photo_url) media.push({ url: users[0].photo_url });
       for (const item of media) await db.query('INSERT IGNORE INTO media_deletion_queue (url) VALUES (?)', [item.url]);
       await db.query('DELETE FROM support_reports WHERE user_id = ?', [req.userId]);
