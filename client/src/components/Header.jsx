@@ -235,7 +235,6 @@ export default function Header({
           )}
         </div>
         <div className="header-actions">
-          <button type="button" className="house-enter-btn daily-header-link" onClick={() => navigate('/today')}>Today</button>
           <button type="button" className="header-link-btn" title="Awards gallery" onClick={() => navigate('/awards')}>
             🏆 <span>Awards</span>
           </button>
