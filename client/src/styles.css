@@ -498,11 +498,11 @@
   }
   .active-filter .chip button{background:none;border:none;cursor:pointer;color:inherit;display:flex;}
 
-  .feed-list{display:flex;flex-direction:column;gap:24px;width:100%;max-width:470px;margin-inline:auto;}
+  .feed-list{display:flex;flex-direction:column;gap:16px;}
   .feed-card{overflow:hidden;}
   .feed-card-head{display:flex;align-items:center;gap:10px;padding:13px 16px;}
   .feed-card-media{
-    display:block;width:100%;aspect-ratio:1/1;max-height:min(560px,60vh);max-height:min(560px,60svh);position:relative;
+    display:block;width:100%;aspect-ratio:1/1;position:relative;
     border:0;padding:0;margin:0;background:var(--surface-2);cursor:pointer;overflow:hidden;
   }
   .feed-card-media img,.feed-card-media video{width:100%;height:100%;object-fit:cover;display:block;}
@@ -1780,5 +1780,5 @@ button.story-ring{border:0;cursor:pointer;}
 .progress-award-state{bottom:5px;}
 .awards-grid .progress-award{border:0;padding:0;width:100%;}
 .gold-unity-award{text-align:center;padding:28px;margin:24px auto 0;max-width:560px;background:radial-gradient(ellipse at top,#fff0bc,#fffaf1 75%);border:1px solid #e6c574;border-radius:22px;}
- .gold-unity-trophy{display:block;width:min(100%,260px);height:auto;margin:0 auto 18px;filter:brightness(.4) saturate(.3);}
-.gold-unity-revealed .gold-unity-trophy{filter:drop-shadow(0 10px 16px #b5812330);}
+ .gold-unity-medallion{display:block;width:min(100%,260px);height:auto;margin:0 auto 18px;filter:brightness(.4) saturate(.3);}
+.gold-unity-revealed .gold-unity-medallion{filter:drop-shadow(0 10px 16px #b5812330);}
