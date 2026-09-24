@@ -1,7 +1,7 @@
 import { awardStars } from '../lib/awardRank.mjs';
 const symbols = { health: '✦', wealth: '◆', relationships: '♥' };
 
-export default function ProgressAward({ category, task, preview = false }) {
+export default function ProgressAward({ category, task, preview = false, kind = 'task' }) {
   const target = Math.max(1, task.targetDays);
   const completed = Math.min(target, Math.max(0, task.completedDays));
   const fraction = completed / target;
@@ -21,6 +21,6 @@ export default function ProgressAward({ category, task, preview = false }) {
       </div>
       <span className="progress-award-state">{preview ? 'Design preview' : earned ? 'Fully revealed' : completed ? 'Coming to life' : 'Waiting to awaken'}</span>
     </div>
-    <figcaption><span className="house-eyebrow">{rank} · {target}-day task</span><h4>{task.text}</h4>{task.tag && <small>#{task.tag}</small>}<p>{preview ? 'Example: ' : ''}{completed} / {target} days · {Math.round(fraction * 100)}% revealed</p><progress value={completed} max={target} aria-label={`${task.text} award reveal`} /><small>{preview ? 'Preview only — track your own reveal in Today.' : earned ? 'Task complete. Finish every task to earn the goal trophy.' : 'Each task-photo check-in reveals more of your award.'}</small></figcaption>
+    <figcaption><span className="house-eyebrow">{rank} · {target}-day {kind}</span><h4>{task.text}</h4>{task.tag && <small>#{task.tag}</small>}<p>{preview ? 'Example: ' : ''}{completed} / {target} days · {Math.round(fraction * 100)}% revealed</p><progress value={completed} max={target} aria-label={`${task.text} award reveal`} /><small>{preview ? 'Preview only — track your own reveal in Today.' : earned ? (kind === 'goal' ? 'Every task in this goal is complete.' : 'Task complete. Finish every task to earn the goal trophy.') : 'Each task-photo check-in reveals more of your award.'}</small></figcaption>
   </figure>;
 }
