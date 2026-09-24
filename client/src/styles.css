@@ -502,6 +502,7 @@
   .feed-card-media .tile-badge{position:absolute;top:12px;right:12px;color:#fff;filter:drop-shadow(0 1px 3px rgba(0,0,0,.55));}
   .feed-card-actions{display:flex;align-items:center;gap:4px;padding:10px 12px;}
   .feed-sticker-badge{padding:4px 6px;}
+  .feed-reaction-trigger-wrap{position:relative;}
   .feed-card-progress{
     display:block;width:100%;text-align:left;background:none;border:0;cursor:pointer;
     padding:0 16px 10px;

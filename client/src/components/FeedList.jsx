@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import api, { mediaUrl } from '../api';
 import { CAT_MAP, timeAgo, truncate } from '../lib/format';
 import { pickLookRecipe } from '../lib/looks';
 import { HeartIcon, CommentIcon, VideoIcon } from '../lib/icons';
 import { isMemeReaction, memeReaction } from '../lib/reactions';
+import ReactionPickerPanel from './ReactionPickerPanel';
 import Avatar from './Avatar';
 
 const ASPECT_RATIOS = { square: '1 / 1', portrait: '4 / 5', landscape: '16 / 9' };
@@ -16,6 +17,19 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
   const [liked, setLiked] = useState(!!post.likedByMe);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
   const [likePending, setLikePending] = useState(false);
+  const [sticker, setSticker] = useState(post.latestCommentSticker || null);
+  const [stickerPending, setStickerPending] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const pickerRef = useRef(null);
+
+  useEffect(() => {
+    if (!pickerOpen) return;
+    function handleClickOutside(e) {
+      if (pickerRef.current && !pickerRef.current.contains(e.target)) setPickerOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [pickerOpen]);
 
   async function toggleLike(e) {
     e.stopPropagation();
@@ -31,6 +45,21 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
       setLikeCount((c) => c + (wasLiked ? 1 : -1));
     } finally {
       setLikePending(false);
+    }
+  }
+
+  async function addQuickReaction(key) {
+    setPickerOpen(false);
+    if (stickerPending) return;
+    setStickerPending(true);
+    const before = sticker;
+    setSticker(key);
+    try {
+      await api.post(`/api/posts/${post.id}/comments`, { text: '', sticker: key });
+    } catch {
+      setSticker(before);
+    } finally {
+      setStickerPending(false);
     }
   }
 
@@ -66,17 +95,23 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
         <button type="button" className="action-btn" onClick={() => onOpen(post)}>
           <CommentIcon />{post.commentCount > 0 ? post.commentCount : 'Comment'}
         </button>
-        {post.latestCommentSticker && (
+        {sticker && (
           <button type="button" className="action-btn feed-sticker-badge" onClick={() => onOpen(post)} aria-label="View sticker reaction">
-            {isMemeReaction(post.latestCommentSticker) ? (
-              <span className="comment-sticker-meme" style={{ background: memeReaction(post.latestCommentSticker).bg }}>
-                <span>{memeReaction(post.latestCommentSticker).emoji}</span><small>{memeReaction(post.latestCommentSticker).label}</small>
+            {isMemeReaction(sticker) ? (
+              <span className="comment-sticker-meme" style={{ background: memeReaction(sticker).bg }}>
+                <span>{memeReaction(sticker).emoji}</span><small>{memeReaction(sticker).label}</small>
               </span>
             ) : (
-              <span className="comment-sticker-emoji">{post.latestCommentSticker}</span>
+              <span className="comment-sticker-emoji">{sticker}</span>
             )}
           </button>
         )}
+        <div className="feed-reaction-trigger-wrap" ref={pickerRef}>
+          <button type="button" className="action-btn" disabled={stickerPending} aria-label="Add a reaction" onClick={(e) => { e.stopPropagation(); setPickerOpen((v) => !v); }}>
+            😊+
+          </button>
+          {pickerOpen && <ReactionPickerPanel onPick={addQuickReaction} />}
+        </div>
       </div>
       {post.goalProgress?.target > 0 && (
         <button type="button" className={`feed-card-progress house-floor-${post.category}`} onClick={() => onOpen(post)}>
