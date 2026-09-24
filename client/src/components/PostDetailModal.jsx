@@ -9,6 +9,7 @@ import Avatar from './Avatar';
 import EditPostModal from './EditPostModal';
 import PostGoalPanel from './PostGoalPanel';
 import ComposerModal from './ComposerModal';
+import CommentReactions from './CommentReactions';
 import { HeartIcon } from '../lib/icons';
 
 export default function PostDetailModal({ post, onClose, onChanged, onDeleted, onOpenAuthor, onOpenTag }) {
@@ -69,7 +70,7 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
     setCommentPending(true);
     try {
       const { data } = await api.post(`/api/posts/${post.id}/comments`, { text });
-      setComments((cs) => [...cs, { id: data.id, authorId: user.id, authorName: user.displayName, text, createdAt: Date.now() }]);
+      setComments((cs) => [...cs, { id: data.id, authorId: user.id, authorName: user.displayName, text, createdAt: Date.now(), reactions: [] }]);
       setCommentText('');
       onChanged?.();
     } catch (err) {
@@ -233,6 +234,9 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
                           </div>
                         )}
                       </div>
+                    )}
+                    {editingCommentId !== c.id && (
+                      <CommentReactions postId={post.id} commentId={c.id} reactions={c.reactions} />
                     )}
                     <div className="comment-time">{timeAgo(c.createdAt)}</div>
                   </div>

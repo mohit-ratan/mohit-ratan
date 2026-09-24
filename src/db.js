@@ -142,4 +142,16 @@ pool.query(`
   ) ENGINE=InnoDB
 `).catch((err) => console.error('Could not ensure streak_freeze_uses table exists:', err));
 
+pool.query(`
+  CREATE TABLE IF NOT EXISTS comment_reactions (
+    comment_id VARCHAR(36) NOT NULL,
+    user_id VARCHAR(36) NOT NULL,
+    reaction VARCHAR(20) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (comment_id, user_id, reaction),
+    FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB
+`).catch((err) => console.error('Could not ensure comment_reactions table exists:', err));
+
 module.exports = pool;

@@ -62,6 +62,21 @@ CREATE TABLE IF NOT EXISTS comments (
   INDEX idx_comments_post (post_id)
 ) ENGINE=InnoDB;
 
+-- A reaction is either a plain emoji character or a 'meme:<key>' sticker
+-- from the app's own curated set (see client/src/lib/reactions.js) — never
+-- free text, so the server always validates against that same allow-list.
+-- One user can leave several different reactions on the same comment
+-- (Slack-style), but never the same one twice.
+CREATE TABLE IF NOT EXISTS comment_reactions (
+  comment_id  VARCHAR(36) NOT NULL,
+  user_id     VARCHAR(36) NOT NULL,
+  reaction    VARCHAR(20) NOT NULL,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (comment_id, user_id, reaction),
+  FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS stories (
   id           VARCHAR(36) PRIMARY KEY,
   author_id    VARCHAR(36) NOT NULL,

@@ -8,6 +8,7 @@ const { canView } = require('../lib/follows');
 const { notify } = require('../lib/notifications');
 const { uploadMedia, deleteMedia } = require('../lib/storage');
 const { checkAndAwardTrifecta, trifectaStatus, TRIFECTA_CATEGORIES } = require('../lib/trifecta');
+const { ALLOWED_REACTIONS } = require('../lib/reactions');
 
 function mediaTypeFromMime(mime) {
   return mime && mime.startsWith('video') ? 'video' : 'image';
@@ -456,6 +457,24 @@ async function listComments(req, res) {
        WHERE c.post_id = ? ORDER BY c.created_at ASC`,
       [req.params.id]
     );
+
+    const reactionsByComment = new Map();
+    if (rows.length) {
+      const commentIds = rows.map((r) => r.id);
+      const placeholders = commentIds.map(() => '?').join(',');
+      const [reactionRows] = await pool.query(
+        `SELECT comment_id, reaction, COUNT(*) as count,
+                SUM(CASE WHEN user_id = ? THEN 1 ELSE 0 END) as reacted_by_me
+         FROM comment_reactions WHERE comment_id IN (${placeholders})
+         GROUP BY comment_id, reaction`,
+        [req.userId, ...commentIds]
+      );
+      for (const r of reactionRows) {
+        if (!reactionsByComment.has(r.comment_id)) reactionsByComment.set(r.comment_id, []);
+        reactionsByComment.get(r.comment_id).push({ reaction: r.reaction, count: Number(r.count), reactedByMe: Number(r.reacted_by_me) > 0 });
+      }
+    }
+
     res.json({
       comments: rows.map(r => ({
         id: r.id,
@@ -463,11 +482,45 @@ async function listComments(req, res) {
         authorName: r.display_name,
         text: r.text,
         createdAt: new Date(r.created_at).getTime(),
+        reactions: reactionsByComment.get(r.id) || [],
       })),
     });
   } catch (err) {
     console.error('list comments error:', err);
     res.status(500).json({ error: 'Could not load comments.' });
+  }
+}
+
+// Toggles one of my reactions on a comment — reacting again with the same
+// key removes it, matching how every other "react" affordance in the app
+// (likes, follows) treats a second tap as undo.
+async function toggleCommentReaction(req, res) {
+  try {
+    if (!(await canViewPost(req.userId, req.params.id))) return res.status(404).json({ error: 'Post not found.' });
+    const { reaction } = req.body || {};
+    if (!ALLOWED_REACTIONS.has(reaction)) return res.status(400).json({ error: 'Not a valid reaction.' });
+    const [commentRows] = await pool.query('SELECT 1 FROM comments WHERE id = ? AND post_id = ?', [req.params.commentId, req.params.id]);
+    if (!commentRows.length) return res.status(404).json({ error: 'Comment not found.' });
+
+    const [existing] = await pool.query(
+      'SELECT 1 FROM comment_reactions WHERE comment_id = ? AND user_id = ? AND reaction = ?',
+      [req.params.commentId, req.userId, reaction]
+    );
+    if (existing.length) {
+      await pool.query(
+        'DELETE FROM comment_reactions WHERE comment_id = ? AND user_id = ? AND reaction = ?',
+        [req.params.commentId, req.userId, reaction]
+      );
+      return res.json({ ok: true, active: false });
+    }
+    await pool.query(
+      'INSERT IGNORE INTO comment_reactions (comment_id, user_id, reaction) VALUES (?, ?, ?)',
+      [req.params.commentId, req.userId, reaction]
+    );
+    res.json({ ok: true, active: true });
+  } catch (err) {
+    console.error('toggle comment reaction error:', err);
+    res.status(500).json({ error: 'Could not update that reaction.' });
   }
 }
 
@@ -520,4 +573,4 @@ async function deleteComment(req, res) {
   }
 }
 
-module.exports = { list, trendingTags, searchTags, categoryCounts, achievements, create, update, remove, like, listComments, addComment, updateComment, deleteComment };
+module.exports = { list, trendingTags, searchTags, categoryCounts, achievements, create, update, remove, like, listComments, addComment, updateComment, deleteComment, toggleCommentReaction };

@@ -357,6 +357,45 @@
   .comment-action-btn{background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:11px;font-weight:600;padding:2px;}
   .comment-action-btn:hover{color:var(--text);}
   .comment-edit-row{display:flex;gap:6px;align-items:center;margin-left:34px;}
+
+  .comment-reactions{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:5px 0 0 34px;position:relative;}
+  .comment-reaction-pill{
+    display:inline-flex;align-items:center;gap:4px;padding:2px 8px;
+    border-radius:999px;border:1px solid var(--border);background:var(--surface);
+    font-size:12px;cursor:pointer;line-height:1.6;
+  }
+  .comment-reaction-pill:hover{border-color:var(--text-faint);}
+  .comment-reaction-pill.active{background:var(--accent-soft);border-color:var(--accent);}
+  .comment-reaction-count{font-size:10.5px;font-weight:700;color:var(--text-muted);}
+  .comment-reaction-meme-mini{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:16px;height:16px;border-radius:50%;font-size:10px;color:#fff;
+  }
+  .comment-reaction-add-wrap{position:relative;}
+  .comment-reaction-add{
+    background:none;border:1px dashed var(--border);border-radius:999px;
+    padding:2px 8px;font-size:12px;color:var(--text-faint);cursor:pointer;line-height:1.6;
+  }
+  .comment-reaction-add:hover{color:var(--text);border-color:var(--text-faint);}
+  .reaction-picker{
+    position:absolute;bottom:calc(100% + 6px);left:0;z-index:20;width:220px;
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);
+    box-shadow:var(--shadow-m);padding:10px;
+  }
+  .reaction-picker-emoji{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;}
+  .reaction-picker-emoji button{
+    background:none;border:none;font-size:18px;cursor:pointer;padding:4px;border-radius:8px;
+  }
+  .reaction-picker-emoji button:hover{background:var(--surface-2);}
+  .reaction-picker-label{display:block;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text-faint);margin-bottom:6px;}
+  .reaction-picker-memes{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;}
+  .reaction-picker-meme{
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    border:none;border-radius:8px;padding:6px 4px;cursor:pointer;color:#fff;
+  }
+  .reaction-picker-meme span{font-size:16px;}
+  .reaction-picker-meme small{font-size:8.5px;font-weight:800;letter-spacing:.03em;}
+  .reaction-picker-meme:hover{filter:brightness(1.15);}
   .comment-edit-row .comment-input{flex:1;}
   .comment-form{display:flex;gap:8px;align-items:center;}
   .comment-form input{
