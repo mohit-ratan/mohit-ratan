@@ -125,6 +125,7 @@ export default function Header({
 
   function notificationText(n) {
     if (n.type === 'like') return `${n.actorName} liked your post`;
+    if (n.type === 'reaction') return `${n.actorName} reacted to your post`;
     if (n.type === 'comment') return `${n.actorName} commented on your post`;
     if (n.type === 'follow_accepted') return `${n.actorName} accepted your follow request`;
     if (n.type === 'partner_request') return `${n.actorName} wants to be your accountability partner`;

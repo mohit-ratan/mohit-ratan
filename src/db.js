@@ -122,6 +122,10 @@ pool.query(
   "ALTER TABLE notifications MODIFY COLUMN type ENUM('like','comment','follow_accepted','partner_request','partner_accepted','partner_missed') NOT NULL"
 ).catch((err) => console.error('Could not extend notifications.type enum:', err));
 
+pool.query(
+  "ALTER TABLE notifications MODIFY COLUMN type ENUM('like','comment','follow_accepted','partner_request','partner_accepted','partner_missed','reaction') NOT NULL"
+).catch((err) => console.error('Could not extend notifications.type enum with reaction:', err));
+
 pool.query(`
   CREATE TABLE IF NOT EXISTS special_awards (
     user_id VARCHAR(36) NOT NULL,
@@ -162,5 +166,17 @@ pool.query(`
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   ) ENGINE=InnoDB
 `).catch((err) => console.error('Could not ensure comment_reactions table exists:', err));
+
+pool.query(`
+  CREATE TABLE IF NOT EXISTS post_reactions (
+    post_id VARCHAR(36) NOT NULL,
+    user_id VARCHAR(36) NOT NULL,
+    reaction VARCHAR(20) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (post_id, user_id),
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB
+`).catch((err) => console.error('Could not ensure post_reactions table exists:', err));
 
 module.exports = pool;

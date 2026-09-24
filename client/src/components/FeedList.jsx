@@ -17,8 +17,8 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
   const [liked, setLiked] = useState(!!post.likedByMe);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
   const [likePending, setLikePending] = useState(false);
-  const [sticker, setSticker] = useState(post.latestCommentSticker || null);
-  const [stickerPending, setStickerPending] = useState(false);
+  const [myReaction, setMyReaction] = useState(post.myReaction || null);
+  const [reactionPending, setReactionPending] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerRef = useRef(null);
 
@@ -48,18 +48,19 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
     }
   }
 
-  async function addQuickReaction(key) {
+  async function pickReaction(key) {
     setPickerOpen(false);
-    if (stickerPending) return;
-    setStickerPending(true);
-    const before = sticker;
-    setSticker(key);
+    if (reactionPending) return;
+    setReactionPending(true);
+    const before = myReaction;
+    setMyReaction(key === before ? null : key);
     try {
-      await api.post(`/api/posts/${post.id}/comments`, { text: '', sticker: key });
+      const { data } = await api.post(`/api/posts/${post.id}/reaction`, { reaction: key });
+      setMyReaction(data.myReaction);
     } catch {
-      setSticker(before);
+      setMyReaction(before);
     } finally {
-      setStickerPending(false);
+      setReactionPending(false);
     }
   }
 
@@ -95,22 +96,25 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
         <button type="button" className="action-btn" onClick={() => onOpen(post)}>
           <CommentIcon />{post.commentCount > 0 ? post.commentCount : 'Comment'}
         </button>
-        {sticker && (
-          <button type="button" className="action-btn feed-sticker-badge" onClick={() => onOpen(post)} aria-label="View sticker reaction">
-            {isMemeReaction(sticker) ? (
-              <span className="comment-sticker-meme" style={{ background: memeReaction(sticker).bg }}>
-                <span>{memeReaction(sticker).emoji}</span><small>{memeReaction(sticker).label}</small>
-              </span>
-            ) : (
-              <span className="comment-sticker-emoji">{sticker}</span>
-            )}
-          </button>
-        )}
         <div className="feed-reaction-trigger-wrap" ref={pickerRef}>
-          <button type="button" className="action-btn" disabled={stickerPending} aria-label="Add a reaction" onClick={(e) => { e.stopPropagation(); setPickerOpen((v) => !v); }}>
-            😊+
+          <button
+            type="button"
+            className={`action-btn${myReaction ? ' feed-sticker-badge' : ''}`}
+            disabled={reactionPending}
+            aria-label={myReaction ? 'Change your reaction' : 'Add a reaction'}
+            onClick={(e) => { e.stopPropagation(); setPickerOpen((v) => !v); }}
+          >
+            {myReaction ? (
+              isMemeReaction(myReaction) ? (
+                <span className="comment-sticker-meme" style={{ background: memeReaction(myReaction).bg }}>
+                  <span>{memeReaction(myReaction).emoji}</span><small>{memeReaction(myReaction).label}</small>
+                </span>
+              ) : (
+                <span className="comment-sticker-emoji">{myReaction}</span>
+              )
+            ) : '😊+'}
           </button>
-          {pickerOpen && <ReactionPickerPanel onPick={addQuickReaction} />}
+          {pickerOpen && <ReactionPickerPanel onPick={pickReaction} />}
         </div>
       </div>
       {post.goalProgress?.target > 0 && (

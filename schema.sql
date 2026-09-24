@@ -51,6 +51,20 @@ CREATE TABLE IF NOT EXISTS post_likes (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+-- A quick sticker reaction attached directly to the post (the feed's
+-- "add reaction" button), separate from commenting. One reaction per
+-- user per post, like a Like button with a choice of icon — setting a
+-- new one replaces the old, never a real comment row.
+CREATE TABLE IF NOT EXISTS post_reactions (
+  post_id     VARCHAR(36) NOT NULL,
+  user_id     VARCHAR(36) NOT NULL,
+  reaction    VARCHAR(20) NOT NULL,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (post_id, user_id),
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 -- A comment needs text, a sticker (emoji or meme, same allow-list as
 -- comment_reactions), or both — never neither, enforced in the controller.
 CREATE TABLE IF NOT EXISTS comments (
@@ -157,7 +171,7 @@ CREATE TABLE IF NOT EXISTS notifications (
   id            VARCHAR(36) PRIMARY KEY,
   recipient_id  VARCHAR(36) NOT NULL,
   actor_id      VARCHAR(36) NOT NULL,
-  type          ENUM('like','comment','follow_accepted','partner_request','partner_accepted','partner_missed') NOT NULL,
+  type          ENUM('like','comment','follow_accepted','partner_request','partner_accepted','partner_missed','reaction') NOT NULL,
   post_id       VARCHAR(36) DEFAULT NULL,
   read_at       DATETIME DEFAULT NULL,
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

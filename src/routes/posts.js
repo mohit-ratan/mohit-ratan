@@ -14,6 +14,7 @@ router.post('/', requireAuth, uploadSingle('media'), postsController.create);
 router.put('/:id', requireAuth, postsController.update);
 router.delete('/:id', requireAuth, postsController.remove);
 router.post('/:id/like', requireAuth, postsController.like);
+router.post('/:id/reaction', requireAuth, postsController.setPostReaction);
 router.get('/:id/comments', requireAuth, postsController.listComments);
 router.post('/:id/comments', requireAuth, postsController.addComment);
 router.put('/:id/comments/:commentId', requireAuth, postsController.updateComment);

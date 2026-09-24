@@ -53,7 +53,7 @@ function mapPost(row) {
     likeCount: Number(row.like_count || 0),
     likedByMe: !!row.liked_by_me,
     commentCount: Number(row.comment_count || 0),
-    latestCommentSticker: row.latest_sticker || null,
+    myReaction: row.my_reaction || null,
   };
 }
 
@@ -103,11 +103,11 @@ async function list(req, res) {
     let sql = `SELECT p.*, u.display_name, u.photo_url as author_photo,
                (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) as like_count,
                (SELECT COUNT(*) FROM comments cm WHERE cm.post_id = p.id) as comment_count,
-               (SELECT cm2.sticker FROM comments cm2 WHERE cm2.post_id = p.id AND cm2.sticker IS NOT NULL ORDER BY cm2.created_at DESC LIMIT 1) as latest_sticker,
+               (SELECT pr.reaction FROM post_reactions pr WHERE pr.post_id = p.id AND pr.user_id = ?) as my_reaction,
                EXISTS(SELECT 1 FROM post_likes pl2 WHERE pl2.post_id = p.id AND pl2.user_id = ?) as liked_by_me
                FROM posts p JOIN users u ON u.id = p.author_id
                WHERE ${VISIBLE_TO_VIEWER_SQL}`;
-    const params = [req.userId, req.userId, req.userId, req.userId, req.userId];
+    const params = [req.userId, req.userId, req.userId, req.userId, req.userId, req.userId];
     if (category && category !== 'all') {
       sql += ' AND p.category = ?';
       params.push(category);
@@ -451,6 +451,38 @@ async function like(req, res) {
   }
 }
 
+// A quick sticker reaction attached straight to the post — never a
+// comment. One reaction per user per post: sending the reaction already
+// active removes it, sending a different one swaps it.
+async function setPostReaction(req, res) {
+  try {
+    if (!(await canViewPost(req.userId, req.params.id))) return res.status(404).json({ error: 'Post not found.' });
+    const { id } = req.params;
+    const { reaction } = req.body || {};
+    if (!reaction || !ALLOWED_REACTIONS.has(reaction)) return res.status(400).json({ error: 'Not a valid reaction.' });
+    const [existing] = await pool.query(
+      'SELECT reaction FROM post_reactions WHERE post_id = ? AND user_id = ?',
+      [id, req.userId]
+    );
+    if (existing.length && existing[0].reaction === reaction) {
+      await pool.query('DELETE FROM post_reactions WHERE post_id = ? AND user_id = ?', [id, req.userId]);
+      return res.json({ myReaction: null });
+    }
+    await pool.query(
+      'INSERT INTO post_reactions (post_id, user_id, reaction) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE reaction = VALUES(reaction)',
+      [id, req.userId, reaction]
+    );
+    if (!existing.length) {
+      const [postRows] = await pool.query('SELECT author_id FROM posts WHERE id = ?', [id]);
+      if (postRows[0]) await notify(postRows[0].author_id, req.userId, 'reaction', id);
+    }
+    res.json({ myReaction: reaction });
+  } catch (err) {
+    console.error('set post reaction error:', err);
+    res.status(500).json({ error: 'Could not update reaction.' });
+  }
+}
+
 async function listComments(req, res) {
   try {
     if (!(await canViewPost(req.userId, req.params.id))) return res.status(404).json({ error: 'Post not found.' });
@@ -578,4 +610,4 @@ async function deleteComment(req, res) {
   }
 }
 
-module.exports = { list, trendingTags, searchTags, categoryCounts, achievements, create, update, remove, like, listComments, addComment, updateComment, deleteComment, toggleCommentReaction };
+module.exports = { list, trendingTags, searchTags, categoryCounts, achievements, create, update, remove, like, setPostReaction, listComments, addComment, updateComment, deleteComment, toggleCommentReaction };
