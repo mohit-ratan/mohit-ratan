@@ -114,7 +114,7 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
               )
             ) : '😊+'}
           </button>
-          {pickerOpen && <ReactionPickerPanel onPick={pickReaction} />}
+          {pickerOpen && <ReactionPickerPanel onPick={pickReaction} current={myReaction} onRemove={() => pickReaction(myReaction)} />}
         </div>
       </div>
       {post.goalProgress?.target > 0 && (

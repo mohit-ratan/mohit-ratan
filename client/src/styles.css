@@ -382,11 +382,18 @@
     background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);
     box-shadow:var(--shadow-m);padding:10px;
   }
+  .reaction-picker-remove{
+    display:flex;align-items:center;gap:6px;width:100%;margin-bottom:8px;
+    background:var(--surface-2);border:1px solid var(--border);border-radius:8px;
+    padding:7px 10px;font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;
+  }
+  .reaction-picker-remove:hover{color:var(--text);border-color:var(--text-faint);}
   .reaction-picker-emoji{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;}
   .reaction-picker-emoji button{
     background:none;border:none;font-size:18px;cursor:pointer;padding:4px;border-radius:8px;
   }
   .reaction-picker-emoji button:hover{background:var(--surface-2);}
+  .reaction-picker-emoji button.active{background:var(--accent-soft);box-shadow:0 0 0 1.5px var(--accent) inset;}
   .reaction-picker-label{display:block;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text-faint);margin-bottom:6px;}
   .reaction-picker-memes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
   .reaction-picker-meme{
@@ -396,6 +403,7 @@
   .reaction-picker-meme span{font-size:15px;flex-shrink:0;}
   .reaction-picker-meme small{font-size:7.5px;font-weight:800;letter-spacing:.02em;line-height:1.15;text-align:left;}
   .reaction-picker-meme:hover{filter:brightness(1.15);}
+  .reaction-picker-meme.active{box-shadow:0 0 0 2px #fff inset,0 0 0 4px var(--accent) inset;}
   @media(max-width:480px){
     .reaction-picker{width:280px;}
     .reaction-picker-memes{grid-template-columns:repeat(3,1fr);}

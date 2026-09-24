@@ -298,7 +298,11 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
                   😊+
                 </button>
                 {stickerPickerOpen && (
-                  <ReactionPickerPanel onPick={(key) => { setCommentSticker(key); setStickerPickerOpen(false); }} />
+                  <ReactionPickerPanel
+                    onPick={(key) => { setCommentSticker(key); setStickerPickerOpen(false); }}
+                    current={commentSticker}
+                    onRemove={() => { setCommentSticker(null); setStickerPickerOpen(false); }}
+                  />
                 )}
               </div>
               <input
