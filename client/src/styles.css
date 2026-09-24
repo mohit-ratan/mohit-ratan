@@ -1060,13 +1060,14 @@
 .house-enter-btn:disabled{opacity:.6;cursor:wait;}
 .house-enter-btn.today-tasks-btn{
   background:linear-gradient(135deg,var(--accent),#e0650f);
-  border-color:var(--accent);color:#fff;
-  animation:today-tasks-pulse 2.4s ease-in-out infinite;
+  border-color:transparent;color:#fff;box-shadow:0 3px 10px rgba(199,71,12,.3);
+  animation:today-tasks-pulse 1.8s ease-out 3;
 }
 .house-enter-btn.today-tasks-btn:hover{background:linear-gradient(135deg,var(--accent-hover),#c4530c);color:#fff;}
 @keyframes today-tasks-pulse{
-  0%,100%{box-shadow:0 0 0 0 rgba(199,71,12,.45);}
-  50%{box-shadow:0 0 0 7px rgba(199,71,12,0);}
+  0%{box-shadow:0 3px 10px rgba(199,71,12,.3),0 0 0 0 rgba(199,71,12,.4);}
+  70%{box-shadow:0 3px 10px rgba(199,71,12,.3),0 0 0 6px rgba(199,71,12,0);}
+  100%{box-shadow:0 3px 10px rgba(199,71,12,.3),0 0 0 0 rgba(199,71,12,0);}
 }
 @media(prefers-reduced-motion:reduce){.today-tasks-btn{animation:none;}}
 .feed-load-more{display:flex;justify-content:center;margin-top:16px;}
@@ -1642,8 +1643,11 @@ button.story-ring{border:0;cursor:pointer;}
 .journal-note { white-space: pre-wrap; overflow-wrap: anywhere; }
 
 /* Group feed shortcuts and match journal controls to the orange palette. */
-.feed-intro-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-shrink:0;}
-.feed-intro-actions .house-enter-btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;margin:0;}
+.feed-intro-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-shrink:0;}
+.feed-intro-actions .house-enter-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:44px;margin:0;padding:11px 20px;border-radius:999px;
+}
 .journal-file-input{width:100%;min-width:0;font:inherit;color:var(--text-muted);}
 .journal-file-input::file-selector-button{padding:11px 18px;margin-right:14px;border:1px solid var(--border);border-radius:999px;background:var(--accent-soft);color:var(--accent-deep);font:inherit;font-weight:600;cursor:pointer;transition:background .15s;}
 .journal-file-input:not(:disabled)::file-selector-button:hover{background:#ffdcc2;}
@@ -1654,4 +1658,4 @@ button.story-ring{border:0;cursor:pointer;}
 .journal-save-btn:not(:disabled):hover{background:var(--accent-hover);border-color:var(--accent-hover);}
 .journal-save-btn:disabled{background:var(--accent-soft);border-color:var(--border);color:var(--text-muted);cursor:not-allowed;}
 @media(max-width:900px){.feed-intro{flex-wrap:wrap;}.feed-intro-actions{justify-content:flex-start;flex-wrap:wrap;}}
-@media(max-width:480px){.feed-intro-actions{display:grid;grid-template-columns:1fr 1fr;width:100%;gap:10px;}.journal-save-btn{width:100%;}.journal-file-input::file-selector-button{padding:10px 14px;margin-right:8px;}}
+@media(max-width:480px){.feed-intro-actions{display:grid;grid-template-columns:1fr;width:100%;gap:8px;}.journal-save-btn{width:100%;}.journal-file-input::file-selector-button{padding:10px 14px;margin-right:8px;}}
