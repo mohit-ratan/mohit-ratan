@@ -5,14 +5,18 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { CATEGORIES, hasInvalidTaskDays } from '../lib/format';
 import { LOOK_RECIPES, getRecipeById, pickLookRecipe } from '../lib/looks';
+import { ASPECT_RATIO_NUMBERS } from '../lib/crop';
 import GoalTemplatePicker from './GoalTemplatePicker';
 import TaskListEditor from './TaskListEditor';
+import PhotoCropper from './PhotoCropper';
 
 const VIBE_ITEMS = [{ id: '', emoji: '⚪', label: 'No look' }, ...LOOK_RECIPES];
 
-// Edits category/vibe/tag for an existing post — deliberately not built on
-// ComposerModal, which is tightly wired around file upload + AI-look
-// canvas baking that doesn't apply here (media isn't editable).
+// Edits category/vibe/tag/crop for an existing post — deliberately not
+// built on ComposerModal, which is tightly wired around file upload +
+// AI-look canvas baking that doesn't apply here (the photo itself can't
+// be replaced, only reframed — the crop position is just metadata, so
+// repositioning here never re-uploads anything).
 export default function EditPostModal({ post, onClose, onSaved }) {
   const { user } = useAuth();
   const showToast = useToast();
@@ -25,6 +29,7 @@ export default function EditPostModal({ post, onClose, onSaved }) {
   const [tagRaw, setTagRaw] = useState(post.tag || '');
   const [visibility, setVisibility] = useState(post.visibility === 'public' ? 'public' : 'friends');
   const [aspectRatio, setAspectRatio] = useState(post.aspectRatio || 'square');
+  const [pan, setPan] = useState({ x: post.cropX ?? 50, y: post.cropY ?? 50 });
   const [submitting, setSubmitting] = useState(false);
   const dialogRef = useDialog(onClose, submitting);
   const [existingTags, setExistingTags] = useState(null);
@@ -49,6 +54,11 @@ export default function EditPostModal({ post, onClose, onSaved }) {
     setVibeLabel(recipe ? recipe.label : '');
   }
 
+  function chooseAspect(value) {
+    setAspectRatio(value);
+    setPan({ x: 50, y: 50 });
+  }
+
   async function handleSubmit() {
     if (hasInvalidTaskDays(goalSubtasks)) {
       showToast('Enter a whole number of days from 1 to 3650 for each task.', true);
@@ -57,6 +67,7 @@ export default function EditPostModal({ post, onClose, onSaved }) {
     setSubmitting(true);
     try {
       const body = { category: chosenCat, vibe: vibeLabel.slice(0, 60), tag: normalizedTag, visibility, aspectRatio };
+      if (!isVideo) { body.cropX = pan.x; body.cropY = pan.y; }
       if (isNewTag) {
         const cleanSubtasks = goalSubtasks.filter((t) => t.text.trim());
         if (goalTargetDate || cleanSubtasks.length) {
@@ -85,7 +96,7 @@ export default function EditPostModal({ post, onClose, onSaved }) {
             {isVideo ? (
               <video src={mediaUrl(post.mediaUrl)} style={filter ? { filter } : undefined} muted loop controls />
             ) : (
-              <img src={mediaUrl(post.mediaUrl)} alt="" style={filter ? { filter } : undefined} />
+              <PhotoCropper src={mediaUrl(post.mediaUrl)} aspect={ASPECT_RATIO_NUMBERS[aspectRatio]} pan={pan} onPanChange={setPan} filter={filter} />
             )}
           </div>
           <div className="vibe-rail">
@@ -155,9 +166,9 @@ export default function EditPostModal({ post, onClose, onSaved }) {
             <div className="visibility-choice-row">
               <label className="composer-field-label">Photo shape</label>
               <div className="visibility-choice-options">
-                <button type="button" className={`visibility-choice${aspectRatio === 'square' ? ' chosen' : ''}`} onClick={() => setAspectRatio('square')}>⬜ Square</button>
-                <button type="button" className={`visibility-choice${aspectRatio === 'portrait' ? ' chosen' : ''}`} onClick={() => setAspectRatio('portrait')}>📱 Portrait</button>
-                <button type="button" className={`visibility-choice${aspectRatio === 'landscape' ? ' chosen' : ''}`} onClick={() => setAspectRatio('landscape')}>🖼️ Landscape</button>
+                <button type="button" className={`visibility-choice${aspectRatio === 'square' ? ' chosen' : ''}`} onClick={() => chooseAspect('square')}>⬜ Square</button>
+                <button type="button" className={`visibility-choice${aspectRatio === 'portrait' ? ' chosen' : ''}`} onClick={() => chooseAspect('portrait')}>📱 Portrait</button>
+                <button type="button" className={`visibility-choice${aspectRatio === 'landscape' ? ' chosen' : ''}`} onClick={() => chooseAspect('landscape')}>🖼️ Landscape</button>
               </div>
             </div>
             {isNewTag && (

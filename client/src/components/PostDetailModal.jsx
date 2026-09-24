@@ -150,7 +150,15 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
               {!post.aiStyled && post.vibe && (
                 <span className="vibe-chip">✨ {truncate(post.vibe, 34)}</span>
               )}
-              <img src={mediaUrl(post.mediaUrl)} alt={post.tag ? `Post for #${post.tag}` : 'Post'} style={!post.aiStyled && filter ? { filter } : undefined} />
+              <img
+                src={mediaUrl(post.mediaUrl)}
+                alt={post.tag ? `Post for #${post.tag}` : 'Post'}
+                style={{
+                  objectFit: 'cover',
+                  objectPosition: `${post.cropX ?? 50}% ${post.cropY ?? 50}%`,
+                  ...(!post.aiStyled && filter ? { filter } : null),
+                }}
+              />
             </>
           ) : (
             <div className={`text-card ${cat.id}`}><span className="reveal-text">{cat.label}</span></div>

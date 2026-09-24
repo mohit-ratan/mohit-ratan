@@ -13,6 +13,11 @@ function mediaTypeFromMime(mime) {
   return mime && mime.startsWith('video') ? 'video' : 'image';
 }
 
+function clampPercent(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : 50;
+}
+
 // Deletes the goal for (authorId, tag) if no posts remain under that tag —
 // a goal with zero posts behind it would be invisible/unmanageable, since
 // achievements only ever surface tags that have at least one post.
@@ -41,6 +46,8 @@ function mapPost(row) {
     aiStyled: !!row.ai_styled,
     visibility: row.visibility,
     aspectRatio: row.aspect_ratio,
+    cropX: row.crop_x == null ? 50 : Number(row.crop_x),
+    cropY: row.crop_y == null ? 50 : Number(row.crop_y),
     createdAt: new Date(row.created_at).getTime(),
     likeCount: Number(row.like_count || 0),
     likedByMe: !!row.liked_by_me,
@@ -261,6 +268,8 @@ async function create(req, res) {
     const cleanTag = (tag || '').replace(/^#/, '').toLowerCase().slice(0, 24);
     const visibility = req.body.visibility === 'public' ? 'public' : 'friends';
     const aspectRatio = ['square', 'portrait', 'landscape'].includes(req.body.aspectRatio) ? req.body.aspectRatio : 'square';
+    const cropX = clampPercent(req.body.cropX);
+    const cropY = clampPercent(req.body.cropY);
 
     if (req.body.goalTaskIndex !== undefined) {
       if (mediaType !== 'image') return res.status(400).json({ error: 'Upload a photo to complete a task.' });
@@ -288,9 +297,9 @@ async function create(req, res) {
           return res.status(409).json({ error: 'This goal task has changed. Reopen the uploader and choose it again.' });
         }
         await connection.query(
-          `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled, visibility, aspect_ratio)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0, visibility, aspectRatio]
+          `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled, visibility, aspect_ratio, crop_x, crop_y)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0, visibility, aspectRatio, cropX, cropY]
         );
         const wasDone = target.done;
         const checkIn = recordTaskCheckIn(target, req.body.timeZone);
@@ -323,9 +332,9 @@ async function create(req, res) {
     }
 
     await pool.query(
-      `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled, visibility, aspect_ratio)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0, visibility, aspectRatio]
+      `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled, visibility, aspect_ratio, crop_x, crop_y)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0, visibility, aspectRatio, cropX, cropY]
     );
 
     // Optional goal metadata, only ever set the first time a tag is used
@@ -373,10 +382,12 @@ async function update(req, res) {
     const oldTag = post.tag;
     const visibility = req.body.visibility === 'public' ? 'public' : 'friends';
     const aspectRatio = ['square', 'portrait', 'landscape'].includes(req.body.aspectRatio) ? req.body.aspectRatio : 'square';
+    const cropX = clampPercent(req.body.cropX ?? post.crop_x);
+    const cropY = clampPercent(req.body.cropY ?? post.crop_y);
 
     await pool.query(
-      'UPDATE posts SET category = ?, vibe = ?, tag = ?, visibility = ?, aspect_ratio = ? WHERE id = ?',
-      [category, (vibe || '').slice(0, 60), cleanTag, visibility, aspectRatio, post.id]
+      'UPDATE posts SET category = ?, vibe = ?, tag = ?, visibility = ?, aspect_ratio = ?, crop_x = ?, crop_y = ? WHERE id = ?',
+      [category, (vibe || '').slice(0, 60), cleanTag, visibility, aspectRatio, cropX, cropY, post.id]
     );
 
     if (cleanTag !== oldTag) {

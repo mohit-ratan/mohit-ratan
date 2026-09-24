@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS posts (
   ai_styled    TINYINT(1)   NOT NULL DEFAULT 0,
   visibility   ENUM('public','friends') NOT NULL DEFAULT 'friends',
   aspect_ratio ENUM('square','portrait','landscape') NOT NULL DEFAULT 'square',
+  crop_x       DECIMAL(5,2) NOT NULL DEFAULT 50,
+  crop_y       DECIMAL(5,2) NOT NULL DEFAULT 50,
   created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_posts_category (category),

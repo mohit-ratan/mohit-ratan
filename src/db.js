@@ -70,6 +70,15 @@ pool.query(`
 }).catch((err) => console.error('Could not ensure posts.aspect_ratio column exists:', err));
 
 pool.query(`
+  SELECT COUNT(*) as cnt FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'posts' AND COLUMN_NAME = 'crop_x'
+`).then(([rows]) => {
+  if (!rows[0].cnt) {
+    return pool.query('ALTER TABLE posts ADD COLUMN crop_x DECIMAL(5,2) NOT NULL DEFAULT 50, ADD COLUMN crop_y DECIMAL(5,2) NOT NULL DEFAULT 50');
+  }
+}).catch((err) => console.error('Could not ensure posts.crop_x/crop_y columns exist:', err));
+
+pool.query(`
   CREATE TABLE IF NOT EXISTS blocks (
     blocker_id VARCHAR(36) NOT NULL,
     blocked_id VARCHAR(36) NOT NULL,

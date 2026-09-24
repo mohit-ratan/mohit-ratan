@@ -27,7 +27,7 @@ function GridTile({ post, onOpen, onOpenAuthor, showAuthor }) {
             <span className="tile-badge"><VideoIcon /></span>
           </>
         ) : isImage ? (
-          <img src={mediaUrl(post.mediaUrl)} alt="" loading="lazy" decoding="async" style={!post.aiStyled && filter ? { filter } : undefined} />
+          <img src={mediaUrl(post.mediaUrl)} alt="" loading="lazy" decoding="async" style={{ objectPosition: `${post.cropX ?? 50}% ${post.cropY ?? 50}%`, ...(!post.aiStyled && filter ? { filter } : null) }} />
         ) : (
           <div className={`text-card ${cat.id}`}>
             <span className="reveal-text">{truncate(postWord(post) || cat.label, 90)}</span>

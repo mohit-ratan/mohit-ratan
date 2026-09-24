@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { CATEGORIES, hasInvalidTaskDays } from '../lib/format';
 import { LOOK_RECIPES, getRecipeById, applyLookToImage } from '../lib/looks';
-import { cropImageToFrame, ASPECT_RATIO_NUMBERS } from '../lib/crop';
+import { ASPECT_RATIO_NUMBERS } from '../lib/crop';
 import GoalTemplatePicker from './GoalTemplatePicker';
 import PhotoCropper from './PhotoCropper';
 import TaskListEditor from './TaskListEditor';
@@ -190,13 +190,14 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
         const blob = await applyLookToImage(media.file, { filter: 'none' });
         if (blob.size < media.file.size) uploadFile = new File([blob], 'status.jpg', { type: 'image/jpeg' });
       }
-      // Bakes in exactly the crop the person chose in the reposition tool —
-      // GIFs are skipped since a canvas crop would freeze the animation.
-      if (isPost && media.kind === 'image' && media.file.type !== 'image/gif') {
-        const blob = await cropImageToFrame(media.file, ASPECT_RATIO_NUMBERS[aspectRatio], pan);
-        uploadFile = new File([blob], 'cropped.jpg', { type: 'image/jpeg' });
-      }
       form.append('media', uploadFile);
+      // The crop is stored as a position, not baked into the photo, so it
+      // can still be repositioned later from Edit post. GIFs keep their
+      // default center crop since there's no reposition tool for them.
+      if (isPost && media.kind === 'image' && media.file.type !== 'image/gif') {
+        form.append('cropX', pan.x);
+        form.append('cropY', pan.y);
+      }
       form.append('vibe', vibeLabel.slice(0, 60));
       form.append('tag', normalizedTag);
       form.append('aiStyled', String(!!(media.kind === 'image' && media.styled)));

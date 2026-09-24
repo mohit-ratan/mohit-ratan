@@ -51,7 +51,7 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
         {isVideo ? (
           <video src={mediaUrl(post.mediaUrl)} style={filter ? { filter } : undefined} muted playsInline preload="metadata" />
         ) : isImage ? (
-          <img src={mediaUrl(post.mediaUrl)} alt={post.tag ? `Post for #${post.tag}` : 'Post'} loading="lazy" decoding="async" style={!post.aiStyled && filter ? { filter } : undefined} />
+          <img src={mediaUrl(post.mediaUrl)} alt={post.tag ? `Post for #${post.tag}` : 'Post'} loading="lazy" decoding="async" style={{ objectPosition: `${post.cropX ?? 50}% ${post.cropY ?? 50}%`, ...(!post.aiStyled && filter ? { filter } : null) }} />
         ) : (
           <div className={`text-card ${cat.id}`}><span className="reveal-text">{cat.label}</span></div>
         )}

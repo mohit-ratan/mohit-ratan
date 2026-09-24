@@ -9,7 +9,7 @@ function clamp(value, min, max) {
 // shape. This doesn't add a new crop — object-fit:cover already crops
 // every post to its frame everywhere it's displayed; this just lets the
 // person choose WHERE within that crop, instead of always the center.
-export default function PhotoCropper({ src, aspect, pan, onPanChange }) {
+export default function PhotoCropper({ src, aspect, pan, onPanChange, filter }) {
   const frameRef = useRef(null);
   const dragState = useRef(null);
   const [naturalSize, setNaturalSize] = useState(null);
@@ -63,7 +63,7 @@ export default function PhotoCropper({ src, aspect, pan, onPanChange }) {
         alt=""
         draggable={false}
         onLoad={(e) => setNaturalSize({ w: e.target.naturalWidth, h: e.target.naturalHeight })}
-        style={{ objectPosition: `${pan.x}% ${pan.y}%` }}
+        style={{ objectPosition: `${pan.x}% ${pan.y}%`, ...(filter ? { filter } : null) }}
       />
       <span className="photo-cropper-hint" aria-hidden="true">Drag to reposition</span>
     </div>
