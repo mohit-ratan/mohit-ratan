@@ -42,7 +42,7 @@ export default function AwardsGalleryPage() {
               <h2 id={`awards-${collection.category}-title`}>{collection.label} awards</h2>
             </div>
             <div className="awards-grid">
-              {[7,15,30,45,60].map(days=><article className={`award-card award-card-${collection.category}`} key={days}><ProgressAward preview category={collection.category} task={{targetDays:days,completedDays:days,text:`${collection.label} · ${days} days`}} /></article>)}
+              {[7,15,30,45].map(days=><article className={`award-card award-card-${collection.category}`} key={days}><ProgressAward preview category={collection.category} task={{targetDays:days,completedDays:days,text:`${collection.label} · ${days} days`}} /></article>)}
             </div>
           </section>
         ))}
