@@ -4,6 +4,8 @@ import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
 import FirstGoalGuide from '../components/FirstGoalGuide';
+import WelcomeTour from '../components/WelcomeTour';
+import useLocalFlag from '../hooks/useLocalFlag';
 import StoriesBar from '../components/StoriesBar';
 import FeedList from '../components/FeedList';
 import SideColumn from '../components/SideColumn';
@@ -72,6 +74,7 @@ export default function HomePage() {
   const [freezesRemaining, setFreezesRemaining] = useState(0);
   const [loading, setLoading] = useState(true);
   const [hasGoals, setHasGoals] = useState(null);
+  const [seenTour, markTourSeen] = useLocalFlag('psw_seen_welcome_tour');
   const loadGoalStatus = useCallback(() => api.get('/api/posts/achievements', { params: { authorId: user.id } }).then(({ data }) => setHasGoals(data.goals.length + data.achievements.length > 0)).catch(() => {}), [user.id]);
   useEffect(() => { loadGoalStatus(); }, [loadGoalStatus]);
 
@@ -199,7 +202,7 @@ export default function HomePage() {
         <main className="layout">
           <section className="feed-col">
             <div className="feed-intro"><div><span className="house-eyebrow">A LITTLE PROGRESS, EVERY DAY</span><h1>Your daily chapter.</h1><p>Share a moment. Build a habit. Celebrate the work.</p></div><div className="feed-intro-actions"><button className="house-enter-btn" type="button" onClick={() => navigate(`/profile/${user.id}/achievements`)}>My goals ↗</button><button className="house-enter-btn today-tasks-btn" onClick={() => navigate('/today')}>Today’s tasks →</button><button className="house-enter-btn" type="button" onClick={() => navigate('/following-progress')}>Following's progress ↗</button></div></div>
-            {hasGoals === false && <FirstGoalGuide onStart={goal => setModal({ type: 'create', goal })} />}
+            {!seenTour ? <WelcomeTour onDone={markTourSeen} /> : hasGoals === false && <FirstGoalGuide onStart={goal => setModal({ type: 'create', goal })} />}
             {storyError && <div className="inline-error" role="alert">Statuses couldn’t refresh. <button type="button" onClick={loadStories}>Retry</button></div>}
             <StoriesBar
               stories={stories}

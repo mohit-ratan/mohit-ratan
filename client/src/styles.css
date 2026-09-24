@@ -821,6 +821,10 @@
   }
   .tag-input-row input:focus{border-color:var(--accent);}
   .tag-hint{font-size:11.5px;color:var(--text-faint);}
+  .tag-hint-match{color:var(--health);font-weight:600;}
+  .tag-hint-warn{color:#a5651b;font-weight:600;}
+  .tag-hint-fix{background:none;border:none;padding:0;margin:0;color:var(--accent);font-weight:700;text-decoration:underline;cursor:pointer;font-size:inherit;}
+  .tag-hint-fix:hover{color:var(--accent-hover);}
   .composer-note{font-size:11.5px;color:var(--text-faint);line-height:1.5;}
 
   /* ---------- goals (composer setup + achievement checklist) ---------- */
@@ -1569,6 +1573,15 @@ button.story-ring{border:0;cursor:pointer;}
 .first-goal-guide h2{font-family:var(--font-display);font-size:28px;margin:8px 0 20px;}
 .first-goal-guide select{padding:12px;border:1px solid var(--border);border-radius:10px;background:white;font:inherit;}
 .first-goal-guide p,.first-goal-guide small{font-size:13px;line-height:1.6;}
+.welcome-tour-head{display:flex;align-items:center;justify-content:space-between;}
+.welcome-tour-skip{font-size:12px;}
+.welcome-tour-icon{display:block;font-size:36px;margin:4px 0 6px;}
+.welcome-tour h2{margin:0 0 10px;}
+.welcome-tour-dots{display:flex;gap:6px;margin:18px 0 4px;}
+.welcome-tour-dots span{width:7px;height:7px;border-radius:50%;background:var(--border);}
+.welcome-tour-dots span.active{background:var(--accent);}
+.welcome-tour-actions{display:flex;align-items:center;justify-content:space-between;margin-top:16px;}
+.welcome-tour-actions .auth-submit{margin-left:auto;width:auto;padding:11px 24px;}
 /* Task-photo celebrations: finite bursts, never autoplay audio or flashing. */
 .task-party-backdrop{position:fixed;inset:0;z-index:300;display:grid;place-items:center;padding:24px;background:#23170fc9;backdrop-filter:blur(9px);overflow-y:auto;isolation:isolate;}
 .task-party-card{position:relative;z-index:1;width:min(100%,460px);padding:40px 32px 28px;text-align:center;border-radius:28px;background:radial-gradient(ellipse at top,#ffdfae,transparent 62%),#fffaf3;border:1px solid #fff0d8;box-shadow:0 24px 100px #0005;animation:task-party-enter .45s cubic-bezier(.2,.8,.3,1) both;}

@@ -7,6 +7,7 @@ import { useToast } from '../context/ToastContext';
 import { CATEGORIES, hasInvalidTaskDays } from '../lib/format';
 import { LOOK_RECIPES, getRecipeById, applyLookToImage } from '../lib/looks';
 import { ASPECT_RATIO_NUMBERS } from '../lib/crop';
+import { findSimilarTag } from '../lib/tagMatch';
 import GoalTemplatePicker from './GoalTemplatePicker';
 import PhotoCropper from './PhotoCropper';
 import TaskListEditor from './TaskListEditor';
@@ -63,6 +64,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
   const selectedTask = subtaskIndex !== '' ? linkedTask?.subtasks?.[Number(subtaskIndex)] : linkedTask;
   const taskSelectValue = taskIndex === '' ? '' : subtaskIndex !== '' ? `${taskIndex}:${subtaskIndex}` : taskIndex;
   const isNewTag = isPost && !!normalizedTag && !!existingTags && !existingTags.has(normalizedTag);
+  const similarTag = isNewTag ? findSimilarTag(normalizedTag, existingTags) : null;
 
   function selectGoalTask(value) {
     if (!value) { setTaskIndex(''); setSubtaskIndex(''); return; }
@@ -351,26 +353,14 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                 ? 'Tap a filter to apply it automatically. Choose No look to restore your original photo.'
                 : 'Tap a filter to preview it on your video.'}
             </div>
-            <div className="tag-input-row">
-              <label className="composer-field-label" htmlFor="composer-tag">Post tag</label>
-              <input
-                type="text"
-                id="composer-tag"
-                maxLength={24}
-                placeholder="One word or hashtag (optional) — e.g. #grateful"
-                value={tagRaw}
-                onChange={(e) => { setTagRaw(e.target.value); setTaskIndex(''); setSubtaskIndex(''); }}
-              />
-              <span className="tag-hint">Just one word — no caption needed.</span>
-            </div>
             {isPost && availableGoals.length > 0 && <div className="goal-setup">
-              <label className="goal-setup-label" htmlFor="photo-goal">Update a goal with this photo</label>
+              <label className="goal-setup-label" htmlFor="photo-goal">Continue one of your existing tasks?</label>
               <select id="photo-goal" value={linkedGoal?.tag || ''} onChange={(e) => {
                 const item = availableGoals.find((goal) => goal.tag === e.target.value);
                 setTagRaw(item?.tag || ''); setTaskIndex(''); setSubtaskIndex('');
                 if (item) setChosenCat(item.category);
               }}>
-                <option value="">No goal selected</option>
+                <option value="">No — I'll enter a tag below</option>
                 {availableGoals.map((item) => <option key={item.tag} value={item.tag}>#{item.tag}</option>)}
               </select>
               {linkedGoal && <>
@@ -389,6 +379,34 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                 <span className="tag-hint">Each photo adds one day of progress to this task or subtask, up to its target. Multiple uploads on the same day each count.</span>
               </>}
             </div>}
+            <div className="tag-input-row">
+              <label className="composer-field-label" htmlFor="composer-tag">Post tag</label>
+              <input
+                type="text"
+                id="composer-tag"
+                maxLength={24}
+                list="composer-existing-tags"
+                placeholder="One word or hashtag (optional) — e.g. #grateful"
+                value={tagRaw}
+                onChange={(e) => { setTagRaw(e.target.value); setTaskIndex(''); setSubtaskIndex(''); }}
+              />
+              {existingTags && existingTags.size > 0 && (
+                <datalist id="composer-existing-tags">
+                  {[...existingTags].map((t) => <option key={t} value={t} />)}
+                </datalist>
+              )}
+              {linkedGoal ? (
+                <span className="tag-hint tag-hint-match">✓ Continuing your existing #{normalizedTag} task — this photo won't start a new one.</span>
+              ) : similarTag ? (
+                <span className="tag-hint tag-hint-warn">
+                  This will start a brand-new task. Did you mean{' '}
+                  <button type="button" className="tag-hint-fix" onClick={() => setTagRaw(similarTag)}>#{similarTag}</button>
+                  {' '}— your existing one?
+                </span>
+              ) : (
+                <span className="tag-hint">Just one word — no caption needed. Reuse the exact same tag every time to keep tracking the same task.</span>
+              )}
+            </div>
             {isNewTag && (
               <div className="goal-setup">
                 <div className="goal-setup-label">🎯 Set a goal for #{normalizedTag}? (optional)</div>
