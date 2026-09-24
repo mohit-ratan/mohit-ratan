@@ -53,6 +53,7 @@ function mapPost(row) {
     likeCount: Number(row.like_count || 0),
     likedByMe: !!row.liked_by_me,
     commentCount: Number(row.comment_count || 0),
+    latestCommentSticker: row.latest_sticker || null,
   };
 }
 
@@ -102,6 +103,7 @@ async function list(req, res) {
     let sql = `SELECT p.*, u.display_name, u.photo_url as author_photo,
                (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) as like_count,
                (SELECT COUNT(*) FROM comments cm WHERE cm.post_id = p.id) as comment_count,
+               (SELECT cm2.sticker FROM comments cm2 WHERE cm2.post_id = p.id AND cm2.sticker IS NOT NULL ORDER BY cm2.created_at DESC LIMIT 1) as latest_sticker,
                EXISTS(SELECT 1 FROM post_likes pl2 WHERE pl2.post_id = p.id AND pl2.user_id = ?) as liked_by_me
                FROM posts p JOIN users u ON u.id = p.author_id
                WHERE ${VISIBLE_TO_VIEWER_SQL}`;
@@ -481,6 +483,7 @@ async function listComments(req, res) {
         authorId: r.author_id,
         authorName: r.display_name,
         text: r.text,
+        sticker: r.sticker,
         createdAt: new Date(r.created_at).getTime(),
         reactions: reactionsByComment.get(r.id) || [],
       })),
@@ -527,12 +530,14 @@ async function toggleCommentReaction(req, res) {
 async function addComment(req, res) {
   try {
     if (!(await canViewPost(req.userId, req.params.id))) return res.status(404).json({ error: 'Post not found.' });
-    const { text } = req.body || {};
-    if (!text || !text.trim()) return res.status(400).json({ error: 'Comment cannot be empty.' });
+    const rawText = typeof req.body?.text === 'string' ? req.body.text.trim() : '';
+    const sticker = req.body?.sticker || null;
+    if (sticker && !ALLOWED_REACTIONS.has(sticker)) return res.status(400).json({ error: 'Not a valid sticker.' });
+    if (!rawText && !sticker) return res.status(400).json({ error: 'Add some text or a sticker to comment.' });
     const id = uuidv4();
     await pool.query(
-      'INSERT INTO comments (id, post_id, author_id, text) VALUES (?, ?, ?, ?)',
-      [id, req.params.id, req.userId, text.trim().slice(0, 500)]
+      'INSERT INTO comments (id, post_id, author_id, text, sticker) VALUES (?, ?, ?, ?, ?)',
+      [id, req.params.id, req.userId, rawText.slice(0, 500), sticker]
     );
     const [postRows] = await pool.query('SELECT author_id FROM posts WHERE id = ?', [req.params.id]);
     if (postRows[0]) await notify(postRows[0].author_id, req.userId, 'comment', req.params.id);

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import api from '../api';
-import { EMOJI_REACTIONS, MEME_REACTIONS, isMemeReaction, memeReaction } from '../lib/reactions';
+import { isMemeReaction, memeReaction } from '../lib/reactions';
+import ReactionPickerPanel from './ReactionPickerPanel';
 
 // Toggling mirrors likes/follows elsewhere: reacting again with the same
 // key removes it. Updates optimistically and reverts on failure, same
@@ -61,23 +62,7 @@ export default function CommentReactions({ postId, commentId, reactions }) {
         <button type="button" className="comment-reaction-add" aria-label="Add a reaction" onClick={() => setPickerOpen((v) => !v)}>
           😊+
         </button>
-        {pickerOpen && (
-          <div className="reaction-picker">
-            <div className="reaction-picker-emoji">
-              {EMOJI_REACTIONS.map((e) => (
-                <button key={e} type="button" onClick={() => toggle(e)}>{e}</button>
-              ))}
-            </div>
-            <span className="reaction-picker-label">Memes</span>
-            <div className="reaction-picker-memes">
-              {MEME_REACTIONS.map((m) => (
-                <button key={m.key} type="button" className="reaction-picker-meme" style={{ background: m.bg }} onClick={() => toggle(m.key)}>
-                  <span>{m.emoji}</span><small>{m.label}</small>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        {pickerOpen && <ReactionPickerPanel onPick={toggle} />}
       </div>
     </div>
   );

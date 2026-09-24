@@ -51,11 +51,14 @@ CREATE TABLE IF NOT EXISTS post_likes (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+-- A comment needs text, a sticker (emoji or meme, same allow-list as
+-- comment_reactions), or both — never neither, enforced in the controller.
 CREATE TABLE IF NOT EXISTS comments (
   id          VARCHAR(36) PRIMARY KEY,
   post_id     VARCHAR(36) NOT NULL,
   author_id   VARCHAR(36) NOT NULL,
-  text        VARCHAR(500) NOT NULL,
+  text        VARCHAR(500) NOT NULL DEFAULT '',
+  sticker     VARCHAR(20) DEFAULT NULL,
   created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
   FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,

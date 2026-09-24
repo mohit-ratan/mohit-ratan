@@ -143,6 +143,15 @@ pool.query(`
 `).catch((err) => console.error('Could not ensure streak_freeze_uses table exists:', err));
 
 pool.query(`
+  SELECT COUNT(*) as cnt FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'comments' AND COLUMN_NAME = 'sticker'
+`).then(([rows]) => {
+  if (!rows[0].cnt) {
+    return pool.query('ALTER TABLE comments ADD COLUMN sticker VARCHAR(20) DEFAULT NULL');
+  }
+}).catch((err) => console.error('Could not ensure comments.sticker column exists:', err));
+
+pool.query(`
   CREATE TABLE IF NOT EXISTS comment_reactions (
     comment_id VARCHAR(36) NOT NULL,
     user_id VARCHAR(36) NOT NULL,

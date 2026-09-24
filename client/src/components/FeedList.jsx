@@ -3,6 +3,7 @@ import api, { mediaUrl } from '../api';
 import { CAT_MAP, timeAgo, truncate } from '../lib/format';
 import { pickLookRecipe } from '../lib/looks';
 import { HeartIcon, CommentIcon, VideoIcon } from '../lib/icons';
+import { isMemeReaction, memeReaction } from '../lib/reactions';
 import Avatar from './Avatar';
 
 const ASPECT_RATIOS = { square: '1 / 1', portrait: '4 / 5', landscape: '16 / 9' };
@@ -65,6 +66,17 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
         <button type="button" className="action-btn" onClick={() => onOpen(post)}>
           <CommentIcon />{post.commentCount > 0 ? post.commentCount : 'Comment'}
         </button>
+        {post.latestCommentSticker && (
+          <button type="button" className="action-btn feed-sticker-badge" onClick={() => onOpen(post)} aria-label="View sticker reaction">
+            {isMemeReaction(post.latestCommentSticker) ? (
+              <span className="comment-sticker-meme" style={{ background: memeReaction(post.latestCommentSticker).bg }}>
+                <span>{memeReaction(post.latestCommentSticker).emoji}</span><small>{memeReaction(post.latestCommentSticker).label}</small>
+              </span>
+            ) : (
+              <span className="comment-sticker-emoji">{post.latestCommentSticker}</span>
+            )}
+          </button>
+        )}
       </div>
       {post.goalProgress?.target > 0 && (
         <button type="button" className={`feed-card-progress house-floor-${post.category}`} onClick={() => onOpen(post)}>
