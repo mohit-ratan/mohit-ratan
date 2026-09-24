@@ -354,7 +354,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                 : 'Tap a filter to preview it on your video.'}
             </div>
             {isPost && availableGoals.length > 0 && <div className="goal-setup">
-              <label className="goal-setup-label" htmlFor="photo-goal">Continue one of your existing tasks?</label>
+              <label className="goal-setup-label" htmlFor="photo-goal">Continue one of your existing goals?</label>
               <select id="photo-goal" value={linkedGoal?.tag || ''} onChange={(e) => {
                 const item = availableGoals.find((goal) => goal.tag === e.target.value);
                 setTagRaw(item?.tag || ''); setTaskIndex(''); setSubtaskIndex('');
@@ -396,15 +396,15 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                 </datalist>
               )}
               {linkedGoal ? (
-                <span className="tag-hint tag-hint-match">✓ Continuing your existing #{normalizedTag} task — this photo won't start a new one.</span>
+                <span className="tag-hint tag-hint-match">✓ Continuing your existing #{normalizedTag} goal — this photo won't start a new one.</span>
               ) : similarTag ? (
                 <span className="tag-hint tag-hint-warn">
-                  This will start a brand-new task. Did you mean{' '}
+                  This will start a brand-new goal. Did you mean{' '}
                   <button type="button" className="tag-hint-fix" onClick={() => setTagRaw(similarTag)}>#{similarTag}</button>
                   {' '}— your existing one?
                 </span>
               ) : (
-                <span className="tag-hint">Just one word — no caption needed. Reuse the exact same tag every time to keep tracking the same task.</span>
+                <span className="tag-hint">Just one word — no caption needed. Reuse the exact same tag every time to keep tracking the same goal.</span>
               )}
             </div>
             {isNewTag && (

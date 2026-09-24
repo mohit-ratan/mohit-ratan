@@ -18,8 +18,8 @@ function levenshtein(a, b) {
 
 // Finds an existing tag close enough to `tag` that it was probably meant
 // to be the same one (a typo, a plural, a different word order) rather
-// than a deliberate new task — used to nudge someone back to continuing
-// their existing task instead of silently starting an unrelated one.
+// than a deliberate new goal — used to nudge someone back to continuing
+// their existing goal instead of silently starting an unrelated one.
 export function findSimilarTag(tag, existingTags) {
   if (!tag) return null;
   let best = null;

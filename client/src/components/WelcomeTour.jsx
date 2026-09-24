@@ -17,8 +17,8 @@ const SLIDES = [
   },
   {
     icon: '🎯',
-    title: 'Tags become tasks',
-    body: 'The first time you use a tag, you can turn it into a task with a day target, like "gym, 30 days". Reuse that exact same tag every time you check in to keep tracking that one task — a different tag starts a brand-new one, so it\'s worth double-checking before you post.',
+    title: 'Tags become goals',
+    body: 'The first time you use a tag, you can turn it into a goal and break it into tasks, each with its own day target, like "Gym, 30 days". Reuse that exact same tag every time you check in to keep tracking that same goal — a different tag starts a brand-new one, so it\'s worth double-checking before you post.',
   },
   {
     icon: '🏆',
