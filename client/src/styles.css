@@ -502,14 +502,13 @@
   .feed-card{overflow:hidden;}
   .feed-card-head{display:flex;align-items:center;gap:10px;padding:13px 16px;}
   .feed-card-media{
-    display:block;width:100%;aspect-ratio:1/1;max-height:60vh;max-height:60svh;position:relative;
+    display:block;width:100%;aspect-ratio:1/1;max-height:70vh;max-height:70svh;position:relative;
     border:0;padding:0;margin:0;background:var(--surface-2);cursor:pointer;overflow:hidden;
   }
-  .feed-card-media img,.feed-card-media video{width:100%;height:100%;object-fit:contain;display:block;}
+  .feed-card-media img,.feed-card-media video{width:100%;height:100%;object-fit:cover;display:block;}
   .feed-card-media .text-card{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;}
   .feed-card-media .tile-badge{position:absolute;top:12px;right:12px;color:#fff;filter:drop-shadow(0 1px 3px rgba(0,0,0,.55));}
   .feed-card-actions{display:flex;align-items:center;gap:4px;padding:10px 12px;}
-  .feed-sticker-badge{padding:4px 6px;}
   .feed-reaction-trigger-wrap{position:relative;}
   .feed-card-progress{
     display:block;width:100%;text-align:left;background:none;border:0;cursor:pointer;
@@ -1779,9 +1778,23 @@ button.story-ring{border:0;cursor:pointer;}
 .progress-award-stars{bottom:-12px;font-size:14px;letter-spacing:3px;color:var(--metal);text-shadow:0 1px 0 var(--metal-light);}
 .progress-award-state{bottom:5px;}
 .awards-grid .progress-award{border:0;padding:0;width:100%;}
-.gold-unity-award{text-align:center;padding:28px;margin:24px auto 0;max-width:560px;background:radial-gradient(ellipse at top,#fff0bc,#fffaf1 75%);border:1px solid #e6c574;border-radius:22px;}
- .gold-unity-medallion{display:block;width:min(100%,330px);height:auto;margin:0 auto 18px;filter:brightness(.4) saturate(.3);}
-.gold-unity-revealed .gold-unity-medallion{filter:drop-shadow(0 10px 16px #b5812330);}
+.gold-unity-award{text-align:center;padding:44px 32px;margin:28px auto 0;max-width:640px;background:radial-gradient(ellipse at top,#fff0bc,#fffaf1 75%);border:1px solid #e6c574;border-radius:28px;box-shadow:0 18px 44px -20px #c99a2c55;}
+ .gold-unity-medallion{display:block;width:min(100%,440px);height:auto;margin:0 auto 22px;filter:brightness(.4) saturate(.3);}
+.gold-unity-revealed{position:relative;}
+.gold-unity-revealed::before{
+  content:'';position:absolute;top:36px;left:50%;transform:translateX(-50%);
+  width:min(80%,380px);height:min(80%,380px);border-radius:50%;
+  background:radial-gradient(circle,#ffe8952e,transparent 70%);pointer-events:none;
+}
+.gold-unity-revealed .gold-unity-medallion{position:relative;filter:drop-shadow(0 14px 22px #b5812345);}
+.gold-unity-award h3{font-family:var(--font-display);font-size:24px;margin:0 0 8px;}
+.gold-unity-award p{font-size:14.5px;color:#7a5a12;margin:0 0 8px;}
+.gold-unity-award small{display:block;max-width:420px;margin:0 auto;font-size:12px;line-height:1.6;color:#96793a;}
+@media(max-width:480px){
+  .gold-unity-award{padding:32px 20px;}
+  .gold-unity-medallion{width:min(100%,300px);}
+}
 
-.feed-reaction-button{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border-radius:50%;}
 .feed-reaction-button:hover,.feed-reaction-button[aria-expanded="true"]{background:var(--accent-soft);color:var(--accent);}
+.feed-reaction-button.reacted{color:var(--accent);}
+.feed-reaction-emoji{font-size:15px;line-height:1;}
