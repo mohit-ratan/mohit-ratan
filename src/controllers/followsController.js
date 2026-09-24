@@ -2,6 +2,7 @@ const pool = require('../db');
 const { canView } = require('../lib/follows');
 const { isBlocked } = require('../lib/blocks');
 const { notify } = require('../lib/notifications');
+const { normalizeTasks } = require('../lib/goalProgress');
 
 // Sends a follow request (or is a no-op if one already exists in either
 // state — the caller just gets back whatever the current status now is).
@@ -166,4 +167,73 @@ async function listFollowing(req, res) {
   }
 }
 
-module.exports = { follow, unfollow, respond, listRequests, listFollowers, listFollowing };
+// Everyone I follow, each represented by their single closest-to-finishing
+// active (incomplete) goal, ranked with the nearest-to-done first. There's
+// no fixed order stored anywhere — it's recomputed from live progress on
+// every request, so the ranking naturally reshuffles as people actually
+// make (or don't make) progress, rather than sitting in a static list.
+async function followingProgress(req, res) {
+  try {
+    const [followees] = await pool.query(
+      `SELECT u.id, u.display_name, u.photo_url FROM follows f
+       JOIN users u ON u.id = f.followee_id
+       WHERE f.follower_id = ? AND f.status = 'accepted'`,
+      [req.userId]
+    );
+    if (!followees.length) return res.json({ people: [] });
+    const ids = followees.map((f) => f.id);
+    const placeholders = ids.map(() => '?').join(',');
+
+    const [goalRows] = await pool.query(
+      `SELECT author_id, tag, target_date, subtasks FROM goals WHERE author_id IN (${placeholders})`,
+      ids
+    );
+    const [postRows] = await pool.query(
+      `SELECT author_id, tag, category FROM posts WHERE author_id IN (${placeholders}) AND tag IS NOT NULL AND tag <> ''`,
+      ids
+    );
+
+    const categoryCounts = new Map(); // `${authorId}:${tag}` -> { category: count }
+    for (const r of postRows) {
+      const key = `${r.author_id}:${r.tag}`;
+      const counts = categoryCounts.get(key) || {};
+      counts[r.category] = (counts[r.category] || 0) + 1;
+      categoryCounts.set(key, counts);
+    }
+
+    const goalsByAuthor = new Map();
+    for (const g of goalRows) {
+      if (!goalsByAuthor.has(g.author_id)) goalsByAuthor.set(g.author_id, []);
+      goalsByAuthor.get(g.author_id).push(g);
+    }
+
+    const people = followees.map((u) => {
+      const goals = goalsByAuthor.get(u.id) || [];
+      let best = null;
+      for (const g of goals) {
+        const tasks = normalizeTasks(g.subtasks);
+        if (!tasks.length || tasks.every((t) => t.done)) continue; // only active goals
+        const { completed, target } = tasks.reduce(
+          (acc, t) => ({ completed: acc.completed + t.completedDays, target: acc.target + t.targetDays }),
+          { completed: 0, target: 0 }
+        );
+        const percent = target ? Math.round((completed / target) * 100) : 0;
+        if (!best || percent > best.percent) {
+          const counts = categoryCounts.get(`${u.id}:${g.tag}`);
+          const category = counts ? Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0] : 'health';
+          best = { tag: g.tag, category, percent, completedDays: completed, targetDays: target, targetDate: g.target_date ? new Date(g.target_date).toISOString().slice(0, 10) : null };
+        }
+      }
+      if (!best) return null;
+      return { id: u.id, displayName: u.display_name, photoUrl: u.photo_url, goal: best };
+    }).filter(Boolean);
+
+    people.sort((a, b) => b.goal.percent - a.goal.percent);
+    res.json({ people });
+  } catch (err) {
+    console.error('following progress error:', err);
+    res.status(500).json({ error: 'Could not load progress for people you follow.' });
+  }
+}
+
+module.exports = { follow, unfollow, respond, listRequests, listFollowers, listFollowing, followingProgress };

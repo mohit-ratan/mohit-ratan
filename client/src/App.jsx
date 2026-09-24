@@ -14,6 +14,7 @@ import ProfilePage from './pages/ProfilePage';
 import JournalPage from './pages/JournalPage';
 import TodayPage from './pages/TodayPage';
 import AwardsGalleryPage from './pages/AwardsGalleryPage';
+import FollowingProgressPage from './pages/FollowingProgressPage';
 
 // The three.js/r3f/drei stack is ~1MB — code-split so only the 3D routes
 // pay that cost instead of it loading on every page (feed, login, etc).
@@ -48,6 +49,7 @@ export default function App() {
     <Routes>
       <Route path="/journal" element={<RequireAuth><JournalPage /></RequireAuth>} />
       <Route path="/today" element={<RequireAuth><TodayPage /></RequireAuth>} />
+      <Route path="/following-progress" element={<RequireAuth><FollowingProgressPage /></RequireAuth>} />
       <Route path="/forgot-password" element={<RecoveryPage key="forgot" mode="forgot-password" />} />
       <Route path="/reset-password" element={<RecoveryPage key="reset" mode="reset-password" />} />
       <Route path="/resend-verification" element={<RecoveryPage key="resend" mode="resend-verification" />} />

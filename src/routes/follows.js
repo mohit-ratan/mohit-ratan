@@ -5,6 +5,7 @@ const { requireAuth } = require('../middleware/auth');
 const router = express.Router();
 
 router.get('/requests', requireAuth, followsController.listRequests);
+router.get('/progress', requireAuth, followsController.followingProgress);
 router.get('/:id/followers', requireAuth, followsController.listFollowers);
 router.get('/:id/following', requireAuth, followsController.listFollowing);
 router.post('/:id', requireAuth, followsController.follow);
