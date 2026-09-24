@@ -1774,7 +1774,8 @@ button.story-ring{border:0;cursor:pointer;}
 
 .progress-award.award-category-health{--metal:#26824d;--metal-light:#cbf4d5;}
 .progress-award.award-category-wealth{--metal:#8794a4;--metal-light:#f0f6ff;}
-.progress-award.award-category-relationships{--metal:#dc691b;--metal-light:#ffe0ae;}
+.progress-award.award-category-relationships{--metal:#b88d79;--metal-light:#f3e2d7;}
+.award-category-relationships .progress-award-stage{background:radial-gradient(ellipse at center,#faf0e9,#f5efea);}
 .progress-award-stars{bottom:-12px;font-size:14px;letter-spacing:3px;color:var(--metal);text-shadow:0 1px 0 var(--metal-light);}
 .progress-award-state{bottom:5px;}
 .awards-grid .progress-award{border:0;padding:0;width:100%;}
