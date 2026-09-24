@@ -35,3 +35,13 @@ test('reminders respect timezone, daily claims and a last-minute opt-out',async(
  await sendPersonalReminders(now);await sendPersonalReminders(now);assert.equal(sent,1);
  claimed=false;enabled=false;await sendPersonalReminders(now);assert.equal(sent,1);
 });
+
+test('task award reveals retain exact duration and completed awards',()=>{
+ const result=summarize([{tag:'fitness',category:'health',subtasks:[
+  {id:'week',text:'Walk',targetDays:7,completedDays:1},
+  {id:'month',text:'Train',targetDays:30,completedDays:30}
+ ]}],[],[],'UTC');
+ assert.deepEqual(result.awards[0].taskAwards.map(t=>[t.id,t.targetDays,t.completedDays]),[['fitness:week',7,1],['fitness:month',30,30]]);
+ assert.equal(result.tasks.length,1);
+ assert.deepEqual(result.awards[1].taskAwards,[]);
+});

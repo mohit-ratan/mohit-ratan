@@ -498,7 +498,7 @@
   }
   .active-filter .chip button{background:none;border:none;cursor:pointer;color:inherit;display:flex;}
 
-  .feed-list{display:flex;flex-direction:column;gap:16px;}
+  .feed-list{display:flex;flex-direction:column;gap:24px;width:100%;max-width:470px;margin-inline:auto;}
   .feed-card{overflow:hidden;}
   .feed-card-head{display:flex;align-items:center;gap:10px;padding:13px 16px;}
   .feed-card-media{
@@ -1745,3 +1745,29 @@ button.story-ring{border:0;cursor:pointer;}
 .journal-save-btn:disabled{background:var(--accent-soft);border-color:var(--border);color:var(--text-muted);cursor:not-allowed;}
 @media(max-width:900px){.feed-intro{flex-wrap:wrap;}.feed-intro-actions{justify-content:flex-start;flex-wrap:wrap;}}
 @media(max-width:480px){.feed-intro-actions{display:grid;grid-template-columns:1fr;width:100%;gap:8px;}.journal-save-btn{width:100%;}.journal-file-input::file-selector-button{padding:10px 14px;margin-right:8px;}}
+
+.task-award-collection{display:grid;gap:18px;margin-top:16px;}
+.progress-award{--metal:#bd8152;--metal-light:#ffe0ae;margin:0;padding-bottom:20px;border-bottom:1px solid var(--border);}
+.award-tier-silver{--metal:#889ba9;--metal-light:#edf7ff;}
+.award-tier-gold{--metal:#d99822;--metal-light:#fff2ab;}
+.award-tier-legend{--metal:#bc7133;--metal-light:#fff5c1;}
+.progress-award-stage{height:230px;position:relative;display:grid;place-items:center;isolation:isolate;overflow:hidden;border-radius:18px;background:radial-gradient(ellipse at center,#fff5e6,#f6eee7);}
+.progress-award-aura{position:absolute;width:170px;height:170px;border-radius:50%;background:var(--metal-light);filter:blur(25px);opacity:var(--reveal);transition:opacity 1.2s;}
+.progress-award-art{position:relative;width:160px;height:174px;filter:brightness(var(--award-light)) saturate(var(--reveal));transform:translateY(-4px);transition:filter 1.4s ease;}
+.progress-award-medal{position:absolute;inset:20px 17px 27px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--metal-light),var(--metal) 50%,var(--metal-light));border:5px double var(--metal-light);box-shadow:inset 0 0 0 4px var(--metal),inset 0 0 16px #fff8,0 8px 14px #55351b30;color:#422c19;}
+.progress-award-medal strong{font-family:var(--font-display);font-size:38px;line-height:1.1;max-width:100%;}
+.progress-award-symbol{font-size:19px;line-height:1.2;}
+.progress-award-days{font-size:9px;letter-spacing:3px;font-weight:700;}
+.progress-award-ribbons{position:absolute;inset:90px 35px 0;background:linear-gradient(90deg,var(--metal),var(--metal-light),var(--metal));clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%);}
+.progress-award-crown{position:absolute;top:-12px;left:0;right:0;text-align:center;font-size:42px;color:var(--metal);z-index:1;}
+.progress-award-laurels{position:absolute;inset:55px 0 auto;display:flex;justify-content:space-between;font-size:48px;color:var(--metal);}
+.progress-award-laurels span{transform:scaleX(-1);}
+.progress-award-stars{position:absolute;bottom:-4px;left:0;right:0;text-align:center;color:var(--metal-light);text-shadow:0 1px 3px #875017;letter-spacing:8px;}
+.award-tier-legend .progress-award-medal{box-shadow:0 0 0 5px var(--metal),0 0 0 8px var(--metal-light),0 0 22px #e8ac64;}
+.progress-award-state{position:absolute;bottom:10px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);}
+.progress-award figcaption{padding-top:14px;}
+.progress-award figcaption h4{margin:5px 0;font-size:16px;overflow-wrap:anywhere;}
+.progress-award figcaption p{font-size:12px;margin:8px 0;}
+.award-revealed .progress-award-aura{animation:award-breathe 3s ease-in-out infinite alternate;}
+@keyframes award-breathe{to{transform:scale(1.12);opacity:.65;}}
+@media(prefers-reduced-motion:reduce){.progress-award-art,.progress-award-aura{transition:none;animation:none;}}

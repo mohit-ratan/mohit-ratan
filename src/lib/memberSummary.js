@@ -22,7 +22,7 @@ function summarize(goals, events, consistency, timeZone, now = new Date()) {
     const ratios=eligible.map(g=>({tag:g.tag,percent:Math.round(g.subtasks.reduce((n,t)=>n+t.completedDays,0)/g.subtasks.reduce((n,t)=>n+t.targetDays,0)*100)}));
     const nearest=ratios.sort((a,b)=>b.percent-a.percent)[0];
     const earnedStreak=consistency.find(c=>c.category===category);
-    return {category,completedGoals:completed,goalPercent:nearest?.percent||0,nearestGoal:nearest?.tag||null,bestStreak:earnedStreak?.best_streak||0,consistencyEarned:!!earnedStreak?.earned_at};
+    return {category,taskAwards:eligible.flatMap(g=>g.subtasks.map(t=>({id:`${g.tag}:${t.id}`,tag:g.tag,text:t.text,targetDays:t.targetDays,completedDays:t.completedDays}))),completedGoals:completed,goalPercent:nearest?.percent||0,nearestGoal:nearest?.tag||null,bestStreak:earnedStreak?.best_streak||0,consistencyEarned:!!earnedStreak?.earned_at};
   });
   return {today,timeZone,tasks,awards,recap:{from,to:today,checkIns:week.length,goalsCompleted:new Set(week.filter(e=>e.goal_completed).map(e=>e.goal_tag)).size,bestStreak:longestStreak(week.map(e=>e.localDay)),categories:categories.map(category=>({category,checkIns:week.filter(e=>e.category===category).length})),days:Array.from({length:7},(_,i)=>{const day=shiftDay(from,i);return {day,count:week.filter(e=>e.localDay===day).length};})}};
 }
