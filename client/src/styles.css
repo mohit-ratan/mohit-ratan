@@ -1779,6 +1779,5 @@ button.story-ring{border:0;cursor:pointer;}
 .progress-award-state{bottom:5px;}
 .awards-grid .progress-award{border:0;padding:0;width:100%;}
 .gold-unity-award{text-align:center;padding:28px;margin:24px auto 0;max-width:560px;background:radial-gradient(ellipse at top,#fff0bc,#fffaf1 75%);border:1px solid #e6c574;border-radius:22px;}
-.gold-unity-medal{width:150px;height:170px;margin:auto;display:flex;flex-direction:column;justify-content:center;align-items:center;border:7px double #ffe9a0;border-radius:45% 45% 48% 48%;background:linear-gradient(135deg,#fff2b2,#d89820,#ffeeb3);box-shadow:0 0 0 3px #b88422,0 10px 35px #c68c2730;filter:brightness(.35) saturate(.25);color:#634215;}
-.gold-unity-revealed .gold-unity-medal{filter:none;}
-.gold-unity-medal>span{font-size:28px;line-height:1;}.gold-unity-medal strong{font-family:var(--font-display);font-size:44px;}.gold-unity-medal div{display:flex;gap:8px;}.gold-unity-medal i{font-style:normal;border-radius:50%;background:white;width:24px;height:24px;box-shadow:0 1px 4px #71490044;}.unity-health{color:#26824d;}.unity-wealth{color:#788899;}.unity-relationships{color:#dc691b;}
+ .gold-unity-trophy{display:block;width:min(100%,260px);height:auto;margin:0 auto 18px;filter:brightness(.4) saturate(.3);}
+.gold-unity-revealed .gold-unity-trophy{filter:drop-shadow(0 10px 16px #b5812330);}
