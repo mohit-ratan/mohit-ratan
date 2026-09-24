@@ -99,9 +99,10 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
         <div className="feed-reaction-trigger-wrap" ref={pickerRef}>
           <button
             type="button"
-            className={`action-btn${myReaction ? ' feed-sticker-badge' : ''}`}
+            className={`action-btn feed-reaction-button${myReaction ? ' feed-sticker-badge' : ''}`}
             disabled={reactionPending}
             aria-label={myReaction ? 'Change your reaction' : 'Add a reaction'}
+            aria-expanded={pickerOpen}
             onClick={(e) => { e.stopPropagation(); setPickerOpen((v) => !v); }}
           >
             {myReaction ? (
@@ -112,7 +113,7 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
               ) : (
                 <span className="comment-sticker-emoji">{myReaction}</span>
               )
-            ) : '😊+'}
+            ) : <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-8.5-8.5"/><path d="M8 14s1.3 2 4 2 4-2 4-2"/><path d="M8.5 9h.01M14.5 9h.01M19 2v6M16 5h6"/></svg>}
           </button>
           {pickerOpen && <ReactionPickerPanel onPick={pickReaction} current={myReaction} onRemove={() => pickReaction(myReaction)} />}
         </div>
