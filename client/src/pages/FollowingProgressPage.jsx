@@ -70,13 +70,13 @@ export default function FollowingProgressPage() {
                 {people.map((p, index) => {
                   const cat = CAT_MAP[p.goal.category] || CAT_MAP.health;
                   return (
-                    <li key={p.id} className="progress-rank-row">
+                    <li key={p.id} className={`progress-rank-row${p.isMe ? ' is-me' : ''}`}>
                       <span className="progress-rank-position">#{index + 1}</span>
                       <button type="button" className="progress-rank-person" onClick={() => navigate(`/profile/${p.id}`)}>
                         <Avatar id={p.id} name={p.displayName} photoUrl={p.photoUrl} size={44} />
                       </button>
                       <div className="progress-rank-details">
-                        <button type="button" className="progress-rank-name" onClick={() => navigate(`/profile/${p.id}`)}>{p.displayName}</button>
+                        <button type="button" className="progress-rank-name" onClick={() => navigate(`/profile/${p.id}`)}>{p.displayName}{p.isMe ? ' (you)' : ''}</button>
                         <span className={`cat-label ${cat.id}`}>{cat.emoji} {cat.label} · #{p.goal.tag}</span>
                         <div className="goal-task-summary"><span>{p.goal.completedDays} / {p.goal.targetDays} task days</span><strong>{p.goal.percent}%</strong></div>
                         <progress value={p.goal.percent} max={100} aria-label={`${p.displayName}: ${p.goal.percent}% toward #${p.goal.tag}`} />

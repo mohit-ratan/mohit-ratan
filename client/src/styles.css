@@ -1081,6 +1081,8 @@
 .progress-rank-name{background:none;border:none;cursor:pointer;padding:0;font-weight:700;font-size:14px;color:var(--text);text-align:left;align-self:flex-start;}
 .progress-rank-name:hover{text-decoration:underline;}
 .progress-rank-details progress{width:100%;height:6px;margin-top:2px;}
+.progress-rank-row.is-me{background:var(--accent-soft);border-color:var(--accent);}
+.progress-rank-row.is-me .progress-rank-position{color:var(--accent);}
 .house-achievements{margin-top:24px;display:flex;flex-direction:column;gap:10px;max-height:410px;overflow:auto;}
 .house-achievement{display:flex;align-items:center;gap:13px;background:white;border:1px solid #e1e6dc;border-radius:12px;padding:10px;text-align:left;cursor:pointer;color:inherit;}
 .house-achievement:hover{border-color:var(--floor-color);}

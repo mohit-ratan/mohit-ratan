@@ -167,11 +167,13 @@ async function listFollowing(req, res) {
   }
 }
 
-// Everyone I follow, each represented by their single closest-to-finishing
-// active (incomplete) goal, ranked with the nearest-to-done first. There's
-// no fixed order stored anywhere — it's recomputed from live progress on
-// every request, so the ranking naturally reshuffles as people actually
-// make (or don't make) progress, rather than sitting in a static list.
+// Me plus everyone I follow, each represented by their single
+// closest-to-finishing active (incomplete) goal, ranked with the
+// nearest-to-done first — so I can see my own standing among the people
+// I follow, not just theirs. There's no fixed order stored anywhere —
+// it's recomputed from live progress on every request, so the ranking
+// naturally reshuffles as people actually make (or don't make) progress,
+// rather than sitting in a static list.
 async function followingProgress(req, res) {
   try {
     const [followees] = await pool.query(
@@ -180,8 +182,10 @@ async function followingProgress(req, res) {
        WHERE f.follower_id = ? AND f.status = 'accepted'`,
       [req.userId]
     );
-    if (!followees.length) return res.json({ people: [] });
-    const ids = followees.map((f) => f.id);
+    const [meRows] = await pool.query('SELECT id, display_name, photo_url FROM users WHERE id = ?', [req.userId]);
+    const everyone = meRows.length ? [...followees, meRows[0]] : followees;
+    if (!everyone.length) return res.json({ people: [] });
+    const ids = everyone.map((f) => f.id);
     const placeholders = ids.map(() => '?').join(',');
 
     const [goalRows] = await pool.query(
@@ -207,7 +211,7 @@ async function followingProgress(req, res) {
       goalsByAuthor.get(g.author_id).push(g);
     }
 
-    const people = followees.map((u) => {
+    const people = everyone.map((u) => {
       const goals = goalsByAuthor.get(u.id) || [];
       let best = null;
       for (const g of goals) {
@@ -225,7 +229,7 @@ async function followingProgress(req, res) {
         }
       }
       if (!best) return null;
-      return { id: u.id, displayName: u.display_name, photoUrl: u.photo_url, goal: best };
+      return { id: u.id, displayName: u.display_name, photoUrl: u.photo_url, isMe: u.id === req.userId, goal: best };
     }).filter(Boolean);
 
     people.sort((a, b) => b.goal.percent - a.goal.percent);
