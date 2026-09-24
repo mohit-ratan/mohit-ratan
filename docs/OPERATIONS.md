@@ -97,3 +97,9 @@ import tool as a migration. The release only adds tables at startup.
 ## Upload folders
 
 New uploads use UTC upload dates in their object keys: `posts/YYYY/MM/DD/<uuid>.<ext>`, `stories/YYYY/MM/DD/<uuid>.<ext>`, and `avatars/YYYY/MM/DD/<uuid>.<ext>`. Private encrypted journal photos use `journal/YYYY/MM/DD/<uuid>.bin` in the separate private bucket. No additional environment settings or manual folder creation are needed. Existing objects stay at their original paths; stored URLs and deletion references continue to work.
+
+## Shared award designs and 45-day gold award
+
+Today and the public gallery share the duration medal component. Health medals are green, Wealth silver, and Relationships orange. Targets of 1–7 days carry one star, 8–15 two, 16–30 three, 31–45 four, 46–60 five; each further 15-day band adds another star. Longer designs add laurels, crowns and ornamental rings. Gallery medals are explicitly previews, not user unlocks.
+
+The prized gold Trifecta requires recorded goal completion check-ins in all three categories within a rolling 45 × 24-hour window. It is granted once and persists under `trifecta-45`. Previous lifetime `trifecta` records remain in the database but do not qualify for the new award. No completion dates are fabricated for legacy goals. Today shows categories completed inside the current window, and the Achievement House uses the same gold design after earning it.

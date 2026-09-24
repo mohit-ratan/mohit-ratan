@@ -33,7 +33,7 @@ export default function TaskCelebration({ celebration, onClose }) {
       {trifectaEarned && (
         <div className="task-party-trifecta" aria-hidden="true">
           <span className="task-party-trifecta-medallion"><span className="task-party-trifecta-holo" /><span>🏆</span></span>
-          <span>Health · Wealth · Relationships — all three, at once.</span>
+          <span>Health · Wealth · Relationships — all three, within 45 days.</span>
         </div>
       )}
       <div className="task-party-medal" aria-hidden="true"><span>DAY</span><strong key={number}>{number}</strong><small>+1 task day</small></div>

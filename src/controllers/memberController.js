@@ -1,5 +1,6 @@
 const pool = require('../db');
 const { ensureMemberTables } = require('../lib/memberFeatures');
+const { trifectaStatus } = require('../lib/trifecta');
 const { summarize } = require('../lib/memberSummary');
 const { validTimeZone } = require('../lib/taskCelebration');
 async function dashboard(req,res) {
@@ -12,8 +13,8 @@ async function dashboard(req,res) {
       FROM goals g WHERE g.author_id=?`,[req.userId]);
     const [events]=await pool.query('SELECT * FROM task_checkins WHERE user_id=? AND occurred_ms>=?',[req.userId,Date.now()-9*86400000]);
     const [consistency]=await pool.query('SELECT * FROM category_consistency WHERE user_id=?',[req.userId]);
-    const [special]=await pool.query("SELECT earned_at FROM special_awards WHERE user_id=? AND award_id='trifecta'",[req.userId]);
-    res.json({...summarize(goals,events,consistency,zone),trifectaEarned:!!special.length,preferences:{timeZone:zone,enabled:!!prefs[0]?.reminder_enabled,time:prefs[0]?.reminder_time||'19:00'}});
+    const special=await trifectaStatus(req.userId);
+    res.json({...summarize(goals,events,consistency,zone),trifectaEarned:special.earned,trifectaCategories:special.categories,preferences:{timeZone:zone,enabled:!!prefs[0]?.reminder_enabled,time:prefs[0]?.reminder_time||'19:00'}});
   } catch(err){console.error('Dashboard failed:',err.code);res.status(500).json({error:'Could not load your daily progress.'});}
 }
 async function preferences(req,res) {

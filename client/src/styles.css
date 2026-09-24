@@ -1771,3 +1771,14 @@ button.story-ring{border:0;cursor:pointer;}
 .award-revealed .progress-award-aura{animation:award-breathe 3s ease-in-out infinite alternate;}
 @keyframes award-breathe{to{transform:scale(1.12);opacity:.65;}}
 @media(prefers-reduced-motion:reduce){.progress-award-art,.progress-award-aura{transition:none;animation:none;}}
+
+.progress-award.award-category-health{--metal:#26824d;--metal-light:#cbf4d5;}
+.progress-award.award-category-wealth{--metal:#8794a4;--metal-light:#f0f6ff;}
+.progress-award.award-category-relationships{--metal:#dc691b;--metal-light:#ffe0ae;}
+.progress-award-stars{bottom:-12px;font-size:14px;letter-spacing:3px;color:var(--metal);text-shadow:0 1px 0 var(--metal-light);}
+.progress-award-state{bottom:5px;}
+.awards-grid .progress-award{border:0;padding:0;width:100%;}
+.gold-unity-award{text-align:center;padding:28px;margin:24px auto 0;max-width:560px;background:radial-gradient(ellipse at top,#fff0bc,#fffaf1 75%);border:1px solid #e6c574;border-radius:22px;}
+.gold-unity-medal{width:150px;height:170px;margin:auto;display:flex;flex-direction:column;justify-content:center;align-items:center;border:7px double #ffe9a0;border-radius:45% 45% 48% 48%;background:linear-gradient(135deg,#fff2b2,#d89820,#ffeeb3);box-shadow:0 0 0 3px #b88422,0 10px 35px #c68c2730;filter:brightness(.35) saturate(.25);color:#634215;}
+.gold-unity-revealed .gold-unity-medal{filter:none;}
+.gold-unity-medal>span{font-size:28px;line-height:1;}.gold-unity-medal strong{font-family:var(--font-display);font-size:44px;}.gold-unity-medal div{display:flex;gap:8px;}.gold-unity-medal i{font-style:normal;border-radius:50%;background:white;width:24px;height:24px;box-shadow:0 1px 4px #71490044;}.unity-health{color:#26824d;}.unity-wealth{color:#788899;}.unity-relationships{color:#dc691b;}

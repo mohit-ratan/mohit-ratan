@@ -1,3 +1,4 @@
+import GoldAward from '../components/GoldAward';
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import api from '../api';
@@ -94,19 +95,7 @@ export default function AchievementsPage() {
             <h1>A home for your achievements.</h1>
             <p>Complete every task in a goal to earn an award for your floor.</p>
           </header>
-          {trifecta?.earned && (
-            <div className="trifecta-earned-card" role="note">
-              <div className="trifecta-earned-medallion" aria-hidden="true">
-                <span className="trifecta-earned-holo" />
-                <span>🏆</span>
-              </div>
-              <div>
-                <span className="award-status-chip">Earned{trifecta.earnedAt ? ` · ${new Date(trifecta.earnedAt).toLocaleDateString()}` : ''}</span>
-                <h2>Trifecta Award</h2>
-                <p>A completed goal in Health, Wealth, and Relationships, all at once — the whole picture, not just one part of it.</p>
-              </div>
-            </div>
-          )}
+          {trifecta?.earned && <GoldAward earned />}
           <div className="achievement-house-layout">
             <div className="house-scene" aria-label="Achievement house with three floors">
               <div className="house-roof" aria-hidden="true"><span>PackSomeWork</span></div>

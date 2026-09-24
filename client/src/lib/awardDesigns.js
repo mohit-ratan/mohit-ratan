@@ -46,17 +46,10 @@ export const AWARD_KIND_COPY = {
   },
 };
 
-// A rare fourth design: earning every category's Goal Trophy at once. This
-// one IS real — src/lib/trifecta.js (backend) grants it the moment a
-// member has a completed goal in health, wealth, and relationships all at
-// once, recorded permanently in the special_awards table. The gallery
-// still shows it with the same generic "not yet earned" preview treatment
-// as everything else here, since this page never checks the viewer's own
-// progress — the real, personalized version of this award lives in each
-// member's own Achievement House.
+// Gold award uses recorded goal completions within a rolling 45-day window.
 export const TRIFECTA_AWARD = {
   id: 'trifecta',
   icon: '🏆',
   name: 'Trifecta Award',
-  rule: "Earn the Health, Wealth, and Relationships Goal Trophies at the same time, and this rare, all-category award is yours — proof you're building the whole life, not just one part of it.",
+  rule: "Complete a goal in Health, Wealth, and Relationships within any rolling 45-day window to receive the prized gold award.",
 };

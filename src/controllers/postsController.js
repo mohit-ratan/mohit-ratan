@@ -240,7 +240,6 @@ async function achievements(req, res) {
     // Tagged posts track progress; only a finished, non-empty checklist earns an award.
     const earnedList = achievementList.filter((a) => a.goal?.completed);
     const trifecta = await trifectaStatus(authorId);
-    trifecta.categories = TRIFECTA_CATEGORIES.filter((c) => earnedList.some((a) => a.category === c));
     res.json({
       achievements: earnedList,
       goals: achievementList.filter((a) => a.goal && !a.goal.completed),

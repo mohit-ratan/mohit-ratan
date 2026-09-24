@@ -2,7 +2,18 @@ const pool = require('../db');
 const { normalizeTasks } = require('./goalProgress');
 
 const TRIFECTA_CATEGORIES = ['health', 'wealth', 'relationships'];
-const TRIFECTA_AWARD_ID = 'trifecta';
+const TRIFECTA_AWARD_ID = 'trifecta-45';
+const { ensureMemberTables } = require('./memberFeatures');
+const WINDOW_MS = 45 * 86400000;
+function windowCategories(events, now = Date.now()) {
+  return new Set(events.filter(e => Number(e.occurred_ms) >= now - WINDOW_MS && Number(e.occurred_ms) <= now).map(e => e.category).filter(c => TRIFECTA_CATEGORIES.includes(c)));
+}
+async function recentCategories(userId, now = Date.now()) {
+  await ensureMemberTables();
+  const [events] = await pool.query('SELECT category, occurred_ms FROM task_checkins WHERE user_id=? AND goal_completed=1 AND occurred_ms>=? AND occurred_ms<=?', [userId, now-WINDOW_MS, now]);
+  return windowCategories(events, now);
+}
+
 
 // Categories the author has at least one *completed* goal in — same rule
 // as a single Goal Trophy (see postsController.achievements()), just
@@ -37,13 +48,14 @@ async function trifectaStatus(authorId) {
     'SELECT earned_at FROM special_awards WHERE user_id = ? AND award_id = ?',
     [authorId, TRIFECTA_AWARD_ID]
   );
-  if (rows.length) return { earned: true, earnedAt: new Date(rows[0].earned_at).getTime() };
-  return { earned: false, earnedAt: null };
+  const categories = [...await recentCategories(authorId)];
+  if (rows.length) return { earned: true, earnedAt: new Date(rows[0].earned_at).getTime(), categories };
+  return { earned: false, earnedAt: null, categories };
 }
 
 // Call right after a goal check-in might have just completed a goal.
 // Persists the award (once, via the primary key) the first time all three
-// categories have a completed goal — later calls are cheap no-ops once
+// categories have recorded goal completions within 45 days — later calls are no-ops once
 // it's already recorded.
 async function checkAndAwardTrifecta(userId) {
   const [existing] = await pool.query(
@@ -52,7 +64,7 @@ async function checkAndAwardTrifecta(userId) {
   );
   if (existing.length) return false;
 
-  const categories = await completedGoalCategories(userId);
+  const categories = await recentCategories(userId);
   if (!TRIFECTA_CATEGORIES.every((c) => categories.has(c))) return false;
 
   const [result] = await pool.query(
@@ -62,4 +74,4 @@ async function checkAndAwardTrifecta(userId) {
   return result.affectedRows > 0;
 }
 
-module.exports = { TRIFECTA_CATEGORIES, TRIFECTA_AWARD_ID, completedGoalCategories, trifectaStatus, checkAndAwardTrifecta };
+module.exports = { windowCategories, recentCategories, TRIFECTA_CATEGORIES, TRIFECTA_AWARD_ID, completedGoalCategories, trifectaStatus, checkAndAwardTrifecta };

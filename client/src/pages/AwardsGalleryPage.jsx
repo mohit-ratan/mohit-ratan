@@ -1,45 +1,9 @@
 import { Link } from 'react-router-dom';
+import ProgressAward from '../components/ProgressAward';
+import GoldAward from '../components/GoldAward';
 import BrandLogo from '../components/BrandLogo';
 import { useAuth } from '../context/AuthContext';
-import { AWARD_COLLECTIONS, AWARD_KIND_COPY, TRIFECTA_AWARD } from '../lib/awardDesigns';
-
-function AwardCard({ award, category }) {
-  const kindCopy = AWARD_KIND_COPY[award.kind];
-  return (
-    <article className={`award-card award-card-${category}`}>
-      <div className="award-medallion-wrap">
-        <span className="award-medallion-ring" />
-        <div className="award-medallion">
-          <span className="award-medallion-shine" />
-          <span className="award-medallion-icon">{award.icon}</span>
-        </div>
-      </div>
-      <span className="award-status-chip">Design preview · not yet earned</span>
-      <h3>{award.name}</h3>
-      <span className="award-kind-label">{kindCopy.label}</span>
-      <p>{award.rule}</p>
-    </article>
-  );
-}
-
-function TrifectaAwardCard() {
-  return (
-    <article className="award-card award-card-trifecta">
-      <div className="award-medallion-wrap-trifecta">
-        <span className="award-medallion-ring-outer" />
-        <span className="award-medallion-ring-trifecta" />
-        <div className="award-medallion-trifecta">
-          <span className="award-medallion-holo" />
-          <span className="award-medallion-trifecta-icon">{TRIFECTA_AWARD.icon}</span>
-        </div>
-      </div>
-      <span className="award-status-chip">Design preview · not yet earned</span>
-      <h3>{TRIFECTA_AWARD.name}</h3>
-      <span className="award-kind-label">Ultimate award</span>
-      <p>{TRIFECTA_AWARD.rule}</p>
-    </article>
-  );
-}
+import { AWARD_COLLECTIONS, AWARD_KIND_COPY } from '../lib/awardDesigns';
 
 export default function AwardsGalleryPage() {
   const { user } = useAuth();
@@ -63,11 +27,11 @@ export default function AwardsGalleryPage() {
       <main id="awards-main">
         <section className="awards-hero">
           <p className="intro-eyebrow">EVERY DESIGN, EXPLAINED</p>
-          <h1>The Awards Gallery</h1>
+          <h1>The Awards Gallery</h1><p>1–7 days: ★ · 8–15: ★★ · 16–30: ★★★. Every additional 15 days adds a star. Colours follow your category; detail grows with the challenge.</p>
           <p className="intro-lead">
             A look at every award design in PackSomeWork — what it celebrates and exactly how it's earned. Nothing shown
             here has been awarded to you; it's a catalog of designs, not a trophy case. Your own earned awards live in
-            your <Link to={user ? `/profile/${user.id}/achievements` : '/register'} className="intro-text-link-inline">Achievement House</Link>.
+            your <Link to={user ? '/today' : '/register'} className="intro-text-link-inline">Today dashboard</Link>.
           </p>
         </section>
 
@@ -78,9 +42,7 @@ export default function AwardsGalleryPage() {
               <h2 id={`awards-${collection.category}-title`}>{collection.label} awards</h2>
             </div>
             <div className="awards-grid">
-              {collection.awards.map((award) => (
-                <AwardCard key={award.id} award={award} category={collection.category} />
-              ))}
+              {[7,15,30,45,60].map(days=><article className={`award-card award-card-${collection.category}`} key={days}><ProgressAward preview category={collection.category} task={{targetDays:days,completedDays:days,text:`${collection.label} · ${days} days`}} /></article>)}
             </div>
           </section>
         ))}
@@ -90,7 +52,7 @@ export default function AwardsGalleryPage() {
             <p className="intro-eyebrow">🏆 THE RAREST DESIGN</p>
             <h2 id="awards-trifecta-title">One award for the whole picture</h2>
           </div>
-          <TrifectaAwardCard />
+          <GoldAward preview />
         </section>
 
         <section className="awards-legend" aria-labelledby="awards-legend-title">
