@@ -10,7 +10,6 @@ import EditPostModal from './EditPostModal';
 import PostGoalPanel from './PostGoalPanel';
 import ComposerModal from './ComposerModal';
 import CommentReactions from './CommentReactions';
-import ReactionPickerPanel from './ReactionPickerPanel';
 import { isMemeReaction, memeReaction } from '../lib/reactions';
 import { HeartIcon } from '../lib/icons';
 
@@ -29,9 +28,6 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
   const [commentRetry, setCommentRetry] = useState(0);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
-  const [commentSticker, setCommentSticker] = useState(null);
-  const [stickerPickerOpen, setStickerPickerOpen] = useState(false);
-  const stickerPickerRef = useRef(null);
   const [loadingComments, setLoadingComments] = useState(true);
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -50,15 +46,6 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
     }).catch((error) => { if (!cancelled) setCommentError(error.message); }).finally(() => { if (!cancelled) setLoadingComments(false); });
     return () => { cancelled = true; };
   }, [post.id, commentRetry]);
-
-  useEffect(() => {
-    if (!stickerPickerOpen) return;
-    function handleClickOutside(e) {
-      if (stickerPickerRef.current && !stickerPickerRef.current.contains(e.target)) setStickerPickerOpen(false);
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [stickerPickerOpen]);
 
   async function toggleLike() {
     if (liking.current) return;
@@ -79,14 +66,13 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
 
   async function submitComment() {
     const text = commentText.trim();
-    if ((!text && !commentSticker) || commenting.current) return;
+    if (!text || commenting.current) return;
     commenting.current = true;
     setCommentPending(true);
     try {
-      const { data } = await api.post(`/api/posts/${post.id}/comments`, { text, sticker: commentSticker });
-      setComments((cs) => [...cs, { id: data.id, authorId: user.id, authorName: user.displayName, text, sticker: commentSticker, createdAt: Date.now(), reactions: [] }]);
+      const { data } = await api.post(`/api/posts/${post.id}/comments`, { text });
+      setComments((cs) => [...cs, { id: data.id, authorId: user.id, authorName: user.displayName, text, createdAt: Date.now(), reactions: [] }]);
       setCommentText('');
-      setCommentSticker(null);
       onChanged?.();
     } catch (err) {
       showToast(err.message, true);
@@ -204,6 +190,12 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
             )}
             <button className="modal-close-btn" type="button" aria-label="Close" onClick={onClose}>✕</button>
           </div>
+          <div className="modal-like-row">
+            <button className={`action-btn like-btn${liked ? ' liked' : ''}`} disabled={likePending} onClick={toggleLike}>
+              <HeartIcon filled={liked} />{likeCount > 0 ? likeCount : 'Like'}
+            </button>
+            <span className="footer-time">{timeAgo(post.createdAt)}</span>
+          </div>
           <div className="modal-detail-scroll">
             {post.tag && (
               <div className="tags-row">
@@ -274,37 +266,7 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
             )}
           </div>
           <div className="modal-detail-footer">
-            <div className="footer-top-row">
-              <button className={`action-btn like-btn${liked ? ' liked' : ''}`} disabled={likePending} onClick={toggleLike}>
-                <HeartIcon filled={liked} />{likeCount > 0 ? likeCount : 'Like'}
-              </button>
-              <span className="footer-time">{timeAgo(post.createdAt)}</span>
-            </div>
-            {commentSticker && (
-              <div className="comment-sticker-preview">
-                {isMemeReaction(commentSticker) ? (
-                  <span className="comment-sticker-meme" style={{ background: memeReaction(commentSticker).bg }}>
-                    <span>{memeReaction(commentSticker).emoji}</span><small>{memeReaction(commentSticker).label}</small>
-                  </span>
-                ) : (
-                  <span className="comment-sticker-emoji">{commentSticker}</span>
-                )}
-                <button type="button" className="comment-sticker-remove" aria-label="Remove sticker" onClick={() => setCommentSticker(null)}>✕</button>
-              </div>
-            )}
             <div className="comment-form">
-              <div className="comment-sticker-trigger-wrap" ref={stickerPickerRef}>
-                <button type="button" className="comment-sticker-trigger" aria-label="Attach a sticker" onClick={() => setStickerPickerOpen((v) => !v)}>
-                  😊+
-                </button>
-                {stickerPickerOpen && (
-                  <ReactionPickerPanel
-                    onPick={(key) => { setCommentSticker(key); setStickerPickerOpen(false); }}
-                    current={commentSticker}
-                    onRemove={() => { setCommentSticker(null); setStickerPickerOpen(false); }}
-                  />
-                )}
-              </div>
               <input
                 type="text"
                 className="comment-input"
@@ -315,7 +277,7 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
                 onChange={(e) => setCommentText(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') submitComment(); }}
               />
-              <button className="comment-send-btn" disabled={commentPending || (!commentText.trim() && !commentSticker)} onClick={submitComment}>{commentPending ? 'Sending…' : 'Post'}</button>
+              <button className="comment-send-btn" disabled={commentPending || !commentText.trim()} onClick={submitComment}>{commentPending ? 'Sending…' : 'Post'}</button>
             </div>
           </div>
         </div>
