@@ -19,7 +19,7 @@ test('only fully completed goals earn awards; unfinished goals and tags remain a
     module: { exports: {} }, console,
     require: (name) => name === '../lib/trifecta' ? { checkAndAwardTrifecta: async () => false, trifectaStatus: async () => ({}), TRIFECTA_CATEGORIES: ['health','wealth','relationships'] } : name === '../lib/memberFeatures' ? { ensureMemberTables: async () => {}, recordCheckIn: async () => {} } : name === '../lib/taskCelebration' ? require('../src/lib/taskCelebration') : name === '../lib/access' ? { canViewPost: async () => true } : name === '../db' ? {
       query: async (sql) => [sql.includes('FROM goals') ? goals : posts],
-    } : name === 'uuid' ? { v4: () => 'test-id' } : name === '../lib/goalProgress' ? require('../src/lib/goalProgress') : name === '../lib/follows' ? { canView: async () => true } : name === '../lib/notifications' ? { notify: async () => {} } : name === '../lib/storage' ? { uploadMedia: async () => '/assets/uploads/small.jpg', deleteMedia: async () => {} } : require(name),
+    } : name === 'uuid' ? { v4: () => 'test-id' } : name === '../lib/goalProgress' ? require('../src/lib/goalProgress') : name === '../lib/follows' ? { canView: async () => true } : name === '../lib/notifications' ? { notify: async () => {} } : name === '../lib/storage' ? { uploadMedia: async () => '/assets/uploads/small.jpg', deleteMedia: async () => {} } : name === '../lib/reactions' ? require('../src/lib/reactions') : require(name),
   };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/controllers/postsController.js'), 'utf8'), sandbox);
   let result;

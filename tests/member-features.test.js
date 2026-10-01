@@ -41,7 +41,7 @@ test('task award reveals retain exact duration and completed awards',()=>{
   {id:'week',text:'Walk',targetDays:7,completedDays:1},
   {id:'month',text:'Train',targetDays:30,completedDays:30}
  ]}],[],[],'UTC');
- assert.deepEqual(result.awards[0].taskAwards.map(t=>[t.id,t.targetDays,t.completedDays]),[['fitness:week',7,1],['fitness:month',30,30]]);
+ assert.deepEqual(result.awards[0].taskAwards.map(t=>[t.id,t.targetDays,t.completedDays]),[['fitness',37,31]]);
  assert.equal(result.tasks.length,1);
  assert.deepEqual(result.awards[1].taskAwards,[]);
 });

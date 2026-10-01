@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /account
+Disallow: /journal
+Disallow: /today
+
+Sitemap: https://packsomework.com/sitemap.xml

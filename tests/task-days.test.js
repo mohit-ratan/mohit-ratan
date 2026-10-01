@@ -7,7 +7,7 @@ const { normalizeTasks } = require('../src/lib/goalProgress');
 
 test('legacy goals retain completion; progress is weighted by required task days', async () => {
   const { tasksProgress } = await import('../client/src/lib/format.js');
-  assert.deepEqual(normalizeTasks([{ text: 'Old', done: true }])[0], { id: 'legacy-0', text: 'Old', done: true, targetDays: 1, completedDays: 1 });
+  assert.deepEqual(normalizeTasks([{ text: 'Old', done: true }])[0], { id: 'legacy-0', text: 'Old', done: true, targetDays: 1, completedDays: 1, subtasks: [] });
   assert.deepEqual(tasksProgress([{ targetDays: 10, completedDays: 1 }, { targetDays: 20, completedDays: 2 }]), { target: 30, completed: 3 });
 });
 
