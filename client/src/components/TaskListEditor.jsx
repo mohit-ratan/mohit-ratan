@@ -49,7 +49,7 @@ export default function TaskListEditor({ tasks, onChange, depth = 0 }) {
                   type="number"
                   min="1"
                   max="3650"
-                  value={task.targetDays || 1}
+                  value={task.targetDays ?? 1}
                   onChange={(e) => updateAt(index, { targetDays: e.target.value })}
                 />
               </label>

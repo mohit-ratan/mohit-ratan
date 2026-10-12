@@ -24,7 +24,9 @@ function toSqlDate(d) {
 // A streak freeze auto-covers one missed day at a time, up to
 // STREAK_FREEZE_MONTHLY_LIMIT per calendar month, the first time that gap
 // is encountered — recorded permanently in streak_freeze_uses so it's
-// consumed once, not re-spent (or un-spent) on every recomputation.
+// consumed once, not re-spent (or un-spent) on every recomputation. A
+// freeze only ever bridges an ISOLATED single missed day — two missed
+// days back to back break the streak outright, even with freezes left.
 function startOfLocalDay(ts) {
   const d = new Date(ts);
   return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
@@ -43,12 +45,13 @@ async function computeStreak(authorId) {
   // multi-day streak out of nothing.
   const earliestActiveMs = realDayTimestamps.reduce((min, ts) => Math.min(min, ts), Infinity);
 
-  const activeDays = new Set();
-  postDates.forEach(r => activeDays.add(dateKey(r.created_at)));
-  storyDates.forEach(r => activeDays.add(dateKey(r.created_at)));
+  const realActiveDays = new Set();
+  postDates.forEach(r => realActiveDays.add(dateKey(r.created_at)));
+  storyDates.forEach(r => realActiveDays.add(dateKey(r.created_at)));
   // Freeze rows from before this fix may have recorded invalid pre-history
   // freezes; only honor ones that actually fall on/after the real start.
   const validFreezeRows = freezeRows.filter((r) => startOfLocalDay(r.used_on) >= earliestActiveMs);
+  const activeDays = new Set(realActiveDays);
   validFreezeRows.forEach(r => activeDays.add(dateKey(r.used_on)));
 
   const monthStart = new Date();
@@ -68,19 +71,27 @@ async function computeStreak(authorId) {
   let streak = 0;
   while (startOfLocalDay(cursor.getTime()) >= earliestActiveMs) {
     const key = dateKey(cursor.getTime());
-    if (activeDays.has(key)) {
+    if (realActiveDays.has(key)) {
       streak++;
       cursor.setDate(cursor.getDate() - 1);
       continue;
     }
+    // A missed day. Only bridge it if the day right before it (further
+    // back in time) was real activity — i.e. this is truly a single day
+    // sandwiched between real activity, not the start of a longer gap.
+    // Two or more missed days in a row never get bridged at all.
+    const beforeMs = startOfLocalDay(cursor.getTime()) - 86400000;
+    const beforeIsReal = beforeMs >= earliestActiveMs && realActiveDays.has(dateKey(beforeMs));
+    if (!beforeIsReal) break;
     if (freezesUsedThisMonth >= STREAK_FREEZE_MONTHLY_LIMIT) break;
-    try {
-      await pool.query('INSERT INTO streak_freeze_uses (user_id, used_on) VALUES (?, ?)', [authorId, toSqlDate(cursor)]);
-    } catch {
-      break; // table missing locally, or a genuine race — treat the streak as broken here
+    if (!activeDays.has(key)) {
+      try {
+        await pool.query('INSERT INTO streak_freeze_uses (user_id, used_on) VALUES (?, ?)', [authorId, toSqlDate(cursor)]);
+      } catch {
+        break; // table missing locally, or a genuine race — treat the streak as broken here
+      }
+      freezesUsedThisMonth++;
     }
-    freezesUsedThisMonth++;
-    activeDays.add(key);
     streak++;
     cursor.setDate(cursor.getDate() - 1);
   }
