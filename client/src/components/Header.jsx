@@ -145,6 +145,7 @@ export default function Header({
   }
 
   function notificationText(n) {
+    if (n.type === 'monthly_recap') return `PackSomeWork brings you your monthly recap · ${new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${n.month}-01T12:00:00Z`))}`;
     if (n.type === 'like') return `${n.actorName} liked your post`;
     if (n.type === 'reaction') return `${n.actorName} reacted to your post`;
     if (n.type === 'comment') return `${n.actorName} commented on your post`;
@@ -367,7 +368,7 @@ export default function Header({
                         className={`bell-notif-row${n.read ? '' : ' unread'}`}
                         onClick={() => openNotification(n)}
                       >
-                        <Avatar id={n.actorId} name={n.actorName} photoUrl={n.actorPhotoUrl} size={32} />
+                        {n.type === 'monthly_recap' ? <span className="bell-recap-brand"><BrandLogo size={28} /></span> : <Avatar id={n.actorId} name={n.actorName} photoUrl={n.actorPhotoUrl} size={32} />}
                         <span className="bell-notif-text">{notificationText(n)}<small>{timeAgo(n.createdAt)}</small></span>
                       </button>
                     ))}

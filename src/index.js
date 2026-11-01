@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const cron = require('node-cron');
+const { createMonthlyRecapNotifications } = require('./lib/monthlyRecapNotifications');
 const { sendPersonalReminders } = require('./lib/personalReminders');
 const { ensureMemberTables } = require('./lib/memberFeatures');
 const memberController = require('./controllers/memberController');
@@ -86,11 +87,17 @@ const PORT = process.env.PORT || 4000;
 Promise.all([ensureSecurityTables(), ensureMemberTables()]).then(() => {
   app.listen(PORT, () => console.log(`PackSomeWork listening on port ${PORT}`));
   drainMediaDeletionQueue().catch(err => console.error('Media cleanup failed:', err.code));
+  createMonthlyRecapNotifications().catch(err => console.error('Monthly recap notifications failed:', err.code));
 }).catch(err => { console.error('Security schema initialization failed:', err.code); poolShutdown(); process.exit(1); });
 function poolShutdown() { require('./db').end(); }
 cron.schedule('*/15 * * * *', () => {
   drainMediaDeletionQueue().catch(err => console.error('Media cleanup failed:', err.code));
   require('./db').query('DELETE FROM auth_rate_limits WHERE expires_at < NOW() - INTERVAL 1 DAY').catch(err => console.error('Rate cleanup failed:', err.code));
+});
+
+// In-app recaps become available at each member's local month boundary.
+cron.schedule('*/15 * * * *', () => {
+  createMonthlyRecapNotifications().catch(err => console.error('Monthly recap notifications failed:', err.code));
 });
 
 // Personal reminders are opt-in and evaluated in each member's timezone.

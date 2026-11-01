@@ -15,3 +15,10 @@ test('people notifications retain their profile destination', async () => {
   assert.equal(notificationTarget({ type: 'follow_accepted', actorId: 'sender' }), '/profile/sender');
   assert.equal(notificationTarget({ type: 'partner_request', actorId: 'partner' }), '/profile/partner');
 });
+
+test('monthly recap notification opens the recipient profile, correct month and reel', async () => {
+  const { notificationTarget } = await import('../client/src/lib/notificationTarget.mjs');
+  assert.equal(notificationTarget({ type: 'monthly_recap', ownerId: 'owner', month: '2026-10' }), '/profile/owner?recap=2026-10&reel=1#monthly-highlights-title');
+  assert.equal(notificationTarget({ type: 'monthly_recap', month: '2026-10' }), null);
+  assert.equal(notificationTarget({ type: 'monthly_recap', ownerId: 'owner', month: '2026-13' }), null);
+});

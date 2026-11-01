@@ -222,3 +222,12 @@ CREATE TABLE IF NOT EXISTS goal_streaks (
   PRIMARY KEY (author_id, tag),
   FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS monthly_recap_notifications (
+  user_id VARCHAR(36) NOT NULL,
+  month_key CHAR(7) NOT NULL,
+  read_at DATETIME DEFAULT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, month_key),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;

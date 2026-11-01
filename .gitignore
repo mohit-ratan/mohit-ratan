@@ -40,3 +40,6 @@ npm-debug.log*
 
 # Generated copy of the sharing image; source lives under client/public.
 public/brand/share.png
+
+# Vite copies the original reel soundtracks from client/public/audio.
+public/audio/*.wav

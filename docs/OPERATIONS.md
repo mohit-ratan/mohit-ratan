@@ -128,3 +128,16 @@ The prized gold Trifecta requires recorded goal completion check-ins in all thre
 - Profiles now show a monthly recap for completed calendar months, with positive factual highlights, goal completion records, active-day and check-in totals, the longest recorded run within the month, and up to six photos spread across that month. Each image links to its original post. Videos count as shared moments but are not rendered as image thumbnails.
 - `GET /api/profile/:id/monthly-recaps` computes highlights on demand from current visible posts and recorded task check-ins. It automatically includes a month after it ends, with no scheduled publishing job or additional secrets. Six-month windows and a `before=YYYY-MM` cursor support earlier months. The owner's saved reminder timezone is used, defaulting to UTC.
 - Existing profile/block access and per-post friends visibility apply before aggregation. Recaps never query journals or expired stories. Deleting a post or restricting its visibility removes it from the recap for affected viewers. Highlights are deterministic summaries of recorded activity, with no image-content claims or external AI calls. Historical goal completion dates that were not recorded are not fabricated.
+
+## Monthly memory reels
+
+- Recaps with photos offer an in-app vertical reel: an opening month card, the recap’s visible photos with factual highlight captions, and a closing milestone card. Playback supports pause, previous/next slides, replay, optional music, keyboard controls, and reduced-motion settings. Backgrounding the app pauses playback; closing the reel stops audio.
+- Three original instrumental beds are bundled under `client/public/audio`, with upbeat Health, focused Wealth, and warm Relationships themes. The recap’s most-posted category selects the soundtrack. Sound is off until explicitly enabled. Audio failures leave the visual reel usable.
+- `scripts/generate-reel-music.py` reproduces the bundled WAV files without external recordings or dependencies. Vite copies them into `public/audio` during the normal build. No music-provider keys or external media service is required.
+- Reels use only the images already authorized for that viewer’s monthly recap. This is in-app playback, not a downloadable or externally published video. Real-device playback and audio checks remain part of deployment acceptance.
+
+## Monthly recap inbox notifications
+
+- Startup adds `monthly_recap_notifications`, keyed by user and recap month. A background check every 15 minutes creates one in-app notice for the most recently completed month when it contains posts. Member reminder timezones determine the boundary; UTC is the fallback. Startup and notification-inbox reads catch up after downtime. No email or device push is sent.
+- The notice reads “PackSomeWork brings you your monthly recap” with its month and uses the brand icon. Selecting it opens the recipient’s profile, selects that exact month, and opens its reel when photos remain available. Music still requires explicit enabling.
+- The unique user/month key prevents duplicates from concurrent workers or repeated polling. Mark-all-read includes these notices. Account deletion cascades them. No notifications are created for empty months, and prior-month photo visibility continues to be enforced when the recap is opened.

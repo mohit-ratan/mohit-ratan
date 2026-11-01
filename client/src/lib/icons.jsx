@@ -82,6 +82,10 @@ export function TrophyIcon() {
 
 // One rounded outline family for category and interface symbols.
 const THEME_PATHS = {
+  play: ['m8 4 12 8-12 8V4Z'],
+  pause: ['M8 4v16M16 4v16'],
+  sound: ['M11 4 5 9H2v6h3l6 5V4Z', 'M15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14'],
+  muted: ['M11 4 5 9H2v6h3l6 5V4Z', 'm16 9 6 6M22 9l-6 6'],
   circle: ['M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
   square: ['M4 4h16v16H4Z'],
   portrait: ['M6 2h12v20H6Z'],

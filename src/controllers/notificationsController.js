@@ -1,3 +1,4 @@
+const { ensureMonthlyRecapNotification } = require('../lib/monthlyRecapNotifications');
 const pool = require('../db');
 
 // Recent activity aimed at the signed-in user (likes, comments, accepted
@@ -5,6 +6,7 @@ const pool = require('../db');
 // in followsController which needs accept/reject actions.
 async function list(req, res) {
   try {
+    await ensureMonthlyRecapNotification(req.userId);
     const [rows] = await pool.query(
       `SELECT n.id, n.type, n.post_id, n.read_at, n.created_at,
               u.id as actor_id, u.display_name as actor_name, u.photo_url as actor_photo
@@ -14,18 +16,20 @@ async function list(req, res) {
        LIMIT 30`,
       [req.userId]
     );
-    res.json({
-      notifications: rows.map((n) => ({
-        id: n.id,
-        type: n.type,
-        postId: n.post_id,
-        actorId: n.actor_id,
-        actorName: n.actor_name,
-        actorPhotoUrl: n.actor_photo,
-        read: !!n.read_at,
-        createdAt: new Date(n.created_at).getTime(),
-      })),
-    });
+    const [recaps] = await pool.query(`SELECT month_key, read_at, created_at FROM monthly_recap_notifications
+      WHERE user_id = ? ORDER BY created_at DESC LIMIT 30`, [req.userId]);
+    const notifications = rows.map(n => ({
+      id: n.id, type: n.type, postId: n.post_id, actorId: n.actor_id,
+      actorName: n.actor_name, actorPhotoUrl: n.actor_photo,
+      read: !!n.read_at, createdAt: new Date(n.created_at).getTime(),
+    }));
+    notifications.push(...recaps.map(recap => ({
+      id: `monthly-recap:${recap.month_key}`, type: 'monthly_recap', ownerId: req.userId,
+      month: recap.month_key, actorName: 'PackSomeWork', read: !!recap.read_at,
+      createdAt: new Date(recap.created_at).getTime(),
+    })));
+    notifications.sort((a, b) => b.createdAt - a.createdAt);
+    res.json({ notifications: notifications.slice(0, 30) });
   } catch (err) {
     console.error('list notifications error:', err);
     res.status(500).json({ error: 'Could not load notifications.' });
@@ -38,6 +42,7 @@ async function markRead(req, res) {
       'UPDATE notifications SET read_at = NOW() WHERE recipient_id = ? AND read_at IS NULL',
       [req.userId]
     );
+    await pool.query('UPDATE monthly_recap_notifications SET read_at = NOW() WHERE user_id = ? AND read_at IS NULL', [req.userId]);
     res.json({ ok: true });
   } catch (err) {
     console.error('mark notifications read error:', err);
