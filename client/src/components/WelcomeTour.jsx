@@ -1,3 +1,4 @@
+import { ThemeIcon, TrophyIcon } from '../lib/icons';
 import { useState } from 'react';
 
 // Mirrors FirstGoalGuide's "first login" placement and look, but this one
@@ -6,27 +7,27 @@ import { useState } from 'react';
 // achievements, streaks, and the social features.
 const SLIDES = [
   {
-    icon: '👋',
+    icon: 'sparkle',
     title: 'Welcome to PackSomeWork',
     body: "A place to build real consistency in Health, Wealth, and Relationships — one photo at a time. Here's how it all fits together.",
   },
   {
-    icon: '📸',
+    icon: 'camera',
     title: 'Share what you do',
     body: 'Every post needs a real photo or video — no text-only posts. Pick a category, and add a tag if this is part of something ongoing.',
   },
   {
-    icon: '🎯',
+    icon: 'target',
     title: 'Tags become goals',
     body: 'The first time you use a tag, you can turn it into a goal and break it into tasks, each with its own day target, like "Gym, 30 days". Reuse that exact same tag every time you check in to keep tracking that same goal — a different tag starts a brand-new one, so it\'s worth double-checking before you post.',
   },
   {
-    icon: '🏆',
+    icon: 'trophy',
     title: 'Earn real achievements',
     body: "Finish every task in a goal to earn its trophy in your Achievement House. Complete a goal in Health, Wealth, and Relationships all at once for the rare SuperPack Award. Post daily to build a streak — you get 2 free streak freezes a month if you miss a day.",
   },
   {
-    icon: '🤝',
+    icon: 'people',
     title: 'Connect with others',
     body: "Follow people, pair up with an accountability partner who's notified if you miss a day, and check Following's Progress to see how close everyone you follow is to finishing their goal.",
   },
@@ -43,7 +44,7 @@ export default function WelcomeTour({ onDone }) {
         <p className="house-eyebrow">HOW PACKSOMEWORK WORKS · {step + 1} OF {SLIDES.length}</p>
         <button type="button" className="auth-link welcome-tour-skip" onClick={onDone}>Skip</button>
       </div>
-      <span className="welcome-tour-icon" aria-hidden="true">{slide.icon}</span>
+      <span className="welcome-tour-icon" aria-hidden="true">{slide.icon === 'trophy' ? <TrophyIcon /> : <ThemeIcon name={slide.icon} />}</span>
       <h2 id="welcome-tour-title">{slide.title}</h2>
       <p>{slide.body}</p>
       <div className="welcome-tour-dots" aria-hidden="true">

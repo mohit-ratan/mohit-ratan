@@ -4,7 +4,7 @@ import BrandLogo from './BrandLogo';
 import Avatar from './Avatar';
 import api from '../api';
 import { CATEGORIES, timeAgo } from '../lib/format';
-import { SearchIcon, BellIcon } from '../lib/icons';
+import { SearchIcon, BellIcon, TrophyIcon, CategoryIcon, ThemeIcon } from '../lib/icons';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -15,6 +15,7 @@ export default function Header({
   searchQuery = '',
   onSearchChange,
   streak = 0,
+  freezesRemaining,
   showGoalNavigation = false,
 }) {
   const navigate = useNavigate();
@@ -22,6 +23,17 @@ export default function Header({
   const [localSearch, setLocalSearch] = useState('');
   const effectiveSearch = onSearchChange ? searchQuery : localSearch;
   const { user, signOut } = useAuth();
+  const [ownFreezes, setOwnFreezes] = useState(null);
+  const userId = user?.id;
+  const freezeDays = freezesRemaining ?? (ownFreezes?.userId === userId ? ownFreezes.count : null);
+  useEffect(() => {
+    if (!userId || freezesRemaining !== undefined) return;
+    let cancelled = false;
+    api.get(`/api/profile/${userId}`).then(({ data }) => {
+      if (!cancelled) setOwnFreezes({ userId, count: data.freezesRemaining ?? 0 });
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [userId, freezesRemaining]);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const searchBoxRef = useRef(null);
@@ -218,7 +230,7 @@ export default function Header({
             aria-label="Clear search"
             onClick={() => (onSearchChange || setLocalSearch)('')}
           >
-            ✕
+            <ThemeIcon name="close" />
           </button>
           {peopleOpen && effectiveSearch.trim() && (
             <div className="people-search-dropdown">
@@ -264,8 +276,8 @@ export default function Header({
           )}
         </div>
         <div className="header-actions">
-          <button type="button" className="header-link-btn" title="Awards gallery" onClick={() => navigate('/awards')}>
-            🏆 <span>Awards</span>
+          <button type="button" className="header-link-btn" title="Awards gallery" aria-label="Awards gallery" onClick={() => navigate('/awards')}>
+            <TrophyIcon /> <span>Awards</span>
           </button>
           <div className="bell-wrap" ref={requestsRef}>
             <button
@@ -273,6 +285,7 @@ export default function Header({
               type="button"
               title="Notifications"
               aria-label="Notifications"
+              aria-expanded={requestsOpen}
               onClick={toggleBell}
             >
               <BellIcon />
@@ -363,11 +376,20 @@ export default function Header({
               className="avatar-btn"
               type="button"
               title="Account menu"
+              aria-label="Account menu"
+              aria-expanded={menuOpen}
               onClick={() => setMenuOpen((v) => !v)}
             >
               {user ? <Avatar id={user.id} name={user.displayName} photoUrl={user.photoUrl} size={32} /> : 'Me'}
             </button>
-            <span className="streak-badge" hidden={!streak}>🔥<span>{streak}</span></span>
+            {user && <span
+              className={`streak-badge${!streak ? ' streak-badge-zero' : ''}`}
+              aria-label={`${streak} day streak${freezeDays === null ? '' : `, ${freezeDays} freeze days left this month`}`}
+              title={`${streak} day streak${freezeDays === null ? '' : ` · ${freezeDays} freeze days left this month`}`}
+            >
+              <span className="avatar-streak-days" aria-hidden="true"><ThemeIcon name="flame" />{streak}</span>
+              {freezeDays !== null && <span className="avatar-freeze-days" aria-hidden="true"><ThemeIcon name="freeze" />{freezeDays}</span>}
+            </span>}
             {menuOpen && (
               <div className="me-menu">
                 <button
@@ -412,7 +434,7 @@ export default function Header({
               title={c.label}
               onClick={() => handleCategoryClick(c.id)}
             >
-              <span aria-hidden="true">{c.emoji}</span>
+              <CategoryIcon category={c.id} />
             </button>
           ))}
         </nav>

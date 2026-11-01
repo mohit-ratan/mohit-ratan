@@ -1,3 +1,4 @@
+import { ThemeIcon } from '../lib/icons';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
@@ -30,7 +31,7 @@ export default function SuggestedFollows({ onTagClick }) {
 
   return (
     <div className="card side-card suggested-follows">
-      <h4>🎯 Similar goals</h4>
+      <h4><ThemeIcon name="target" /> Similar goals</h4>
       <ul className="follow-list">
         {suggestions.map((s) => (
           <li key={s.id} className="suggested-follow-row">

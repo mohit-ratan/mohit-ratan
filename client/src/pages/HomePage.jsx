@@ -16,7 +16,7 @@ import Avatar from '../components/Avatar';
 import ComposerModal from '../components/ComposerModal';
 import PostDetailModal from '../components/PostDetailModal';
 import StoryViewerModal from '../components/StoryViewerModal';
-import { CameraSmallIcon } from '../lib/icons';
+import { CameraSmallIcon, ThemeIcon } from '../lib/icons';
 
 function groupStoriesByAuthor(stories) {
   const groups = {};
@@ -224,16 +224,13 @@ export default function HomePage() {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         streak={streak}
+        freezesRemaining={freezesRemaining}
       />
       <div className="wrap">
         <main className="layout">
           <section className="feed-col">
             {loadingLinkedPost && <p role="status">Opening post…</p>}
             {linkedPostError && <div className="inline-error" role="alert">{linkedPostError} <button type="button" onClick={closeLinkedPost}>Dismiss</button></div>}
-            <div className="mobile-streak-summary" aria-label="Your streak and freeze days">
-              <span>🔥 {streak} day{streak === 1 ? '' : 's'}</span>
-              <span>🧊 {freezesRemaining} freeze day{freezesRemaining === 1 ? '' : 's'} left this month</span>
-            </div>
             {!seenTour ? <WelcomeTour onDone={markTourSeen} /> : hasGoals === false && <FirstGoalGuide onStart={goal => setModal({ type: 'create', goal })} />}
             {storyError && <div className="inline-error" role="alert">Statuses couldn’t refresh. <button type="button" onClick={loadStories}>Retry</button></div>}
             <StoriesBar
@@ -249,7 +246,7 @@ export default function HomePage() {
             </div>
             {tagFilter && (
               <div className="active-filter">
-                Filtering by <span className="chip">#{tagFilter}<button aria-label="Clear tag filter" onClick={() => setTagFilter(null)}>✕</button></span>
+                Filtering by <span className="chip">#{tagFilter}<button aria-label="Clear tag filter" onClick={() => setTagFilter(null)}><ThemeIcon name="close" /></button></span>
               </div>
             )}
             <div className="feed-section-title"><h2>{searchQuery ? 'Search results' : category === 'all' ? 'Latest moments' : `${category[0].toUpperCase()}${category.slice(1)} moments`}</h2><span>{!loading && !feedError ? `${visiblePosts.length} posts` : ''}</span></div>
@@ -261,7 +258,7 @@ export default function HomePage() {
                 onOpen={(post) => setModal({ type: 'view', post })}
                 onOpenAuthor={openAuthor}
                 onOpenTag={openTag}
-                emptyIcon="🎒"
+                emptyIcon={<ThemeIcon name="bag" />}
                 emptyTitle={searchQuery || tagFilter ? "No matching moments" : "Your next chapter starts here"}
                 emptyText={searchQuery || tagFilter ? "Try another search or clear your filters." : `Share your first moment in ${catLabel} using Create post above.`}
               />

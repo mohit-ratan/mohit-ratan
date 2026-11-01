@@ -1,3 +1,4 @@
+import { ThemeIcon } from '../lib/icons';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';
@@ -24,7 +25,7 @@ export default function PostGoalPanel({ post, isMe, onUploadTask }) {
   const percent = progress.target ? Math.round(progress.completed / progress.target * 100) : 0;
   return (
     <section className={`post-goal-panel house-floor-${post.category}`} aria-labelledby="post-goal-heading">
-      <div className="goal-summary-title"><h3 id="post-goal-heading">🎯 Goal & tasks</h3><span className={`goal-deadline goal-deadline-${status?.tone || 'unset'}`}>{status?.text || 'No target date'}</span></div>
+      <div className="goal-summary-title"><h3 id="post-goal-heading"><ThemeIcon name="target" /> Goal & tasks</h3><span className={`goal-deadline goal-deadline-${status?.tone || 'unset'}`}>{status?.text || 'No target date'}</span></div>
       {goal.targetDate && <p className="goal-target-date">Target: <time dateTime={goal.targetDate}>{new Date(`${goal.targetDate}T00:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}</time></p>}
       <div className="goal-task-summary"><span>{progress.completed} / {progress.target} task days logged</span><strong>{percent}%</strong></div>
       <progress value={progress.completed} max={progress.target || 1} aria-label="Goal progress" />
@@ -32,7 +33,7 @@ export default function PostGoalPanel({ post, isMe, onUploadTask }) {
         {goal.subtasks.map((task, index) => {
           const { completed, target } = taskProgress(task);
           return <li key={task.id}>
-            <div><strong>{task.done ? '✓ ' : ''}{task.text}</strong><span>{completed} / {target} days</span></div>
+            <div><strong>{task.done && <ThemeIcon name="check" />}{task.text}</strong><span>{completed} / {target} days</span></div>
             <div className="post-goal-task-row">
               <progress value={completed} max={target} aria-label={`${task.text} progress`} />
               {isMe && !task.done && (
@@ -51,7 +52,7 @@ export default function PostGoalPanel({ post, isMe, onUploadTask }) {
                 {task.subtasks.map((sub, subIndex) => {
                   const subProgress = taskProgress(sub);
                   return <li key={sub.id}>
-                    <div><strong>{sub.done ? '✓ ' : ''}{sub.text}</strong><span>{subProgress.completed} / {subProgress.target} days</span></div>
+                    <div><strong>{sub.done && <ThemeIcon name="check" />}{sub.text}</strong><span>{subProgress.completed} / {subProgress.target} days</span></div>
                     <div className="post-goal-task-row">
                       <progress value={subProgress.completed} max={subProgress.target} aria-label={`${sub.text} progress`} />
                       {isMe && !sub.done && (

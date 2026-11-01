@@ -1,3 +1,4 @@
+import { CategoryIcon, ThemeIcon } from '../lib/icons';
 import useDialog from '../hooks/useDialog';
 import { useEffect, useRef, useState } from 'react';
 import api, { mediaUrl } from '../api';
@@ -144,13 +145,13 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
         <div className="modal-media-pane">
           {isVideo ? (
             <>
-              {post.vibe && <span className="vibe-chip">✨ {truncate(post.vibe, 34)}</span>}
+              {post.vibe && <span className="vibe-chip"><ThemeIcon name="sparkle" /> {truncate(post.vibe, 34)}</span>}
               <video src={mediaUrl(post.mediaUrl)} style={filter ? { filter } : undefined} controls autoPlay muted loop playsInline />
             </>
           ) : isImage ? (
             <>
               {!post.aiStyled && post.vibe && (
-                <span className="vibe-chip">✨ {truncate(post.vibe, 34)}</span>
+                <span className="vibe-chip"><ThemeIcon name="sparkle" /> {truncate(post.vibe, 34)}</span>
               )}
               <img
                 src={mediaUrl(post.mediaUrl)}
@@ -174,9 +175,10 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
             <div style={{ flex: 1, minWidth: 0 }}>
               <span className="post-author" style={{ cursor: 'pointer' }} onClick={() => onOpenAuthor(post.authorId)}>{post.authorName}</span>
               <div className="post-meta">
-                <span className={`cat-label ${cat.id}`}>{cat.emoji} {cat.label}</span>
+                <span className={`cat-label ${cat.id}`}><CategoryIcon category={cat.id} /> {cat.label}</span>
                 <span className="visibility-label" title={post.visibility === 'public' ? 'Visible to everyone' : 'Visible to accepted followers only'}>
-                  {post.visibility === 'public' ? '🌐 Public' : '👥 Friends'}
+                  <ThemeIcon name={post.visibility === 'public' ? 'globe' : 'people'} />
+                  {post.visibility === 'public' ? ' Public' : ' Friends'}
                 </span>
               </div>
             </div>
@@ -188,7 +190,7 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
                 </button>
               </div>
             )}
-            <button className="modal-close-btn" type="button" aria-label="Close" onClick={onClose}>✕</button>
+            <button className="modal-close-btn" type="button" aria-label="Close" onClick={onClose}><ThemeIcon name="close" /></button>
           </div>
           <div className="modal-like-row">
             <button className={`action-btn like-btn${liked ? ' liked' : ''}`} disabled={likePending} onClick={toggleLike}>

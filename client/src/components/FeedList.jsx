@@ -1,3 +1,4 @@
+import { CategoryIcon, ThemeIcon } from '../lib/icons';
 import { useEffect, useRef, useState } from 'react';
 import api, { mediaUrl } from '../api';
 import { CAT_MAP, timeAgo, truncate } from '../lib/format';
@@ -73,7 +74,7 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
         <div style={{ flex: 1, minWidth: 0 }}>
           <span className="post-author" onClick={() => onOpenAuthor(post.authorId)}>{post.authorName}</span>
           <div className="post-meta">
-            <span className={`cat-label ${cat.id}`}>{cat.emoji} {cat.label}</span>
+            <span className={`cat-label ${cat.id}`}><CategoryIcon category={cat.id} /> {cat.label}</span>
             <span>· {timeAgo(post.createdAt)}</span>
           </div>
         </div>
@@ -87,7 +88,7 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
           <div className={`text-card ${cat.id}`}><span className="reveal-text">{cat.label}</span></div>
         )}
         {isVideo && <span className="tile-badge"><VideoIcon /></span>}
-        {isImage && post.vibe && !post.aiStyled && <span className="vibe-chip">✨ {truncate(post.vibe, 34)}</span>}
+        {isImage && post.vibe && !post.aiStyled && <span className="vibe-chip"><ThemeIcon name="sparkle" /> {truncate(post.vibe, 34)}</span>}
       </button>
       <div className="feed-card-actions">
         <button type="button" className={`action-btn like-btn${liked ? ' liked' : ''}`} disabled={likePending} onClick={toggleLike}>
@@ -117,7 +118,7 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
       </div>
       {post.goalProgress?.target > 0 && (
         <button type="button" className={`feed-card-progress house-floor-${post.category}`} onClick={() => onOpen(post)}>
-          <span>🎯 {post.goalProgress.completed}/{post.goalProgress.target} task days</span>
+          <span><ThemeIcon name="target" /> {post.goalProgress.completed}/{post.goalProgress.target} task days</span>
           <progress value={post.goalProgress.completed} max={post.goalProgress.target} aria-label="Goal progress" />
         </button>
       )}

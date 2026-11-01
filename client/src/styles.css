@@ -1789,11 +1789,6 @@ button.story-ring{border:0;cursor:pointer;}
 .feed-reaction-button.reacted{color:var(--accent);}
 .feed-reaction-emoji{font-size:15px;line-height:1;}
 
-.mobile-streak-summary{display:none;}
-@media(max-width:900px){
-  .mobile-streak-summary{display:flex;flex-wrap:wrap;gap:8px 16px;margin:0 0 16px;padding:12px 14px;border:1px solid #FFD9B3;border-radius:14px;background:#FFF4E8;color:#9A5B1F;font-size:12px;font-weight:600;}
-}
-
 /* Goal navigation sits above the compact category filters. */
 .header-goal-nav{justify-content:flex-start;flex-wrap:wrap;padding-top:12px;}
 .cat-pill.cat-icon{width:44px;height:44px;min-width:44px;padding:0;justify-content:center;font-size:21px;}
@@ -1802,3 +1797,63 @@ button.story-ring{border:0;cursor:pointer;}
   .feed-intro-actions.header-goal-nav{display:flex;gap:8px;width:auto;}
   .header-goal-nav .house-enter-btn{padding:10px 12px;font-size:11px;min-height:44px;}
 }
+
+.avatar-freeze-days,.streak-badge-zero{display:none;}
+@media(max-width:900px){
+  .streak-badge-zero{display:flex;}
+  .streak-badge{gap:5px;padding-inline:5px;}
+  .avatar-freeze-days{display:inline-flex;border-left:1px solid rgba(255,255,255,.5);padding-left:4px;}
+}
+
+/* Shared warm, outlined controls for awards, notifications and account. */
+.header-actions{gap:10px;}
+.header-actions :is(.header-link-btn,.bell-btn,.avatar-btn){
+  height:44px;min-width:44px;border:1px solid var(--border);
+  background:var(--surface);color:var(--accent-deep);box-shadow:0 2px 5px rgba(125,43,11,.04);
+  transition:background .15s,border-color .15s,box-shadow .15s;
+}
+.header-actions :is(.bell-btn,.avatar-btn){width:44px;padding:0;}
+.header-actions .header-link-btn{gap:7px;padding-inline:14px;}
+.header-actions :is(.header-link-btn,.bell-btn) svg{width:20px;height:20px;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.header-actions :is(.header-link-btn,.bell-btn,.avatar-btn):hover,
+.header-actions [aria-expanded="true"]{background:var(--accent-soft);border-color:var(--accent);}
+.header-actions :is(.header-link-btn,.bell-btn,.avatar-btn):focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+.header-actions .bell-badge{background:var(--accent);}
+.header-actions .streak-badge{background:var(--accent-deep);box-shadow:0 2px 4px rgba(125,43,11,.15);}
+@media(max-width:680px){
+  .header-actions{gap:6px;}
+  .header-actions .header-link-btn{width:44px;padding:0;justify-content:center;}
+  .header-inner{column-gap:10px;}
+  .header-inner .brand-mark{font-size:18px;}
+  .header-inner .brand{gap:5px;}
+  .header-inner .brand-icon{width:32px;height:32px;}
+}
+@media(max-width:380px){
+  .header-inner{padding-inline:12px;column-gap:8px;}
+  .header-inner .brand-mark{font-size:14px;}
+  .header-inner .brand-icon{width:28px;height:28px;}
+}
+
+/* Interface symbols share rounded outlines; category colors stay recognizable. */
+.theme-icon{display:inline-block;vertical-align:-.18em;flex-shrink:0;}
+.category-icon-health{color:#3F7752;}
+.category-icon-wealth{color:#936124;}
+.category-icon-relationships{color:#A0516A;}
+.cat-icon .category-icon{width:23px;height:23px;}
+.cat-icon.active .category-icon{color:inherit;}
+.cat-label{display:inline-flex;align-items:center;gap:4px;}
+.cat-label .category-icon{width:13px;height:13px;}
+.side-card h4>.theme-icon,.stat-row .theme-icon,.streak-freeze-note .theme-icon{margin-right:5px;}
+.side-card h4>.theme-icon{color:var(--accent);}
+.avatar-streak-days{display:inline-flex;align-items:center;gap:2px;}
+.streak-badge .theme-icon{width:11px;height:11px;vertical-align:middle;}
+.avatar-freeze-days{align-items:center;gap:2px;}
+.feed-card-progress>span{display:inline-flex;align-items:center;gap:5px;}
+.vibe-chip .theme-icon{width:13px;height:13px;}
+.empty-state .emoji .theme-icon{width:44px;height:44px;color:var(--accent);}
+.welcome-tour-icon svg{width:36px;height:36px;color:var(--accent);}
+.feed-card-actions .action-btn svg{stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.partner-status .theme-icon{width:14px;height:14px;margin-right:3px;}
+
+.visibility-label .theme-icon{width:12px;height:12px;}
+.search-box .clear-btn .theme-icon{position:static;transform:none;pointer-events:none;}

@@ -1,3 +1,4 @@
+import { ThemeIcon } from '../lib/icons';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
@@ -31,7 +32,7 @@ export default function AccountabilityWidget() {
 
   return (
     <div className="card side-card">
-      <h4>🤝 Accountability partners</h4>
+      <h4><ThemeIcon name="people" /> Accountability partners</h4>
       <ul className="follow-list">
         {partners.map((p) => (
           <li key={p.id} className="suggested-follow-row">
@@ -43,7 +44,8 @@ export default function AccountabilityWidget() {
               <button type="button" className="goal-remove-btn" onClick={() => endPartnership(p.id)}>End</button>
             </div>
             <div className={`partner-status ${p.postedToday ? 'ok' : 'warn'}`}>
-              {p.postedToday ? '✅ Posted today' : "⚠️ Hasn't posted today yet"}
+              <ThemeIcon name={p.postedToday ? 'check' : 'warning'} />
+              {p.postedToday ? 'Posted today' : "Hasn't posted today yet"}
             </div>
           </li>
         ))}
