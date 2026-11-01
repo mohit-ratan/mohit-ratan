@@ -25,8 +25,8 @@ function toSqlDate(d) {
 // STREAK_FREEZE_MONTHLY_LIMIT per calendar month, the first time that gap
 // is encountered — recorded permanently in streak_freeze_uses so it's
 // consumed once, not re-spent (or un-spent) on every recomputation. A
-// freeze only ever bridges an ISOLATED single missed day — two missed
-// days back to back break the streak outright, even with freezes left.
+// freeze only covers an ISOLATED single missed day — including yesterday
+// before today's upload. Two missed days back to back break the streak.
 function startOfLocalDay(ts) {
   const d = new Date(ts);
   return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
@@ -39,10 +39,9 @@ async function computeStreak(authorId) {
 
   const realDayTimestamps = [...postDates, ...storyDates].map((r) => startOfLocalDay(r.created_at));
   if (!realDayTimestamps.length) return { streak: 0, freezesUsedThisMonth: 0, freezesRemaining: STREAK_FREEZE_MONTHLY_LIMIT };
-  // A freeze can only bridge a gap BETWEEN real activity — it must never
-  // extend a streak into days before the account's very first post/story,
-  // or a brand-new user's single upload would auto-freeze its way to a
-  // multi-day streak out of nothing.
+  // Freeze protection starts after real activity, never before the first
+  // post. It also protects yesterday before today's upload, so posting
+  // cannot unexpectedly revive a streak that the badge just showed as zero.
   const earliestActiveMs = realDayTimestamps.reduce((min, ts) => Math.min(min, ts), Infinity);
 
   const realActiveDays = new Set();
@@ -54,18 +53,21 @@ async function computeStreak(authorId) {
   const activeDays = new Set(realActiveDays);
   validFreezeRows.forEach(r => activeDays.add(dateKey(r.used_on)));
 
-  const monthStart = new Date();
-  monthStart.setDate(1);
-  monthStart.setHours(0, 0, 0, 0);
-  let freezesUsedThisMonth = validFreezeRows.filter((r) => new Date(r.used_on) >= monthStart).length;
-  const freezesRemaining = () => Math.max(0, STREAK_FREEZE_MONTHLY_LIMIT - freezesUsedThisMonth);
+  const monthKey = value => toSqlDate(value).slice(0, 7);
+  const currentMonth = monthKey(new Date());
+  const usedByMonth = new Map();
+  for (const row of validFreezeRows) {
+    const month = monthKey(new Date(row.used_on));
+    usedByMonth.set(month, (usedByMonth.get(month) || 0) + 1);
+  }
+  const freezeSummary = () => {
+    const freezesUsedThisMonth = usedByMonth.get(currentMonth) || 0;
+    return { freezesUsedThisMonth, freezesRemaining: Math.max(0, STREAK_FREEZE_MONTHLY_LIMIT - freezesUsedThisMonth) };
+  };
 
   const cursor = new Date();
   if (!activeDays.has(dateKey(cursor.getTime()))) {
     cursor.setDate(cursor.getDate() - 1);
-    if (!activeDays.has(dateKey(cursor.getTime()))) {
-      return { streak: 0, freezesUsedThisMonth, freezesRemaining: freezesRemaining() };
-    }
   }
 
   let streak = 0;
@@ -76,26 +78,29 @@ async function computeStreak(authorId) {
       cursor.setDate(cursor.getDate() - 1);
       continue;
     }
-    // A missed day. Only bridge it if the day right before it (further
-    // back in time) was real activity — i.e. this is truly a single day
-    // sandwiched between real activity, not the start of a longer gap.
-    // Two or more missed days in a row never get bridged at all.
-    const beforeMs = startOfLocalDay(cursor.getTime()) - 86400000;
+    // Cover only a single missed day immediately after real activity.
+    // Calendar subtraction also works across daylight-saving transitions.
+    const before = new Date(cursor);
+    before.setDate(before.getDate() - 1);
+    const beforeMs = startOfLocalDay(before);
     const beforeIsReal = beforeMs >= earliestActiveMs && realActiveDays.has(dateKey(beforeMs));
     if (!beforeIsReal) break;
-    if (freezesUsedThisMonth >= STREAK_FREEZE_MONTHLY_LIMIT) break;
+    const freezeMonth = monthKey(cursor);
     if (!activeDays.has(key)) {
+      const used = usedByMonth.get(freezeMonth) || 0;
+      if (used >= STREAK_FREEZE_MONTHLY_LIMIT) break;
       try {
-        await pool.query('INSERT INTO streak_freeze_uses (user_id, used_on) VALUES (?, ?)', [authorId, toSqlDate(cursor)]);
+        await pool.query('INSERT IGNORE INTO streak_freeze_uses (user_id, used_on) VALUES (?, ?)', [authorId, toSqlDate(cursor)]);
       } catch {
         break; // table missing locally, or a genuine race — treat the streak as broken here
       }
-      freezesUsedThisMonth++;
+      usedByMonth.set(freezeMonth, used + 1);
+      activeDays.add(key);
     }
     streak++;
     cursor.setDate(cursor.getDate() - 1);
   }
-  return { streak, freezesUsedThisMonth, freezesRemaining: freezesRemaining() };
+  return { streak, ...freezeSummary() };
 }
 
 async function getProfile(req, res) {

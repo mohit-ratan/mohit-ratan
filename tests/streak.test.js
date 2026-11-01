@@ -14,14 +14,14 @@ function daysAgo(n, now) {
 // Builds a fresh, isolated computeStreak for each test — posts/stories are
 // supplied directly as "days ago" offsets from `now`, and streak_freeze_uses
 // starts empty and is captured as the test runs.
-function freshComputeStreak({ postOffsets = [], now = new Date('2026-10-13T12:00:00Z') }) {
-  const freezeRows = [];
+function freshComputeStreak({ postOffsets = [], existingFreezes = [], now = new Date('2026-10-13T12:00:00Z') }) {
+  const freezeRows = [...existingFreezes];
   const fakePool = {
     query: async (sql, params) => {
       if (sql.includes('FROM posts')) return [postOffsets.map((n) => ({ created_at: daysAgo(n, now) }))];
       if (sql.includes('FROM stories')) return [[]];
       if (sql.includes('FROM streak_freeze_uses')) return [freezeRows.map((used_on) => ({ used_on }))];
-      if (sql.startsWith('INSERT INTO streak_freeze_uses')) { freezeRows.push(params[1]); return [{}]; }
+      if (sql.startsWith('INSERT IGNORE INTO streak_freeze_uses')) { freezeRows.push(params[1]); return [{}]; }
       return [[]];
     },
   };
@@ -34,7 +34,7 @@ function freshComputeStreak({ postOffsets = [], now = new Date('2026-10-13T12:00
     static now() { return now.getTime(); }
   };
   const restore = () => { global.Date = RealDate; };
-  return { computeStreak, restore };
+  return { computeStreak, restore, postOffsets, freezeRows };
 }
 
 test('a 2+ day gap breaks the streak entirely, even with freezes left', async () => {
@@ -75,4 +75,59 @@ test('no activity at all today or yesterday reports a broken streak', async () =
     const result = await computeStreak('u1');
     assert.equal(result.streak, 0);
   } finally { restore(); }
+});
+
+
+test('a single first post and multiple uploads on the same day both count as one', async () => {
+  for (const postOffsets of [[0], [0, 0, 0]]) {
+    const f = freshComputeStreak({ postOffsets });
+    try { assert.equal((await f.computeStreak('u1')).streak, 1); }
+    finally { f.restore(); }
+  }
+});
+test('yesterday is protected before posting, avoiding a zero-to-six surprise', async () => {
+  const f = freshComputeStreak({ postOffsets: [2, 3, 4, 5] });
+  try {
+    const before = await f.computeStreak('u1');
+    assert.equal(before.streak, 5);
+    assert.equal(before.freezesUsedThisMonth, 1);
+    f.postOffsets.push(0);
+    const after = await f.computeStreak('u1');
+    assert.equal(after.streak, 6);
+    assert.equal(after.freezesUsedThisMonth, 1);
+    assert.equal(after.streak - before.streak, 1);
+  } finally { f.restore(); }
+});
+test('repeated reads honor already-spent freezes when the monthly allowance is exhausted', async () => {
+  const f = freshComputeStreak({ postOffsets: [0, 2, 4] });
+  try {
+    for (let read = 0; read < 3; read++) {
+      const result = await f.computeStreak('u1');
+      assert.equal(result.streak, 5);
+      assert.equal(result.freezesUsedThisMonth, 2);
+      assert.equal(result.freezesRemaining, 0);
+    }
+    assert.equal(f.freezeRows.length, 2);
+  } finally { f.restore(); }
+});
+test('without a freeze available, a missed yesterday cannot revive the previous run', async () => {
+  const f = freshComputeStreak({ postOffsets: [2, 3, 4, 5], existingFreezes: ['2026-10-01', '2026-10-03'] });
+  // Seed real older activity so these existing uses belong to account history.
+  f.postOffsets.push(14);
+  try {
+    assert.equal((await f.computeStreak('u1')).streak, 0);
+    f.postOffsets.push(0);
+    assert.equal((await f.computeStreak('u1')).streak, 1);
+  } finally { f.restore(); }
+});
+
+test('freeze allowance belongs to the missed day month, not the day the badge is read', async () => {
+  const f = freshComputeStreak({ postOffsets: [0, 2, 4], now: new Date('2026-11-01T12:00:00Z') });
+  try {
+    const result = await f.computeStreak('u1');
+    assert.equal(result.streak, 5);
+    assert.equal(result.freezesUsedThisMonth, 0);
+    assert.equal(result.freezesRemaining, 2);
+    assert.equal((await f.computeStreak('u1')).streak, 5);
+  } finally { f.restore(); }
 });

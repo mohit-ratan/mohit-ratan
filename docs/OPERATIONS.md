@@ -147,3 +147,8 @@ The prized gold Trifecta requires recorded goal completion check-ins in all thre
 - Recaps include an earned-award gallery and reels give each award its own slide. Goal medals use the saved target on the completion post when available; unknown historical targets use a generic trophy rather than inventing a day count or star rank.
 - Fire awards are reconstructed from visible recorded check-ins through that month’s end. Runs can span months and retain their full count as of month-end. They appear when a weekly milestone or completed run belongs to the selected month; previously completed runs are not repeated in later months.
 - The persisted Trifecta is included in its actual earning month. For public viewers who cannot see friends-only posts, the recap requires visible qualifying goal completions in all three categories. Normal profile and post access checks continue to apply before any award aggregation.
+
+## Profile streak display consistency
+
+- Profile freezes protect an isolated missed yesterday before today's post is uploaded. The badge therefore does not first show zero and then revive an older streak after uploading. Freeze protection never creates days before the first real post or story, and two consecutive missed days still break the run.
+- Already recorded freezes remain valid when their monthly allowance is exhausted; refreshing does not shorten the displayed streak. New freezes consume the allowance for the missed day's calendar month. Duplicate uploads within one day still count once.
