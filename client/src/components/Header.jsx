@@ -431,7 +431,6 @@ export default function Header({
               className={`cat-pill cat-icon${activeCategory === c.id ? ' active' : ''}`}
               aria-label={c.label}
               aria-pressed={activeCategory === c.id}
-              title={c.label}
               onClick={() => handleCategoryClick(c.id)}
             >
               <CategoryIcon category={c.id} />

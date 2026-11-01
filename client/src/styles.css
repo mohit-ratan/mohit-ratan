@@ -1851,3 +1851,21 @@ button.story-ring{border:0;cursor:pointer;}
 .header-goal-nav .house-enter-btn{background:var(--surface);color:var(--accent);border-color:var(--border);}
 .header-goal-nav .house-enter-btn:hover{background:var(--accent-soft);border-color:var(--accent);}
 .header-goal-nav .house-enter-btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+
+/* Category names remain available on hover and keyboard focus. */
+.category-nav{overflow:visible;}
+.category-nav .cat-icon{position:relative;}
+.category-nav .cat-icon::after{
+  content:attr(aria-label);position:absolute;top:calc(100% + 7px);left:50%;
+  transform:translateX(-50%);padding:6px 9px;border-radius:8px;
+  background:var(--accent-deep);color:var(--surface);font-size:11px;font-weight:600;
+  line-height:1.3;white-space:nowrap;box-shadow:var(--shadow-s);z-index:1;
+  opacity:0;visibility:hidden;pointer-events:none;
+}
+.category-nav .cat-icon:hover::after,
+.category-nav .cat-icon:focus-visible::after{opacity:1;visibility:visible;}
+/* Post labels and progress share their category's color. */
+.cat-label .category-icon{color:inherit;}
+.feed-card-progress.house-floor-health{--floor-color:var(--health);}
+.feed-card-progress.house-floor-wealth{--floor-color:var(--wealth);}
+.feed-card-progress.house-floor-relationships{--floor-color:var(--relationships);}
