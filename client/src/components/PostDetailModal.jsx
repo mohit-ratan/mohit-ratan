@@ -175,7 +175,7 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
             <div style={{ flex: 1, minWidth: 0 }}>
               <span className="post-author" style={{ cursor: 'pointer' }} onClick={() => onOpenAuthor(post.authorId)}>{post.authorName}</span>
               <div className="post-meta">
-                <span className={`cat-label ${cat.id}`}><CategoryIcon category={cat.id} /> {cat.label}</span>
+                <span className={`cat-label ${cat.id}`} role="img" aria-label={cat.label} title={cat.label}><CategoryIcon category={cat.id} /></span>
                 <span className="visibility-label" title={post.visibility === 'public' ? 'Visible to everyone' : 'Visible to accepted followers only'}>
                   <ThemeIcon name={post.visibility === 'public' ? 'globe' : 'people'} />
                   {post.visibility === 'public' ? ' Public' : ' Friends'}

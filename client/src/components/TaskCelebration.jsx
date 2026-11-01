@@ -42,7 +42,7 @@ export default function TaskCelebration({ celebration, onClose }) {
       {milestone ? <div className="milestone-award-display">
         <div className="milestone-award-halo" aria-hidden="true" />
         <div className="milestone-award-pop" role="img" aria-label={`${CAT_MAP[milestone.category]?.label || 'Goal'} ${milestone.point}% milestone award`}>
-          <CategoryAwardIcon category={milestone.category} tier={milestone.point / 25} />
+          <CategoryAwardIcon category={milestone.category} targetDays={Math.max(1, Math.ceil(milestone.target * milestone.point / 100))} />
         </div>
         <p>{CAT_MAP[milestone.category]?.label} · {milestone.completed}/{milestone.target} goal task days</p>
       </div> : <div className="task-party-medal" aria-hidden="true"><span>DAY</span><strong key={number}>{number}</strong><small>+1 task day</small></div>}

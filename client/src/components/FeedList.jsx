@@ -75,7 +75,7 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
         <div style={{ flex: 1, minWidth: 0 }}>
           <span className="post-author" onClick={() => onOpenAuthor(post.authorId)}>{post.authorName}</span>
           <div className="post-meta">
-            <span className={`cat-label ${cat.id}`}><CategoryIcon category={cat.id} /> {cat.label}</span>
+            <span className={`cat-label ${cat.id}`} role="img" aria-label={cat.label} title={cat.label}><CategoryIcon category={cat.id} /></span>
             <span>· {timeAgo(post.createdAt)}</span>
           </div>
         </div>

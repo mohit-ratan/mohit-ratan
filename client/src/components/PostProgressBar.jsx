@@ -11,7 +11,7 @@ export default function PostProgressBar({ completed, target, category }) {
         const final = point === 100;
         const label = final ? `${reached ? 'Goal trophy earned' : 'Goal trophy'} · ${target} task days` : `${point}% progress checkpoint${reached ? ' reached' : ''}`;
         return <span key={point} className={`post-progress-marker${reached ? ' reached' : ''}${final ? ' trophy' : ''}`} style={{ left: `${point}%` }} title={label}>
-          <CategoryAwardIcon category={category} tier={point / 25} />
+          <CategoryAwardIcon category={category} targetDays={Math.max(1, Math.ceil(target * point / 100))} />
           <span className="post-progress-marker-label" aria-hidden="true">{final ? 'Goal' : `${point}%`}</span>
         </span>;
       })}

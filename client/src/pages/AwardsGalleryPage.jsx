@@ -1,3 +1,4 @@
+import { CategoryIcon, TrophyIcon } from '../lib/icons';
 import { Link } from 'react-router-dom';
 import ProgressAward from '../components/ProgressAward';
 import GoldAward from '../components/GoldAward';
@@ -27,7 +28,7 @@ export default function AwardsGalleryPage() {
       <main id="awards-main">
         <section className="awards-hero">
           <p className="intro-eyebrow">EVERY DESIGN, EXPLAINED</p>
-          <h1>The Awards Gallery</h1><p>1–7 days: ★ · 8–15: ★★ · 16–30: ★★★. Every additional 15 days adds a star. Colours follow your category; detail grows with the challenge.</p>
+          <h1>The Awards Gallery</h1><p>1–7 days: ★ · 8–15: ★★ · 16–30: ★★★. Every additional 15 days adds a star. Every award shares the prized gold finish. Leaf, dollar, and heart symbols identify each category; detail grows with the challenge.</p>
           <p className="intro-lead">
             A look at every award design in PackSomeWork — what it celebrates and exactly how it's earned. Nothing shown
             here has been awarded to you; it's a catalog of designs, not a trophy case. Your own earned awards live in
@@ -38,7 +39,7 @@ export default function AwardsGalleryPage() {
         {AWARD_COLLECTIONS.map((collection) => (
           <section key={collection.category} className={`awards-collection awards-collection-${collection.category}`} aria-labelledby={`awards-${collection.category}-title`}>
             <div className="intro-section-heading">
-              <p className="intro-eyebrow">{collection.emoji} {collection.label.toUpperCase()} COLLECTION</p>
+              <p className="intro-eyebrow"><CategoryIcon category={collection.category} /> {collection.label.toUpperCase()} COLLECTION</p>
               <h2 id={`awards-${collection.category}-title`}>{collection.label} awards</h2>
             </div>
             <div className="awards-grid">
@@ -49,7 +50,7 @@ export default function AwardsGalleryPage() {
 
         <section className="awards-trifecta-section" aria-labelledby="awards-trifecta-title">
           <div className="intro-section-heading">
-            <p className="intro-eyebrow">🏆 THE RAREST DESIGN</p>
+            <p className="intro-eyebrow"><TrophyIcon /> THE RAREST DESIGN</p>
             <h2 id="awards-trifecta-title">One award for the whole picture</h2>
           </div>
           <GoldAward preview />
