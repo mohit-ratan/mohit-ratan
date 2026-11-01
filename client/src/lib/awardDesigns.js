@@ -2,7 +2,7 @@ import { CATEGORIES } from './format';
 
 // Static content for the public Awards Gallery (/awards) — describes what
 // each award LOOKS like and how it's earned, but carries no per-user data.
-// Real earned awards live in a member's own Achievement House; this is a
+// Real earned awards live in a member's own achievements; this is a
 // catalog of designs, not a personal trophy list.
 //
 // Two kinds, one pair per category:
@@ -23,7 +23,7 @@ export const AWARD_COLLECTIONS = CATEGORIES.map((cat) => ({
       kind: 'goal',
       icon: GOAL_ICONS[cat.id],
       name: `${cat.label} Goal Trophy`,
-      rule: `Set a goal tagged to ${cat.label}, break it into tasks, and check off every single one. The moment the last task is done, this trophy is added to your Achievement House.`,
+      rule: `Set a goal tagged to ${cat.label}, break it into tasks, and check off every single one. The moment the last task is done, this trophy is added to your achievements.`,
     },
     {
       id: `${cat.id}-consistency`,

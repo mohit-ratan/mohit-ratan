@@ -24,7 +24,7 @@ const SLIDES = [
   {
     icon: 'trophy',
     title: 'Earn real achievements',
-    body: "Finish every task in a goal to earn its trophy in your Achievement House. Complete a goal in Health, Wealth, and Relationships all at once for the rare SuperPack Award. Post daily to build a streak — you get 2 free streak freezes a month if you miss a day.",
+    body: "Finish every task in a goal to earn its trophy in your achievements. Complete a goal in Health, Wealth, and Relationships all at once for the rare SuperPack Award. Post daily to build a streak — you get 2 free streak freezes a month if you miss a day.",
   },
   {
     icon: 'people',

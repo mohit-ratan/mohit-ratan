@@ -50,3 +50,23 @@ test('goal timezone remains fixed and grace lasts until the next local day ends'
   assert.equal(currentGoalStreak(next, new Date('2026-10-03T18:29:59Z')).streakDays, 2);
   assert.equal(currentGoalStreak(next, new Date('2026-10-03T18:30:00Z')).streakDays, 0);
 });
+
+test('a broken 20-day run keeps an exact 20-day award after the next run begins', () => {
+  const { goalStreakAwards } = require('../src/lib/goalStreak');
+  let state;
+  for (let day = 1; day <= 20; day++) state = checkInGoal(state, 'UTC', at(day)).state;
+  const broken = goalStreakAwards(state, at(22));
+  assert.deepEqual(broken.map(award => [award.days, award.active]), [[20, false]]);
+  assert.equal(broken[0].startedOn, '2026-10-01');
+  assert.equal(broken[0].endedOn, '2026-10-20');
+  for (let day = 22; day <= 28; day++) state = checkInGoal(state, 'UTC', at(day)).state;
+  assert.deepEqual(goalStreakAwards(state, at(28)).map(award => [award.days, award.active]), [[20, false], [7, true]]);
+});
+test('streak awards preserve exact full weeks and do not invent awards under seven days', () => {
+  const { goalStreakAwards } = require('../src/lib/goalStreak');
+  let state;
+  for (let day = 1; day <= 6; day++) state = checkInGoal(state, 'UTC', at(day)).state;
+  assert.deepEqual(goalStreakAwards(state, at(8)), []);
+  for (let day = 8; day <= 21; day++) state = checkInGoal(state, 'UTC', at(day)).state;
+  assert.deepEqual(goalStreakAwards(state, at(23)).map(award => [award.days, award.active]), [[14, false]]);
+});

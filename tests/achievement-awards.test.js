@@ -15,11 +15,18 @@ test('only fully completed goals earn awards; unfinished goals and tags remain a
     { tag: 'partial', subtasks: [{ text: 'First', done: true }, { text: 'Last', done: false }] },
     { tag: 'complete', subtasks: [{ text: 'First', done: true }, { text: 'Last', done: true }] },
   ];
+  const { goalStreakFromDays } = require('../src/lib/goalStreak');
+  const streakState = goalStreakFromDays(Array.from({ length: 20 }, (_, i) => `2020-01-${String(i + 1).padStart(2, '0')}`), 'UTC');
+  let allowed = true;
   const sandbox = {
     module: { exports: {} }, console,
     require: (name) => name === '../lib/goalStreak' ? require('../src/lib/goalStreak') : name === '../lib/trifecta' ? { checkAndAwardTrifecta: async () => false, trifectaStatus: async () => ({}), TRIFECTA_CATEGORIES: ['health','wealth','relationships'] } : name === '../lib/memberFeatures' ? { ensureMemberTables: async () => {}, recordCheckIn: async () => {} } : name === '../lib/taskCelebration' ? require('../src/lib/taskCelebration') : name === '../lib/access' ? { canViewPost: async () => true } : name === '../db' ? {
-      query: async (sql) => [sql.includes('FROM goals') ? goals : posts],
-    } : name === 'uuid' ? { v4: () => 'test-id' } : name === '../lib/goalProgress' ? require('../src/lib/goalProgress') : name === '../lib/follows' ? { canView: async () => true } : name === '../lib/notifications' ? { notify: async () => {} } : name === '../lib/storage' ? { uploadMedia: async () => '/assets/uploads/small.jpg', deleteMedia: async () => {} } : name === '../lib/reactions' ? require('../src/lib/reactions') : require(name),
+      query: async (sql) => {
+        if (sql.includes('FROM goal_streaks')) return [[{ author_id: 'owner', tag: 'partial', state: streakState }]];
+        if (sql.includes('FROM task_checkins')) return [[]];
+        return [sql.includes('FROM goals') ? goals : posts];
+      },
+    } : name === 'uuid' ? { v4: () => 'test-id' } : name === '../lib/goalProgress' ? require('../src/lib/goalProgress') : name === '../lib/follows' ? { canView: async () => allowed } : name === '../lib/notifications' ? { notify: async () => {} } : name === '../lib/storage' ? { uploadMedia: async () => '/assets/uploads/small.jpg', deleteMedia: async () => {} } : name === '../lib/reactions' ? require('../src/lib/reactions') : require(name),
   };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/controllers/postsController.js'), 'utf8'), sandbox);
   let result;
@@ -30,10 +37,19 @@ test('only fully completed goals earn awards; unfinished goals and tags remain a
   assert.equal(result.achievements[0].count, 2, 'multiple posts earn only one award per goal');
   assert.deepEqual(result.goals.map((a) => a.tag), ['empty', 'partial']);
   assert.deepEqual(result.tags, tags);
+  assert.equal(result.streakAwards.length, 1);
+  assert.equal(result.streakAwards[0].days, 20);
+  assert.equal(result.streakAwards[0].tag, 'partial');
+  assert.equal(result.streakAwards[0].category, 'health');
+  assert.equal(result.streakAwards[0].active, false);
   goals[1].subtasks[1].done = true;
   await sandbox.module.exports.achievements(request, res);
   assert.deepEqual(result.achievements.map((a) => a.tag), ['partial', 'complete']);
   goals[2].subtasks[0].done = false;
   await sandbox.module.exports.achievements(request, res);
   assert.deepEqual(result.achievements.map((a) => a.tag), ['partial']);
+  allowed = false;
+  await sandbox.module.exports.achievements(request, res);
+  assert.deepEqual(result.streakAwards, []);
+  assert.deepEqual(result.achievements, []);
 });

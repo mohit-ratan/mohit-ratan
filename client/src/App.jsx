@@ -16,8 +16,7 @@ import TodayPage from './pages/TodayPage';
 import AwardsGalleryPage from './pages/AwardsGalleryPage';
 import FollowingProgressPage from './pages/FollowingProgressPage';
 
-// The three.js/r3f/drei stack is ~1MB — code-split so only the 3D routes
-// pay that cost instead of it loading on every page (feed, login, etc).
+// Load the achievements gallery only when its route is opened.
 const AchievementsPage = lazy(() => import('./pages/AchievementsPage'));
 
 function ThreeDLoading() {

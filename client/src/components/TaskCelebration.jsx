@@ -45,7 +45,7 @@ export default function TaskCelebration({ celebration, onClose }) {
       )}
       {award ? <div className="milestone-award-display">
         <div className="milestone-award-pop" role="img" aria-label={goalAward ? `${CAT_MAP[goalAward.category]?.label || 'Goal'} completed goal award` : 'Seven consecutive days streak award'}>
-          {goalAward ? <CategoryAwardIcon category={goalAward.category} targetDays={goalAward.targetDays} /> : <FireAwardIcon />}
+          {goalAward ? <CategoryAwardIcon category={goalAward.category} targetDays={goalAward.targetDays} /> : <FireAwardIcon days={streakAward.totalStreakDays} />}
         </div>
         <p>{goalAward ? `${goalAward.targetDays} goal task days · ${CAT_MAP[goalAward.category]?.label}` : `${streakAward.totalStreakDays} consecutive days on this goal`}</p>
       </div> : <div className="task-party-medal" aria-hidden="true"><span>DAY</span><strong key={number}>{number}</strong><small>+1 task day</small></div>}
@@ -55,8 +55,8 @@ export default function TaskCelebration({ celebration, onClose }) {
       <div className="task-party-streak"><span aria-hidden="true">🔥</span><strong>{displayedStreak}-day streak</strong><span>{level === 1 ? 'Keep showing up' : `Level ${level} celebration`}</span></div>
       <progress value={day} max={targetDays} aria-label={`${taskName}: ${day} of ${targetDays} task days`} />
       {trifectaEarned ? (
-        <p className="task-party-award">Your Trifecta Award is waiting in your Achievement House, alongside this goal's own trophy.</p>
-      ) : goalCompleted && <p className="task-party-award">Your award is waiting in your Achievement House.</p>}
+        <p className="task-party-award">Your Trifecta Award is waiting in your achievements, alongside this goal's own trophy.</p>
+      ) : goalCompleted && <p className="task-party-award">Your award is waiting in your achievements.</p>}
       <button className="task-party-continue" type="button" onClick={onClose}>{goalCompleted ? 'Enjoy the win →' : 'Keep the momentum →'}</button>
       <Link to="/journal" onClick={onClose}>Reflect on this win privately →</Link>
       <small className="task-party-note">{displayedStreak === 1 ? 'Check in again tomorrow to build your streak.' : 'Same-day uploads add progress; each calendar day counts once toward your streak.'}</small>

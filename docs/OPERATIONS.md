@@ -116,3 +116,9 @@ The prized gold Trifecta requires recorded goal completion check-ins in all thre
 - An isolated missed day resets this goal streak to zero, marks an unfinished attempt missed, and activates the next attempt. Earned weeks remain earned. These strict per-goal awards do not use the separate profile streak-freeze allowance. Reads show a missed attempt immediately after the grace day ends, without creating history on reads.
 - Existing recorded task check-in dates seed the new goal history; older dates that were never recorded are not fabricated. Photo task-day snapshots remain unchanged. Fire indicators show the goal's current recorded streak status.
 - Progress paths show fire markers and a final category goal award. Only a newly earned week or goal completion shows its corresponding award in the animated pop-up; feed reads do not trigger celebrations. A completed goal takes priority when both awards are earned together.
+
+## Achievement gallery and full streak runs
+
+- The profile achievements route now shows a category-filtered gallery of goal awards and flame-shaped streak awards. The house illustration, floor copy, and 3D entry are removed; existing `?floor=` links still select the right category.
+- The achievements API exposes run awards only for goals with posts visible to the viewer, under the same profile access checks. Each run earns its first fire award at seven days; it displays the current length while active and retains its exact final length after a break (for example, 20 days). Weekly marker history is grouped into complete runs, including the final partial week. Subsequent runs do not replace previous awards.
+- The Trifecta crown is larger, using the same restored category crown shape. Goal awards retain their actual task-day totals and four duration bands.

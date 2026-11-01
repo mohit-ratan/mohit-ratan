@@ -329,7 +329,7 @@ export default function ProfilePage() {
                   </dl>
                   {canView && (
                     <button type="button" className="profile-house-link" onClick={() => navigate(`/profile/${authorId}/achievements`)}>
-                      <span className="profile-house-icon" aria-hidden="true">🏆</span><span><strong>Achievement House</strong><small>Goals, progress & earned awards</small></span><span aria-hidden="true">↗</span>
+                      <span className="profile-house-icon" aria-hidden="true">🏆</span><span><strong>Achievements</strong><small>Goals, progress & earned awards</small></span><span aria-hidden="true">↗</span>
                     </button>
                   )}
                 </div>

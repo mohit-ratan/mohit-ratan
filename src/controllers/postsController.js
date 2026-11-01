@@ -1,4 +1,4 @@
-const { currentGoalStreak, checkInGoal, goalStreakFromDays } = require('../lib/goalStreak');
+const { currentGoalStreak, checkInGoal, goalStreakFromDays, goalStreakAwards } = require('../lib/goalStreak');
 const { ensureMemberTables, recordCheckIn } = require('../lib/memberFeatures');
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
@@ -74,6 +74,30 @@ async function preserveGoalPhotos(db, authorId, tag, tasks) {
     [completed, target, authorId, tag]);
 }
 
+async function loadGoalStreaks(goalPairs) {
+  await ensureMemberTables();
+  const streaks = new Map();
+  if (goalPairs.length) {
+    const [rows] = await pool.query(`SELECT author_id, tag, state FROM goal_streaks WHERE (author_id, tag) IN (${goalPairs.map(() => '(?,?)').join(',')})`, goalPairs.flat());
+    for (const row of rows) streaks.set(`${row.author_id}:${row.tag}`, currentGoalStreak(row.state));
+    const missing = goalPairs.filter(([authorId, tag]) => !streaks.has(`${authorId}:${tag}`));
+    if (missing.length) {
+      const [history] = await pool.query(`SELECT ci.user_id, ci.goal_tag, ci.day_key, g.subtasks
+        FROM task_checkins ci JOIN goals g ON g.author_id = ci.user_id AND g.tag = ci.goal_tag
+        WHERE (ci.user_id, ci.goal_tag) IN (${missing.map(() => '(?,?)').join(',')}) ORDER BY ci.day_key`, missing.flat());
+      for (const [authorId, tag] of missing) {
+        const days = history.filter(row => row.user_id === authorId && row.goal_tag === tag);
+        if (days.length) {
+          const tasks = normalizeTasks(days[0].subtasks);
+          const zone = tasks.find(task => task.streakTimeZone)?.streakTimeZone;
+          streaks.set(`${authorId}:${tag}`, currentGoalStreak(goalStreakFromDays(days.map(row => row.day_key), zone)));
+        }
+      }
+    }
+  }
+  return streaks;
+}
+
 async function attachGoalProgress(posts) {
   if (!posts.length) return posts;
   await ensureMemberTables();
@@ -98,25 +122,7 @@ async function attachGoalProgress(posts) {
     for (const row of saved) byId.set(row.post_id, { completed: row.completed, target: row.target });
   }
   const goalPairs = [...new Map(posts.filter(post => post.tag).map(post => [`${post.authorId}:${post.tag}`, [post.authorId, post.tag]])).values()];
-  const streaks = new Map();
-  if (goalPairs.length) {
-    const [rows] = await pool.query(`SELECT author_id, tag, state FROM goal_streaks WHERE (author_id, tag) IN (${goalPairs.map(() => '(?,?)').join(',')})`, goalPairs.flat());
-    for (const row of rows) streaks.set(`${row.author_id}:${row.tag}`, currentGoalStreak(row.state));
-    const missing = goalPairs.filter(([authorId, tag]) => !streaks.has(`${authorId}:${tag}`));
-    if (missing.length) {
-      const [history] = await pool.query(`SELECT ci.user_id, ci.goal_tag, ci.day_key, g.subtasks
-        FROM task_checkins ci JOIN goals g ON g.author_id = ci.user_id AND g.tag = ci.goal_tag
-        WHERE (ci.user_id, ci.goal_tag) IN (${missing.map(() => '(?,?)').join(',')}) ORDER BY ci.day_key`, missing.flat());
-      for (const [authorId, tag] of missing) {
-        const days = history.filter(row => row.user_id === authorId && row.goal_tag === tag);
-        if (days.length) {
-          const tasks = normalizeTasks(days[0].subtasks);
-          const zone = tasks.find(task => task.streakTimeZone)?.streakTimeZone;
-          streaks.set(`${authorId}:${tag}`, currentGoalStreak(goalStreakFromDays(days.map(row => row.day_key), zone)));
-        }
-      }
-    }
-  }
+  const streaks = await loadGoalStreaks(goalPairs);
   return posts.map(post => byId.has(post.id) ? { ...post, goalProgress: { ...byId.get(post.id), streak: streaks.get(`${post.authorId}:${post.tag}`) || null } } : post);
 }
 
@@ -251,7 +257,7 @@ async function achievements(req, res) {
     const { authorId } = req.query;
     if (!authorId) return res.status(400).json({ error: 'authorId is required.' });
     if (!(await canView(req.userId, authorId))) {
-      return res.json({ achievements: [], goals: [], tags: [] });
+      return res.json({ achievements: [], goals: [], tags: [], streakAwards: [] });
     }
 
     const [rows] = await pool.query(
@@ -299,7 +305,12 @@ async function achievements(req, res) {
     // Tagged posts track progress; only a finished, non-empty checklist earns an award.
     const earnedList = achievementList.filter((a) => a.goal?.completed);
     const trifecta = await trifectaStatus(authorId);
+    const streaks = await loadGoalStreaks(achievementList.filter(item => item.goal).map(item => [authorId, item.tag]));
+    const streakAwards = achievementList.filter(item => item.goal).flatMap(item =>
+      goalStreakAwards(streaks.get(`${authorId}:${item.tag}`)).map(award => ({ ...award, tag: item.tag, category: item.category }))
+    );
     res.json({
+      streakAwards,
       achievements: earnedList,
       goals: achievementList.filter((a) => a.goal && !a.goal.completed),
       tags: achievementList.map((a) => a.tag),

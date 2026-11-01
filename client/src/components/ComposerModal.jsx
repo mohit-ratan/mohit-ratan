@@ -228,7 +228,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
         },
       });
 
-      if (!data.celebration) showToast(data.goalCompleted ? '🏆 Goal complete! Your award is in your Achievement House.' : data.targetDays ? `Photo posted — ${data.completedDays} of ${data.targetDays} days complete!` : isPost ? 'Posted!' : 'Added to your story!');
+      if (!data.celebration) showToast(data.goalCompleted ? '🏆 Goal complete! Your award is in your achievements.' : data.targetDays ? `Photo posted — ${data.completedDays} of ${data.targetDays} days complete!` : isPost ? 'Posted!' : 'Added to your story!');
       onCreated?.(data.story ? { story: { ...data.story, authorId: user.id, authorName: user.displayName, authorPhotoUrl: user.photoUrl } } : undefined);
       onClose();
       if (data.celebration) celebrate({ ...data.celebration, postId: data.id });

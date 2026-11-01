@@ -1935,3 +1935,33 @@ button.story-ring{border:0;cursor:pointer;}
 .feed-card-progress .fire-marker .fire-award-icon>.theme-icon{width:24px;height:24px;}
 .milestone-award-pop>.fire-award-icon{width:150px;height:150px;border:3px double var(--accent);background:var(--accent-soft);}
 .milestone-award-pop>.fire-award-icon>.theme-icon{width:92px;height:92px;}
+
+/* Fire awards have a flame silhouette, rather than a circular badge. */
+svg.fire-award-icon{display:inline-block;vertical-align:middle;width:38px;height:48px;border:0;border-radius:0;background:none;color:var(--accent);}
+.feed-card-progress .fire-marker{padding-top:0;}
+.feed-card-progress .fire-marker svg.fire-award-icon{width:35px;height:45px;border:0;background:none;}
+.feed-card-progress .fire-earned svg.fire-award-icon{color:var(--accent);}
+.feed-card-progress :is(.fire-missed,.fire-upcoming) svg.fire-award-icon{color:#b0b0b0;}
+.feed-card-progress :is(.fire-missed,.fire-upcoming) .fire-award-body{stroke:#929292;}
+.feed-card-progress .fire-active .fire-award-body{fill:var(--accent-soft);}
+.milestone-award-pop>svg.fire-award-icon{width:150px;height:190px;border:0;background:none;}
+.achievements-page{min-height:100vh;background:var(--bg);}
+.achievements-header,.achievements-main{max-width:1100px;margin:auto;padding:24px;}
+.achievements-header{border-bottom:1px solid var(--border);}
+.achievements-header h1{font-family:var(--font-display);font-size:32px;font-weight:500;margin:20px 0 0;}
+.achievement-category-nav{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:28px;}
+.achievement-category-nav button{display:inline-flex;align-items:center;gap:8px;border-radius:999px;color:var(--accent);}
+.achievement-category-nav button.selected{background:var(--accent-soft);border-color:var(--accent);}
+.achievement-category-nav button:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+.earned-awards-section{margin-bottom:36px;}
+.earned-awards-section>h2{font-family:var(--font-display);font-size:26px;font-weight:500;}
+.earned-awards-section>p{color:var(--text-muted);font-size:13px;line-height:1.7;}
+.earned-awards-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;}
+.earned-award-card{min-width:0;margin:0;padding:20px;border:1px solid var(--border);border-radius:18px;background:var(--surface);}
+.earned-award-card .progress-award{border:0;}
+.streak-award-card{text-align:center;}
+.streak-award-card svg.fire-award-icon{width:130px;height:166px;}
+.streak-award-card h3{font-size:20px;margin:12px 0;color:var(--accent-deep);}
+.streak-award-card p,.streak-award-card small{font-size:12px;color:var(--text-muted);}
+@media(max-width:800px){.earned-awards-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:480px){.achievements-header,.achievements-main{padding:20px 16px;}.earned-awards-grid{grid-template-columns:1fr;}.achievements-main{padding-bottom:90px;}.achievement-category-nav{gap:8px;}.achievement-category-nav button{padding:10px;}}

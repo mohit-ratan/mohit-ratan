@@ -75,7 +75,7 @@ export default function PostGoalPanel({ post, isMe, onUploadTask }) {
       </ul>
       {!goal.subtasks.length && <p className="about-text">No tasks added to this goal yet.</p>}
       {isMe && (
-        <Link className="post-goal-link" to={`/profile/${post.authorId}/achievements?floor=${encodeURIComponent(post.category)}`}>View goal in Achievement House →</Link>
+        <Link className="post-goal-link" to={`/profile/${post.authorId}/achievements?floor=${encodeURIComponent(post.category)}`}>View goal in achievements →</Link>
       )}
     </section>
   );

@@ -14,7 +14,7 @@ export default function GoldAward({ earned = false, preview = false, categories 
       <circle cx="140" cy="164" r="110" fill={`url(#${gold})`} stroke="#fff0b7" strokeWidth="2"/>
       <circle cx="140" cy="164" r="103" fill="none" stroke="#845c18" strokeOpacity=".55"/>
       <path d="M45 135a100 100 0 0 1 71-67" fill="none" stroke="#fff6d6" strokeWidth="3" strokeLinecap="round" opacity=".8"/>
-      <svg x="100" y="12" width="80" height="48" viewBox="0 0 64 38"><AwardCrown /></svg>
+      <svg x="84" y="-4" width="112" height="67" viewBox="0 0 64 38"><AwardCrown /></svg>
       <g aria-hidden="true">
         {[[140, 108], [117, 148], [163, 148]].map(([cx, cy]) => (
           <g key={`${cx}-${cy}`}>

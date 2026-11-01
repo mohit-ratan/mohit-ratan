@@ -43,4 +43,23 @@ function goalStreakFromDays(days, requestedZone) {
   if (state) state.timeZone = validTimeZone(requestedZone);
   return state || parseState(null);
 }
-module.exports = { goalStreakFromDays, currentGoalStreak, checkInGoal };
+// Weekly attempts are grouped into full runs so a broken 20-day streak
+// keeps an exact 20-day award, rather than losing its last six days.
+function goalStreakAwards(raw, now = new Date()) {
+  const state = currentGoalStreak(raw, now);
+  const runs = [];
+  for (const attempt of state.attempts) {
+    if (!attempt.days || !attempt.startedOn) continue;
+    const endedOn = new Date(Date.parse(`${attempt.startedOn}T00:00:00Z`) + (attempt.days - 1) * 86400000).toISOString().slice(0, 10);
+    const previous = runs.at(-1);
+    if (previous && dayGap(previous.endedOn, attempt.startedOn) === 1) {
+      previous.days += attempt.days;
+      previous.endedOn = endedOn;
+    } else runs.push({ startedOn: attempt.startedOn, endedOn, days: attempt.days });
+  }
+  return runs.filter(run => run.days >= 7).map(run => ({
+    ...run, id: run.startedOn,
+    active: state.streakDays > 0 && run.endedOn === state.lastDay,
+  }));
+}
+module.exports = { goalStreakAwards, goalStreakFromDays, currentGoalStreak, checkInGoal };
