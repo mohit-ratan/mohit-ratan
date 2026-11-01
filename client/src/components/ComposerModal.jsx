@@ -302,6 +302,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
         <div className="modal-detail-pane">
           <div className="composer-panel-heading"><span className="composer-eyebrow">{isPost ? 'MAKE THIS MOMENT COUNT' : 'SHARE A MOMENT'}</span><h3>{isPost ? 'Your post & goals' : 'Your story'}</h3><p>{isPost ? 'Choose a category, connect a task, and track your progress.' : 'Add a tag and share a little of your day.'}</p></div>
           <fieldset disabled={submitting} className="modal-detail-scroll composer-fields">
+            <div className="composer-field-stack">
             {isPost && (
               <div className="cat-choice-row">
                 {CATEGORIES.map((c) => (
@@ -427,6 +428,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
               {media?.kind === 'image'
                 ? 'Tap a filter to apply it automatically. Choose No look to restore your original photo.'
                 : media?.kind === 'video' ? 'Tap a filter to preview it on your video.' : 'Choose a photo or video to preview a look.'}
+            </div>
             </div>
           </fieldset>
           <div className="modal-detail-footer">

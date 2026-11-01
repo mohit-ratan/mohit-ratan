@@ -2,14 +2,14 @@ import { useId } from 'react';
 
 // Shared reference-style flame for progress markers, previews and earned awards.
 export default function FireAwardIcon({ days }) {
-  const id = useId();
+  const id = `fire-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const outer = `${id}-outer`, inner = `${id}-inner`;
-  return <svg className="fire-award-icon" viewBox="0 0 100 132" aria-hidden="true" focusable="false">
+  return <svg className="fire-award-icon" viewBox="0 0 100 132" width="38" height="48" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
     <defs>
-      <linearGradient id={outer} x1="0" y1="0" x2="0" y2="1">
+      <linearGradient id={outer} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="128">
         <stop stopColor="#FF3E35" /><stop offset=".35" stopColor="#FF650B" /><stop offset=".75" stopColor="#FF8700" /><stop offset="1" stopColor="#FF9C00" />
       </linearGradient>
-      <linearGradient id={inner} x1="0" y1="0" x2="0" y2="1">
+      <linearGradient id={inner} gradientUnits="userSpaceOnUse" x1="0" y1="46" x2="0" y2="128">
         <stop stopColor="#FFF16B" /><stop offset=".6" stopColor="#FFF8A4" /><stop offset=".85" stopColor="#FFFAC3" /><stop offset="1" stopColor="#FFD15B" />
       </linearGradient>
     </defs>
