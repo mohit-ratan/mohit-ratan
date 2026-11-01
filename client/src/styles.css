@@ -1793,3 +1793,12 @@ button.story-ring{border:0;cursor:pointer;}
 @media(max-width:900px){
   .mobile-streak-summary{display:flex;flex-wrap:wrap;gap:8px 16px;margin:0 0 16px;padding:12px 14px;border:1px solid #FFD9B3;border-radius:14px;background:#FFF4E8;color:#9A5B1F;font-size:12px;font-weight:600;}
 }
+
+/* Goal navigation sits above the compact category filters. */
+.header-goal-nav{justify-content:flex-start;flex-wrap:wrap;padding-top:12px;}
+.cat-pill.cat-icon{width:44px;height:44px;min-width:44px;padding:0;justify-content:center;font-size:21px;}
+.cat-pill:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+@media(max-width:480px){
+  .feed-intro-actions.header-goal-nav{display:flex;gap:8px;width:auto;}
+  .header-goal-nav .house-enter-btn{padding:10px 12px;font-size:11px;min-height:44px;}
+}

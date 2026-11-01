@@ -217,6 +217,7 @@ export default function HomePage() {
   return (
     <>
       <Header
+        showGoalNavigation
         activeCategory={category}
         onCategoryChange={(c) => updateFilters({ category: c, tag: null })}
         counts={counts}
@@ -227,7 +228,6 @@ export default function HomePage() {
       <div className="wrap">
         <main className="layout">
           <section className="feed-col">
-            <div className="feed-intro"><div><span className="house-eyebrow">A LITTLE PROGRESS, EVERY DAY</span><h1>Your daily chapter.</h1><p>Share a moment. Build a habit. Celebrate the work.</p></div><div className="feed-intro-actions"><button className="house-enter-btn" type="button" onClick={() => navigate(`/profile/${user.id}/achievements`)}>My goals ↗</button><button className="house-enter-btn today-tasks-btn" onClick={() => navigate('/today')}>Today’s tasks →</button><button className="house-enter-btn" type="button" onClick={() => navigate('/following-progress')}>Following's progress ↗</button></div></div>
             {loadingLinkedPost && <p role="status">Opening post…</p>}
             {linkedPostError && <div className="inline-error" role="alert">{linkedPostError} <button type="button" onClick={closeLinkedPost}>Dismiss</button></div>}
             <div className="mobile-streak-summary" aria-label="Your streak and freeze days">

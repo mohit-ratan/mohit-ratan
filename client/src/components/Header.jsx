@@ -15,6 +15,7 @@ export default function Header({
   searchQuery = '',
   onSearchChange,
   streak = 0,
+  showGoalNavigation = false,
 }) {
   const navigate = useNavigate();
   const showToast = useToast();
@@ -385,10 +386,18 @@ export default function Header({
         </div>
       </div>
       <div className="wrap">
-        <nav className="category-nav">
+        {showGoalNavigation && user && (
+          <nav className="feed-intro-actions header-goal-nav" aria-label="Your progress">
+            <button className="house-enter-btn" type="button" onClick={() => navigate(`/profile/${user.id}/achievements`)}>My goals ↗</button>
+            <button className="house-enter-btn today-tasks-btn" type="button" onClick={() => navigate('/today')}>Today’s tasks →</button>
+            <button className="house-enter-btn" type="button" onClick={() => navigate('/following-progress')}>Following’s progress ↗</button>
+          </nav>
+        )}
+        <nav className="category-nav" aria-label="Filter by category">
           <button
             type="button"
             className={`cat-pill${activeCategory === 'all' ? ' active' : ''}`}
+            aria-pressed={activeCategory === 'all'}
             onClick={() => handleCategoryClick('all')}
           >
             <span className="dot" style={{ color: 'var(--accent)' }} />All <span className="count">{counts.all ?? ''}</span>
@@ -397,10 +406,13 @@ export default function Header({
             <button
               key={c.id}
               type="button"
-              className={`cat-pill${activeCategory === c.id ? ' active' : ''}`}
+              className={`cat-pill cat-icon${activeCategory === c.id ? ' active' : ''}`}
+              aria-label={c.label}
+              aria-pressed={activeCategory === c.id}
+              title={c.label}
               onClick={() => handleCategoryClick(c.id)}
             >
-              <span className="dot" style={{ color: `var(--${c.id})` }} />{c.emoji} {c.label} <span className="count">{counts[c.id] ?? ''}</span>
+              <span aria-hidden="true">{c.emoji}</span>
             </button>
           ))}
         </nav>
