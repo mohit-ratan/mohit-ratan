@@ -141,3 +141,9 @@ The prized gold Trifecta requires recorded goal completion check-ins in all thre
 - Startup adds `monthly_recap_notifications`, keyed by user and recap month. A background check every 15 minutes creates one in-app notice for the most recently completed month when it contains posts. Member reminder timezones determine the boundary; UTC is the fallback. Startup and notification-inbox reads catch up after downtime. No email or device push is sent.
 - The notice reads “PackSomeWork brings you your monthly recap” with its month and uses the brand icon. Selecting it opens the recipient’s profile, selects that exact month, and opens its reel when photos remain available. Music still requires explicit enabling.
 - The unique user/month key prevents duplicates from concurrent workers or repeated polling. Mark-all-read includes these notices. Account deletion cascades them. No notifications are created for empty months, and prior-month photo visibility continues to be enforced when the recap is opened.
+
+## Awards in monthly highlights
+
+- Recaps include an earned-award gallery and reels give each award its own slide. Goal medals use the saved target on the completion post when available; unknown historical targets use a generic trophy rather than inventing a day count or star rank.
+- Fire awards are reconstructed from visible recorded check-ins through that month’s end. Runs can span months and retain their full count as of month-end. They appear when a weekly milestone or completed run belongs to the selected month; previously completed runs are not repeated in later months.
+- The persisted Trifecta is included in its actual earning month. For public viewers who cannot see friends-only posts, the recap requires visible qualifying goal completions in all three categories. Normal profile and post access checks continue to apply before any award aggregation.

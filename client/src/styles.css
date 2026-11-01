@@ -2094,3 +2094,27 @@ svg.fire-award-icon{display:inline-block;vertical-align:middle;width:38px;height
 .bell-recap-brand{width:32px;height:32px;display:grid;place-items:center;flex-shrink:0;border:1px solid var(--border);border-radius:50%;background:var(--accent-soft);}
 
 .monthly-recaps{scroll-margin-top:170px;}
+
+/* The same earned awards appear in the profile recap and reel. */
+.monthly-recap-awards{margin:18px 0 24px;}
+.monthly-recap-awards h4{font-size:13px;color:var(--accent-deep);margin:0 0 12px;}
+.monthly-recap-awards>div{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+.monthly-award-card{margin:0;min-width:0;text-align:center;padding:12px 8px;border:1px solid var(--border);border-radius:12px;background:var(--surface);}
+.monthly-award-art{height:110px;display:grid;place-items:center;}
+.monthly-award-art>.category-award-icon{width:90px;height:107px;}
+.monthly-award-art>svg.fire-award-icon{width:75px;height:100px;}
+.monthly-award-art>svg:not(.category-award-icon):not(.fire-award-icon){width:52px;height:52px;color:var(--accent);}
+.monthly-award-art>.gold-unity-award{margin:0;padding:0;border:0;background:none;box-shadow:none;}
+.monthly-award-art .gold-unity-medallion{width:98px;height:110px;margin:0;}
+.monthly-award-art .gold-unity-award>:not(svg),.monthly-award-art .gold-unity-award::before{display:none;}
+.monthly-award-card figcaption strong{display:block;font-size:10px;color:var(--accent-deep);line-height:1.4;}
+.monthly-award-card figcaption>span{display:block;font-size:10px;color:var(--text-muted);margin-top:5px;overflow-wrap:anywhere;}
+.monthly-reel-award-slide .monthly-award-card{width:100%;max-width:280px;border:0;background:none;padding:12px;}
+.monthly-reel-award-slide .monthly-award-art{height:230px;}
+.monthly-reel-award-slide .monthly-award-art>.category-award-icon{width:180px;height:214px;}
+.monthly-reel-award-slide .monthly-award-art>svg.fire-award-icon{width:155px;height:205px;}
+.monthly-reel-award-slide .monthly-award-art .gold-unity-medallion{width:200px;height:224px;}
+.monthly-reel-award-slide figcaption strong{font-family:var(--font-display);font-size:26px;font-weight:500;}
+.monthly-reel-award-slide figcaption>span{font-size:14px;}
+@media(max-width:480px){.monthly-recap-awards>div{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-height:600px){.monthly-reel-award-slide .monthly-award-art{height:110px;}.monthly-reel-award-slide .monthly-award-art>.category-award-icon{width:90px;height:107px;}.monthly-reel-award-slide .monthly-award-art>svg.fire-award-icon{width:75px;height:100px;}.monthly-reel-award-slide .monthly-award-art .gold-unity-medallion{width:98px;height:110px;}}

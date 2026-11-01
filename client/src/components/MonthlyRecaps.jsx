@@ -1,3 +1,4 @@
+import MonthlyAward from './MonthlyAward';
 import MonthlyReel from './MonthlyReel';
 import Avatar from './Avatar';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -49,7 +50,7 @@ export default function MonthlyRecaps({ authorId, isMe, profile }) {
     if (!target || opened.current === location.key) return;
     opened.current = location.key;
     section.current?.scrollIntoView({ block: 'start' });
-    if (requestReel && target.images.length) setReel(target);
+    if (requestReel && (target.images.length || target.awards?.length)) setReel(target);
   }, [recaps, requestedMonth, requestReel, location.key]);
   const recap = recaps.find(item => item.month === selected) || recaps[0];
 
@@ -62,7 +63,7 @@ export default function MonthlyRecaps({ authorId, isMe, profile }) {
     {error && <p className="inline-error" role="alert">{error} <button type="button" onClick={() => load(failedBefore)}>Try again</button></p>}
     {recap ? <article className="monthly-recap" key={recap.month}>
       <div className="monthly-recap-title"><ThemeIcon name="sparkle" /><h3>{recap.label}</h3></div>
-      {recap.images.length > 0 && <button type="button" className="monthly-recap-play" aria-label={`Play ${recap.label} monthly reel`} title={`Play ${recap.label} reel`} onClick={() => setReel(recap)}>
+      {(recap.images.length > 0 || !!recap.awards?.length) && <button type="button" className="monthly-recap-play" aria-label={`Play ${recap.label} monthly reel`} title={`Play ${recap.label} reel`} onClick={() => setReel(recap)}>
         <span className="monthly-reel-profile-ring">
           <span className="monthly-reel-profile-photo"><Avatar id={authorId} name={profile?.displayName || 'Profile'} photoUrl={profile?.photoUrl} size={64} /></span>
           <span className="monthly-reel-profile-badge"><ThemeIcon name="reel" /></span>
@@ -76,6 +77,7 @@ export default function MonthlyRecaps({ authorId, isMe, profile }) {
         <div><dd>{recap.activeDays}</dd><dt>Days showing up</dt></div>
         <div><dd>{recap.goalsCompleted || recap.checkIns || recap.categories.length}</dd><dt>{recap.goalsCompleted ? 'Goals finished' : recap.checkIns ? 'Goal check-ins' : 'Areas explored'}</dt></div>
       </dl>
+      {!!recap.awards?.length && <div className="monthly-recap-awards"><h4>Awards earned this month</h4><div>{recap.awards.map(award => <MonthlyAward key={award.id} award={award} />)}</div></div>}
       <ul className="monthly-recap-highlights">{recap.highlights.map(highlight => <li key={highlight}><ThemeIcon name="check" /><span>{highlight}</span></li>)}</ul>
       <p className="monthly-recap-footer">Small steps, worth celebrating.</p>
     </article> : !loading && !error && <p className="monthly-recap-empty">{isMe ? 'Your monthly highlights will appear here after a month of sharing. Keep posting your progress.' : 'Monthly highlights appear after a completed month with shared posts.'}</p>}

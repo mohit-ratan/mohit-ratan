@@ -60,6 +60,7 @@ async function controllerFixture({ allowed = true, viewer = 'viewer', followStat
   const pool = { query: async (sql, args) => {
     queries.push({ sql, args });
     if (sql.includes('member_preferences')) return [[{ time_zone: 'UTC' }]];
+    if (sql.includes('FROM task_checkins ci') || sql.includes('FROM special_awards')) return [[]];
     if (sql.includes('FROM posts p')) {
       assert.ok(sql.includes("p.visibility = 'public' OR ? = 1"));
       assert.ok(sql.includes('NOT EXISTS'));

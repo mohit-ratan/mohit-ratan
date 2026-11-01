@@ -28,3 +28,11 @@ test('reel music follows the main category without mutating recap data', async (
   }
   assert.equal(monthlyReelMusic({ categories: [] }).src, '/audio/monthly-health.wav');
 });
+
+test('monthly reel celebrates every recorded award before its closing slide', async () => {
+  const { buildReelSlides } = await import('../client/src/lib/monthlyReel.mjs');
+  const awards = [{ id: 'goal:walk', kind: 'goal', category: 'health', targetDays: 20 }, { id: 'streak:walk', kind: 'streak', days: 20 }, { id: 'trifecta-45', kind: 'trifecta' }];
+  const slides = buildReelSlides({ label: 'October 2026', images: [], highlights: [], awards });
+  assert.deepEqual(slides.filter(slide => slide.type === 'award').map(slide => slide.award), awards);
+  assert.equal(slides.at(-1).type, 'outro');
+});

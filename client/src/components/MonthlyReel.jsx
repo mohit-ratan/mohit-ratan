@@ -1,3 +1,4 @@
+import MonthlyAward from './MonthlyAward';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { mediaUrl } from '../api';
@@ -101,7 +102,11 @@ export default function MonthlyReel({ recap, onClose }) {
           {slide.type === 'photo' ? <>
             <ReelPhoto photo={slide.photo} label={recap.label} />
             <div className="monthly-reel-caption"><span>A MOMENT WORTH REMEMBERING</span><p>{slide.caption}</p></div>
-          </> : <div className="monthly-reel-title-card">
+          </> : slide.type === 'award' ? <div className="monthly-reel-title-card monthly-reel-award-slide">
+            <span>AWARD EARNED · {recap.label.toUpperCase()}</span>
+            <MonthlyAward award={slide.award} />
+            <p>Your work deserves a little celebration.</p>
+          </div> : <div className="monthly-reel-title-card">
             <ThemeIcon name="sparkle" />
             <span>{slide.type === 'intro' ? 'YOUR MONTH IN MOMENTS' : recap.label.toUpperCase()}</span>
             <h3>{slide.heading}</h3><p>{slide.caption}</p>
