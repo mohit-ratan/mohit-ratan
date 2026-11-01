@@ -1,3 +1,4 @@
+import { CategoryIcon } from '../lib/icons';
 import { GOAL_TEMPLATES, suggestedTargetDate } from '../lib/goalTemplates';
 
 // Puts the template matching the post's own category first, but still
@@ -16,7 +17,7 @@ export default function GoalTemplatePicker({ category, onApply }) {
             className="goal-template-btn"
             onClick={() => onApply(t.subtasks.map((s) => ({ ...s })), suggestedTargetDate(t))}
           >
-            {t.label}
+            <CategoryIcon category={t.category} /> {t.label.replace(/^[^\p{L}\p{N}]+/u, '')}
           </button>
         ))}
       </div>

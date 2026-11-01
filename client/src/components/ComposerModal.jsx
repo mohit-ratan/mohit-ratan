@@ -1,3 +1,4 @@
+import { CategoryIcon, ThemeIcon } from '../lib/icons';
 import { useCelebration } from '../context/CelebrationContext';
 import useDialog from '../hooks/useDialog';
 import { useEffect, useRef, useState } from 'react';
@@ -12,6 +13,7 @@ import GoalTemplatePicker from './GoalTemplatePicker';
 import PhotoCropper from './PhotoCropper';
 import TaskListEditor from './TaskListEditor';
 
+const LOOK_ICONS = { '': 'circle', golden: 'sun', moody: 'moon', noir: 'film', neon: 'bolt', dreamy: 'cloud', bold: 'flame' };
 const VIBE_ITEMS = [{ id: '', emoji: '⚪', label: 'No look' }, ...LOOK_RECIPES];
 
 // One modal used for both "Create post" (kind="post") and "Add to your
@@ -245,7 +247,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
       <div ref={dialogRef} tabIndex={-1} className="modal-box composer-workspace" role="dialog" aria-modal="true" aria-labelledby="composer-title">
         <header className="composer-workspace-header">
           <div><span className="composer-eyebrow">PACKSOMEWORK · YOUR DAILY PROGRESS</span><h2 id="composer-title">{title}</h2></div>
-          <button className="composer-close" type="button" aria-label="Close editor" disabled={submitting} onClick={onClose}>✕</button>
+          <button className="composer-close" type="button" aria-label="Close editor" disabled={submitting} onClick={onClose}><ThemeIcon name="close" /></button>
         </header>
         <div className="media-and-look-row">
           {media ? (
@@ -258,7 +260,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                 <img src={media.previewUrl} alt="Selected media" />
               )}
               {generating && <div className="generate-bar"><span className="generate-status" role="status">Applying filter…</span></div>}
-              <button className="remove-media" type="button" aria-label="Remove photo or video" disabled={submitting} onClick={removeMedia}>✕</button>
+              <button className="remove-media" type="button" aria-label="Remove photo or video" disabled={submitting} onClick={removeMedia}><ThemeIcon name="close" /></button>
             </div>
           ) : (
             <label className="modal-media-pane create-dropzone" role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); fileInputRef.current?.click(); } }}>
@@ -291,7 +293,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                 disabled={submitting}
                 onClick={() => chooseVibe(it.id)}
               >
-                {it.emoji}
+                <ThemeIcon name={LOOK_ICONS[it.id]} />
               </button>
             ))}
           </div>
@@ -308,51 +310,15 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                     type="button"
                     className={`cat-choice${c.id === chosenCat ? ' chosen' : ''}`}
                     data-cat={c.id}
+                    aria-pressed={c.id === chosenCat}
                     disabled={!!selectedTask}
                     onClick={() => setChosenCat(c.id)}
                   >
-                    {c.emoji} {c.label}
+                    <CategoryIcon category={c.id} /> {c.label}
                   </button>
                 ))}
               </div>
             )}
-            {isPost && (
-              <div className="visibility-choice-row">
-                <label className="composer-field-label">Who can see this post?</label>
-                <div className="visibility-choice-options">
-                  <button
-                    type="button"
-                    className={`visibility-choice${visibility === 'friends' ? ' chosen' : ''}`}
-                    onClick={() => setVisibility('friends')}
-                  >
-                    👥 Friends only
-                  </button>
-                  <button
-                    type="button"
-                    className={`visibility-choice${visibility === 'public' ? ' chosen' : ''}`}
-                    onClick={() => setVisibility('public')}
-                  >
-                    🌐 Public
-                  </button>
-                </div>
-                <span className="tag-hint">{visibility === 'public' ? 'Anyone can see this post, even people who don’t follow you.' : 'Only people you’ve accepted as followers can see this post.'}</span>
-              </div>
-            )}
-            {isPost && (
-              <div className="visibility-choice-row">
-                <label className="composer-field-label">Photo shape</label>
-                <div className="visibility-choice-options">
-                  <button type="button" className={`visibility-choice${aspectRatio === 'square' ? ' chosen' : ''}`} onClick={() => chooseAspect('square')}>⬜ Square</button>
-                  <button type="button" className={`visibility-choice${aspectRatio === 'portrait' ? ' chosen' : ''}`} onClick={() => chooseAspect('portrait')}>📱 Portrait</button>
-                  <button type="button" className={`visibility-choice${aspectRatio === 'landscape' ? ' chosen' : ''}`} onClick={() => chooseAspect('landscape')}>🖼️ Landscape</button>
-                </div>
-              </div>
-            )}
-            <div className="composer-note">
-              {media?.kind === 'image'
-                ? 'Tap a filter to apply it automatically. Choose No look to restore your original photo.'
-                : 'Tap a filter to preview it on your video.'}
-            </div>
             {isPost && availableGoals.length > 0 && <div className="goal-setup">
               <label className="goal-setup-label" htmlFor="photo-goal">Continue one of your existing goals?</label>
               <select id="photo-goal" value={linkedGoal?.tag || ''} onChange={(e) => {
@@ -409,7 +375,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
             </div>
             {isNewTag && (
               <div className="goal-setup">
-                <div className="goal-setup-label">🎯 Set a goal for #{normalizedTag}? (optional)</div>
+                <div className="goal-setup-label"><ThemeIcon name="target" /> Set a goal for #{normalizedTag}? (optional)</div>
                 {!goalSubtasks.length && (
                   <GoalTemplatePicker
                     category={chosenCat}
@@ -425,6 +391,43 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                 <TaskListEditor tasks={goalSubtasks} onChange={setGoalSubtasks} />
               </div>
             )}
+            {isPost && (
+              <div className="visibility-choice-row">
+                <label className="composer-field-label">Who can see this post?</label>
+                <div className="visibility-choice-options">
+                  <button
+                    type="button"
+                    className={`visibility-choice${visibility === 'friends' ? ' chosen' : ''}`}
+                    onClick={() => setVisibility('friends')}
+                  >
+                    <ThemeIcon name="people" /> Friends only
+                  </button>
+                  <button
+                    type="button"
+                    className={`visibility-choice${visibility === 'public' ? ' chosen' : ''}`}
+                    onClick={() => setVisibility('public')}
+                  >
+                    <ThemeIcon name="globe" /> Public
+                  </button>
+                </div>
+                <span className="tag-hint">{visibility === 'public' ? 'Anyone can see this post, even people who don’t follow you.' : 'Only people you’ve accepted as followers can see this post.'}</span>
+              </div>
+            )}
+            {isPost && (
+              <div className="visibility-choice-row">
+                <label className="composer-field-label">Photo shape</label>
+                <div className="visibility-choice-options">
+                  <button type="button" className={`visibility-choice${aspectRatio === 'square' ? ' chosen' : ''}`} onClick={() => chooseAspect('square')}><ThemeIcon name="square" /> Square</button>
+                  <button type="button" className={`visibility-choice${aspectRatio === 'portrait' ? ' chosen' : ''}`} onClick={() => chooseAspect('portrait')}><ThemeIcon name="portrait" /> Portrait</button>
+                  <button type="button" className={`visibility-choice${aspectRatio === 'landscape' ? ' chosen' : ''}`} onClick={() => chooseAspect('landscape')}><ThemeIcon name="landscape" /> Landscape</button>
+                </div>
+              </div>
+            )}
+            <div className="composer-note">
+              {media?.kind === 'image'
+                ? 'Tap a filter to apply it automatically. Choose No look to restore your original photo.'
+                : media?.kind === 'video' ? 'Tap a filter to preview it on your video.' : 'Choose a photo or video to preview a look.'}
+            </div>
           </fieldset>
           <div className="modal-detail-footer">
             <span className="composer-share-note">{selectedTask ? `This photo adds 1 day toward “${selectedTask.text}”.` : 'A little progress, worth sharing.'}</span>

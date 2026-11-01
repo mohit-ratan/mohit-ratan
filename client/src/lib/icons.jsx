@@ -82,6 +82,15 @@ export function TrophyIcon() {
 
 // One rounded outline family for category and interface symbols.
 const THEME_PATHS = {
+  circle: ['M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
+  square: ['M4 4h16v16H4Z'],
+  portrait: ['M6 2h12v20H6Z'],
+  landscape: ['M2 6h20v12H2Z'],
+  sun: ['M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z', 'M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5'],
+  moon: ['M20 15A8 8 0 0 1 9 4 8.5 8.5 0 1 0 20 15Z'],
+  film: ['M3 4h18v16H3Z', 'M7 4v16M17 4v16M3 8h4M3 16h4M17 8h4M17 16h4'],
+  bolt: ['m13 2-9 12h7l-1 8 10-13h-8l1-7Z'],
+  cloud: ['M6 18a4 4 0 0 1-1-7.9A6 6 0 0 1 16.7 9 4.5 4.5 0 1 1 1.8 9H6Z'],
   star: ['m12 3 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3L3 9.6l6.2-.9L12 3Z'],
   close: ['M6 6l12 12M18 6 6 18'],
   globe: ['M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z', 'M3 12h18M12 3c5 5 5 13 0 18-5-5-5-13 0-18Z'],

@@ -1986,3 +1986,27 @@ svg.fire-award-icon{display:inline-block;vertical-align:middle;width:38px;height
 
 /* Preserve the reference flame's gradients; missed and future runs stay grey. */
 .feed-card-progress :is(.fire-missed,.fire-upcoming) svg.fire-award-icon{filter:grayscale(1);}
+
+/* Composer controls follow the same orange-on-white theme as the feed. */
+.composer-backdrop{background:rgba(52,42,37,.6);}
+.composer-workspace .composer-close{border-color:var(--border);color:var(--accent);background:var(--surface);}
+.composer-workspace .composer-close:hover{background:var(--accent-soft);border-color:var(--accent);}
+.composer-close .theme-icon{width:18px;height:18px;}
+.composer-workspace .cat-choice,
+.composer-workspace .visibility-choice{display:inline-flex;align-items:center;gap:6px;min-height:40px;background:var(--surface);color:var(--accent);border-color:var(--border);}
+.composer-workspace .cat-choice[data-cat].chosen,
+.composer-workspace .visibility-choice.chosen{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);}
+.composer-workspace .cat-choice .category-icon{color:inherit;}
+.composer-workspace :is(.cat-choice,.visibility-choice):hover:not(:disabled){border-color:var(--accent);background:var(--accent-soft);}
+.composer-workspace :is(.cat-choice,.visibility-choice):disabled{opacity:.6;cursor:default;}
+.composer-workspace .vibe-choice{display:inline-flex;align-items:center;justify-content:center;color:var(--accent);}
+.composer-workspace .vibe-choice.chosen{background:var(--accent-soft);color:var(--accent);border-color:var(--accent);box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--accent);}
+.composer-workspace .vibe-choice .theme-icon{width:19px;height:19px;}
+.composer-workspace .tag-hint-match{color:var(--accent);}
+.composer-workspace .modal-detail-scroll{scrollbar-color:var(--border) transparent;}
+.composer-workspace :is(input,select,textarea){border-color:var(--border);accent-color:var(--accent);}
+.composer-workspace :is(.goal-template-btn,.goal-add-btn){color:var(--accent);border-color:var(--border);background:var(--surface);}
+.composer-workspace .goal-template-btn{display:inline-flex;align-items:center;gap:5px;}
+.composer-workspace :is(.goal-template-btn,.goal-add-btn):hover{background:var(--accent-soft);border-color:var(--accent);}
+.composer-workspace .goal-remove-btn{color:var(--accent);}
+.composer-workspace .remove-media .theme-icon{width:16px;height:16px;}
