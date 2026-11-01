@@ -2,6 +2,7 @@ import { CategoryIcon, TrophyIcon } from '../lib/icons';
 import { Link } from 'react-router-dom';
 import ProgressAward from '../components/ProgressAward';
 import GoldAward from '../components/GoldAward';
+import FireAwardIcon from '../components/FireAwardIcon';
 import BrandLogo from '../components/BrandLogo';
 import { useAuth } from '../context/AuthContext';
 import { AWARD_COLLECTIONS, AWARD_KIND_COPY } from '../lib/awardDesigns';
@@ -28,7 +29,7 @@ export default function AwardsGalleryPage() {
       <main id="awards-main">
         <section className="awards-hero">
           <p className="intro-eyebrow">EVERY DESIGN, EXPLAINED</p>
-          <h1>The Awards Gallery</h1><p>Under 10 days: ★ · 10–20: ★★ · 21–30: ★★★ · Over 30: ★★★★. Each goal award shows your actual goal task days. Every award shares the prized gold finish. Leaf, dollar, and heart symbols identify each category; detail grows with the challenge.</p>
+          <h1>The Awards Gallery</h1><p>Under 10 days: ★ · 10–20: ★★ · 21–30: ★★★ · Over 30: ★★★★. Each goal award shows your actual goal task days. Goal awards share the prized gold finish; streak awards use an orange flame. Leaf, dollar, and heart symbols identify each category; detail grows with the challenge.</p>
           <p className="intro-lead">
             A look at every award design in PackSomeWork — what it celebrates and exactly how it's earned. Nothing shown
             here has been awarded to you; it's a catalog of designs, not a trophy case. Your own earned awards live in
@@ -43,10 +44,24 @@ export default function AwardsGalleryPage() {
               <h2 id={`awards-${collection.category}-title`}>{collection.label} awards</h2>
             </div>
             <div className="awards-grid">
-              {[9,20,30,45].map(days=><article className={`award-card award-card-${collection.category}`} key={days}><ProgressAward preview category={collection.category} task={{targetDays:days,completedDays:days,text:`${collection.label} · ${days} days`}} /></article>)}
+              {[10,20,30,45].map(days=><article className={`award-card award-card-${collection.category}`} key={days}><ProgressAward preview category={collection.category} task={{targetDays:days,completedDays:days,text:`${collection.label} · ${days} days`}} /></article>)}
             </div>
           </section>
         ))}
+
+        <section className="awards-collection awards-streak-collection" aria-labelledby="gallery-streak-awards">
+          <div className="intro-section-heading">
+            <p className="intro-eyebrow">CONSISTENCY, ONE DAY AT A TIME</p>
+            <h2 id="gallery-streak-awards">Fire streak awards</h2>
+            <p>Check in on the same goal for seven consecutive days to earn your first fire award. It grows with your streak and keeps the exact final count when the run ends—even 20 days.</p>
+          </div>
+          <div className="awards-grid">
+            {[7,14,20,28].map(days => <figure className="award-card gallery-fire-award" key={days}>
+              <div role="img" aria-label={`${days}-day flame-shaped streak award preview`}><FireAwardIcon days={days} /></div>
+              <figcaption><span className="house-eyebrow">DESIGN PREVIEW</span><h3>{days}-day streak</h3><p>{days === 20 ? 'Example of a run that ended at 20 days. The award stays yours.' : 'Your award displays the actual consecutive days for this goal.'}</p></figcaption>
+            </figure>)}
+          </div>
+        </section>
 
         <section className="awards-trifecta-section" aria-labelledby="awards-trifecta-title">
           <div className="intro-section-heading">

@@ -29,6 +29,7 @@ export default function ProfilePage() {
   const [freezesRemaining, setFreezesRemaining] = useState(0);
   const [posts, setPosts] = useState([]);
   const [trophies, setTrophies] = useState([]);
+  const [streakAwards, setStreakAwards] = useState([]);
   const [trifecta, setTrifecta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -73,9 +74,11 @@ export default function ProfilePage() {
         setPosts(postsRes.data.posts);
         setTrophies(achievementsRes.data.achievements.filter((a) => a.goal?.completed));
         setTrifecta(achievementsRes.data.trifecta || null);
+        setStreakAwards(achievementsRes.data.streakAwards || []);
       } else {
         setPosts([]);
         setTrophies([]);
+        setStreakAwards([]);
         setTrifecta(null);
       }
     } catch (err) {
@@ -324,7 +327,7 @@ export default function ProfilePage() {
                 <div className="profile-bottom-row">
                   <dl className="profile-metrics">
                     <div><dd>{posts.length}</dd><dt>Posts</dt></div>
-                    <div><dd>{trophies.length}</dd><dt>Awards earned</dt></div>
+                    <div><dd>{trophies.length + streakAwards.length + (trifecta?.earned ? 1 : 0)}</dd><dt>Awards earned</dt></div>
                     <div><dd>{streak}<span> days</span></dd><dt>Current streak{isMe && freezesRemaining > 0 && <small className="streak-freeze-inline"> · 🧊 {freezesRemaining} freeze{freezesRemaining === 1 ? '' : 's'} left</small>}</dt></div>
                   </dl>
                   {canView && (
@@ -341,7 +344,7 @@ export default function ProfilePage() {
             {canView ? (
               <>
                 <div className="profile-posts-heading"><h2>{isMe ? 'Your moments' : 'Moments'}</h2><span>{posts.length} {posts.length === 1 ? 'post' : 'posts'}</span></div>
-                <TrophyCase trophies={trophies} authorId={authorId} trifecta={trifecta} />
+                <TrophyCase streakAwards={streakAwards} trophies={trophies} authorId={authorId} trifecta={trifecta} />
                 <PostGrid
                   posts={posts}
                   onOpen={setViewPost}

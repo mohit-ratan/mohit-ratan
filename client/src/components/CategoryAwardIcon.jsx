@@ -13,7 +13,12 @@ export default function CategoryAwardIcon({ category, targetDays = 1 }) {
     <circle cx="80" cy="93" r="53" stroke="#fff0b7" strokeWidth="2" />
     <circle cx="80" cy="93" r="49" stroke="#845c18" strokeOpacity=".5" />
     <path d="M31 83a50 50 0 0 1 39-39" stroke="#fff6d6" strokeWidth="2" strokeLinecap="round" opacity=".8" />
-    <g transform="translate(62 54) scale(2)"><CategoryIcon category={category} /></g>
+    {category === 'health' ? <g transform="translate(62 54) scale(1.5)">
+      <path d="M20 4C10 2 3 7 5 14c2 7 13 5 15-10Z" fill="#a17625" stroke="#ffeab0" strokeWidth=".7" />
+      <path d="M4 21 16 9M10 15v-5M10 15h5" fill="none" stroke="#ffeab0" strokeWidth="1" strokeLinecap="round" />
+    </g> : category === 'relationships' ? <g transform="translate(62 54) scale(1.5)">
+      <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z" fill="#a17625" stroke="#ffeab0" strokeWidth=".7" />
+    </g> : <g transform="translate(62 54) scale(2)"><CategoryIcon category={category} /></g>}
     <text x="80" y="117" textAnchor="middle" fill="#674711" fontFamily="Georgia,serif" fontSize="28" fontWeight="bold">{targetDays}</text>
     <text x="80" y="131" textAnchor="middle" fill="#674711" fontSize="7" letterSpacing="3">DAYS</text>
     {stars >= 3 && <svg x="48" y="7" width="64" height="38" viewBox="0 0 64 38"><AwardCrown /></svg>}

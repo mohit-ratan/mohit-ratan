@@ -8,7 +8,7 @@ export default function PostProgressBar({ completed, target, category, streak })
   const activeIndex = lastActive ? attempts.length - 1 : attempts.length;
   const count = Math.max(Math.floor(target / 7), attempts.length + (completed < target && !lastActive && attempts.length ? 1 : 0));
   return <span className="post-progress-scroll">
-    <span className="post-progress-path streak-progress-path" style={{ minWidth: `${Math.max(180, (count + 1) * 62)}px` }} role="progressbar" aria-label="Goal task days and seven-day streak awards" aria-valuemin={0} aria-valuemax={target} aria-valuenow={completed} aria-valuetext={`${completed} of ${target} task days. Current goal streak: ${streak?.streakDays || 0} days.`}>
+    <span className="post-progress-path streak-progress-path" style={{ minWidth: `${Math.max(160, (count + 1) * 46)}px` }} role="progressbar" aria-label="Goal task days and seven-day streak awards" aria-valuemin={0} aria-valuemax={target} aria-valuenow={completed} aria-valuetext={`${completed} of ${target} task days. Current goal streak: ${streak?.streakDays || 0} days.`}>
       <span className="post-progress-rail"><span className="post-progress-fill" style={{ width: `${percent}%` }} /></span>
       {Array.from({ length: count }, (_, index) => {
         const attempt = attempts[index];

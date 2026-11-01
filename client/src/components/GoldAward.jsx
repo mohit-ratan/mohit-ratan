@@ -5,7 +5,7 @@ export default function GoldAward({ earned = false, preview = false, categories 
   const id = useId();
   const gold = `${id}-gold`, edge = `${id}-edge`;
   return <div className={`gold-unity-award ${earned || preview ? 'gold-unity-revealed' : ''}`}>
-    <svg className="gold-unity-medallion" viewBox="0 0 280 300" role="img" aria-label="Circular crowned gold Trifecta medallion with three interlocking gold rings and gold Health, Wealth and Relationships symbols">
+    <svg className="gold-unity-medallion" viewBox="0 -12 280 312" role="img" aria-label="Circular crowned gold Trifecta medallion with three interlocking gold rings and gold Health, Wealth and Relationships symbols">
       <defs>
         <linearGradient id={gold} x1="0" y1="0" x2="1" y2="1"><stop stopColor="#fff4c4"/><stop offset=".18" stopColor="#e4bd58"/><stop offset=".4" stopColor="#b17b1b"/><stop offset=".52" stopColor="#f9df8a"/><stop offset=".72" stopColor="#d1a03a"/><stop offset="1" stopColor="#8d5d12"/></linearGradient>
         <linearGradient id={edge} x1="0" y1="0" x2="1" y2=".7"><stop stopColor="#a9761b"/><stop offset=".45" stopColor="#fff0b4"/><stop offset="1" stopColor="#b58426"/></linearGradient>
@@ -14,7 +14,7 @@ export default function GoldAward({ earned = false, preview = false, categories 
       <circle cx="140" cy="164" r="110" fill={`url(#${gold})`} stroke="#fff0b7" strokeWidth="2"/>
       <circle cx="140" cy="164" r="103" fill="none" stroke="#845c18" strokeOpacity=".55"/>
       <path d="M45 135a100 100 0 0 1 71-67" fill="none" stroke="#fff6d6" strokeWidth="3" strokeLinecap="round" opacity=".8"/>
-      <svg x="84" y="-4" width="112" height="67" viewBox="0 0 64 38"><AwardCrown /></svg>
+      <svg x="76" y="-12" width="128" height="76" viewBox="0 0 64 38"><AwardCrown /></svg>
       <g aria-hidden="true">
         {[[140, 108], [117, 148], [163, 148]].map(([cx, cy]) => (
           <g key={`${cx}-${cy}`}>

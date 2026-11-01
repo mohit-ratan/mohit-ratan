@@ -1965,3 +1965,23 @@ svg.fire-award-icon{display:inline-block;vertical-align:middle;width:38px;height
 .streak-award-card p,.streak-award-card small{font-size:12px;color:var(--text-muted);}
 @media(max-width:800px){.earned-awards-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:480px){.achievements-header,.achievements-main{padding:20px 16px;}.earned-awards-grid{grid-template-columns:1fr;}.achievements-main{padding-bottom:90px;}.achievement-category-nav{gap:8px;}.achievement-category-nav button{padding:10px;}}
+
+/* Compact streak path keeps the photo as the focus of each post. */
+.feed-card-progress>span:first-child{font-size:11px;font-weight:500;}
+.feed-card-progress .streak-progress-path{height:46px;margin-top:8px;margin-right:16px;}
+.streak-progress-path .post-progress-rail{top:14px;height:4px;}
+.feed-card-progress .streak-progress-path .post-progress-marker{width:24px;height:30px;}
+.feed-card-progress .streak-progress-path .fire-marker svg.fire-award-icon{width:21px;height:28px;}
+.feed-card-progress .streak-progress-path .post-progress-marker.trophy{width:27px;height:32px;}
+.feed-card-progress .streak-progress-path .trophy .category-award-icon{width:27px;height:32px;}
+.feed-card-progress .streak-progress-path .post-progress-marker-label{font-size:8px;font-weight:500;top:calc(100% + 2px);}
+.feed-card-progress .fire-upcoming svg.fire-award-icon{opacity:.6;}
+.gallery-fire-award{margin:0;text-align:center;}
+.gallery-fire-award svg.fire-award-icon{width:130px;height:166px;margin:12px 0 18px;}
+.gallery-fire-award h3{margin:10px 0;font-size:20px;color:var(--accent-deep);}
+.gallery-fire-award figcaption p{font-size:12px;line-height:1.7;color:var(--text-muted);}
+.awards-streak-collection .intro-section-heading>p:last-child{max-width:650px;line-height:1.7;color:var(--text-muted);}
+
+.trophy-badge-streak svg.fire-award-icon{width:40px;height:51px;}
+.trophy-badge-streak{--frame-glow:var(--accent);}
+.trophy-badge-streak-days{font-size:10px;font-weight:600;color:var(--accent);}
