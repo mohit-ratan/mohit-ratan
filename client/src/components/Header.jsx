@@ -1,3 +1,4 @@
+import { notificationTarget } from '../lib/notificationTarget.mjs';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BrandLogo from './BrandLogo';
@@ -134,6 +135,13 @@ export default function Header({
       }
       return next;
     });
+  }
+
+  function openNotification(notification) {
+    setRequestsOpen(false);
+    const target = notificationTarget(notification);
+    if (target) navigate(target);
+    else showToast('This post is no longer available.', true);
   }
 
   function notificationText(n) {
@@ -357,7 +365,7 @@ export default function Header({
                         type="button"
                         key={n.id}
                         className={`bell-notif-row${n.read ? '' : ' unread'}`}
-                        onClick={() => { setRequestsOpen(false); navigate(n.postId ? `/?post=${encodeURIComponent(n.postId)}` : `/profile/${n.actorId}`); }}
+                        onClick={() => openNotification(n)}
                       >
                         <Avatar id={n.actorId} name={n.actorName} photoUrl={n.actorPhotoUrl} size={32} />
                         <span className="bell-notif-text">{notificationText(n)}<small>{timeAgo(n.createdAt)}</small></span>

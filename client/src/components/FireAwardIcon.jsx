@@ -1,11 +1,23 @@
-// The award itself is flame-shaped, with the actual streak length inside.
+import { useId } from 'react';
+
+// Shared reference-style flame for progress markers, previews and earned awards.
 export default function FireAwardIcon({ days }) {
-  return <svg className="fire-award-icon" viewBox="0 0 100 128" aria-hidden="true" focusable="false">
-    <path className="fire-award-body" d="M53 3C67 28 45 36 66 52c5-8 8-15 6-24 20 20 25 38 23 55-2 26-20 42-45 42S6 108 5 83c-1-20 11-38 27-52-3 15-1 25 6 30C51 47 55 29 53 3Z" fill="currentColor" stroke="var(--accent)" strokeWidth="2" strokeLinejoin="round" />
-    <path d="M22 82c-2 12 3 25 14 30" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity=".35" />
-    {days !== undefined ? <>
-      <text x="51" y="91" textAnchor="middle" fill="#fff" fontFamily="Georgia,serif" fontSize={days > 999 ? 25 : 33} fontWeight="bold">{days}</text>
-      <text x="51" y="106" textAnchor="middle" fill="#fff" fontSize="9" letterSpacing="2">DAYS</text>
-    </> : <path d="M53 65c5 13-8 15-1 24 3-3 4-5 4-9 13 14 7 30-6 30s-22-16 3-45Z" fill="#fff" opacity=".85" />}
+  const id = useId();
+  const outer = `${id}-outer`, inner = `${id}-inner`;
+  return <svg className="fire-award-icon" viewBox="0 0 100 132" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id={outer} x1="0" y1="0" x2="0" y2="1">
+        <stop stopColor="#FF3E35" /><stop offset=".35" stopColor="#FF650B" /><stop offset=".75" stopColor="#FF8700" /><stop offset="1" stopColor="#FF9C00" />
+      </linearGradient>
+      <linearGradient id={inner} x1="0" y1="0" x2="0" y2="1">
+        <stop stopColor="#FFF16B" /><stop offset=".6" stopColor="#FFF8A4" /><stop offset=".85" stopColor="#FFFAC3" /><stop offset="1" stopColor="#FFD15B" />
+      </linearGradient>
+    </defs>
+    <path className="fire-award-body" d="M38 2c-3 0-4 2-1 5 13 16 10 28-3 42-9 10-11 17-11 25-4-5-4-14-3-22 0-3-2-5-5-2-24 26-16 58 9 72 19 11 44 5 60-12 19-20 15-38 2-52-2-3-4-1-5 2-3 9-12 10-13-1-1-11 6-25-2-39C60 9 50 3 38 2Z" fill={`url(#${outer})`} />
+    <path className="fire-award-core" d="M59 46c2-2 3-1 2 1-9 22-1 32 8 43 14 18 10 33-8 37-19 4-34-5-35-21-1-7 1-14 5-20 1-2 2-2 3 0 3 7 8 11 10 7 3-5-6-10-2-23 4-12 10-18 17-24Z" fill={`url(#${inner})`} />
+    {days !== undefined && <>
+      <text x="51" y="104" textAnchor="middle" fill="#7D2B0B" fontFamily="Georgia,serif" fontSize={days > 999 ? 19 : days > 99 ? 23 : 28} fontWeight="bold">{days}</text>
+      <text x="51" y="115" textAnchor="middle" fill="#7D2B0B" fontSize="6.5" fontWeight="bold" letterSpacing="1.5">DAYS</text>
+    </>}
   </svg>;
 }
