@@ -42,6 +42,13 @@ CREATE TABLE IF NOT EXISTS posts (
   INDEX idx_posts_created (created_at)
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS post_goal_progress (
+  post_id VARCHAR(36) PRIMARY KEY,
+  completed INT NOT NULL,
+  target INT NOT NULL,
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS post_likes (
   post_id  VARCHAR(36) NOT NULL,
   user_id  VARCHAR(36) NOT NULL,

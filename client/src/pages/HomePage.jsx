@@ -37,6 +37,7 @@ export default function HomePage() {
   const [searchParams] = useSearchParams();
 
   const category = ['health', 'wealth', 'relationships'].includes(searchParams.get('category')) ? searchParams.get('category') : 'all';
+  const linkedPostId = searchParams.get('post');
   const tagFilter = searchParams.get('tag') || null;
   const [searchQuery, setSearchQuery] = useState('');
   // useSearchParams' own setter turned out to silently no-op in production
@@ -48,6 +49,7 @@ export default function HomePage() {
   // combined category+tag update would just replace history with itself.
   function updateFilters({ category: nextCategory, tag: nextTag } = {}) {
     const next = new URLSearchParams(searchParams);
+    next.delete('post');
     if (nextCategory !== undefined) {
       if (!nextCategory || nextCategory === 'all') next.delete('category'); else next.set('category', nextCategory);
     }
@@ -80,6 +82,30 @@ export default function HomePage() {
 
   // modal is one of: null | {type:'create'} | {type:'addStory'} | {type:'view', post} | {type:'viewStory', authorId, index}
   const [modal, setModal] = useState(null);
+  const [linkedPostError, setLinkedPostError] = useState(null);
+  const [loadingLinkedPost, setLoadingLinkedPost] = useState(false);
+
+  function closeLinkedPost() {
+    setModal(null);
+    const next = new URLSearchParams(searchParams);
+    next.delete('post');
+    navigate(next.size ? `/?${next}` : '/', { replace: true });
+  }
+
+  useEffect(() => {
+    if (!linkedPostId) { setLinkedPostError(null); setLoadingLinkedPost(false); return; }
+    let cancelled = false;
+    setModal(null);
+    setLinkedPostError(null);
+    setLoadingLinkedPost(true);
+    api.get(`/api/posts/${encodeURIComponent(linkedPostId)}`).then(({ data }) => {
+      if (!cancelled) setModal({ type: 'view', post: data.post });
+    }).catch(error => {
+      if (!cancelled) setLinkedPostError(error.message);
+    }).finally(() => { if (!cancelled) setLoadingLinkedPost(false); });
+    return () => { cancelled = true; };
+  }, [linkedPostId]);
+
 
   const loadPosts = useCallback(async (offset = 0) => {
     setMoreError(null);
@@ -202,6 +228,12 @@ export default function HomePage() {
         <main className="layout">
           <section className="feed-col">
             <div className="feed-intro"><div><span className="house-eyebrow">A LITTLE PROGRESS, EVERY DAY</span><h1>Your daily chapter.</h1><p>Share a moment. Build a habit. Celebrate the work.</p></div><div className="feed-intro-actions"><button className="house-enter-btn" type="button" onClick={() => navigate(`/profile/${user.id}/achievements`)}>My goals ↗</button><button className="house-enter-btn today-tasks-btn" onClick={() => navigate('/today')}>Today’s tasks →</button><button className="house-enter-btn" type="button" onClick={() => navigate('/following-progress')}>Following's progress ↗</button></div></div>
+            {loadingLinkedPost && <p role="status">Opening post…</p>}
+            {linkedPostError && <div className="inline-error" role="alert">{linkedPostError} <button type="button" onClick={closeLinkedPost}>Dismiss</button></div>}
+            <div className="mobile-streak-summary" aria-label="Your streak and freeze days">
+              <span>🔥 {streak} day{streak === 1 ? '' : 's'}</span>
+              <span>🧊 {freezesRemaining} freeze day{freezesRemaining === 1 ? '' : 's'} left this month</span>
+            </div>
             {!seenTour ? <WelcomeTour onDone={markTourSeen} /> : hasGoals === false && <FirstGoalGuide onStart={goal => setModal({ type: 'create', goal })} />}
             {storyError && <div className="inline-error" role="alert">Statuses couldn’t refresh. <button type="button" onClick={loadStories}>Retry</button></div>}
             <StoriesBar
@@ -267,8 +299,10 @@ export default function HomePage() {
       )}
       {modal?.type === 'view' && (
         <PostDetailModal
+          key={modal.post.id}
           post={modal.post}
-          onClose={() => setModal(null)}
+          onClose={linkedPostId ? closeLinkedPost : () => setModal(null)}
+          onDeleted={linkedPostId ? closeLinkedPost : () => setModal(null)}
           onChanged={refreshAfterChange}
           onOpenAuthor={openAuthor}
           onOpenTag={openTag}

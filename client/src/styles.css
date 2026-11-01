@@ -1788,3 +1788,8 @@ button.story-ring{border:0;cursor:pointer;}
 .feed-reaction-button:hover,.feed-reaction-button[aria-expanded="true"]{background:var(--accent-soft);color:var(--accent);}
 .feed-reaction-button.reacted{color:var(--accent);}
 .feed-reaction-emoji{font-size:15px;line-height:1;}
+
+.mobile-streak-summary{display:none;}
+@media(max-width:900px){
+  .mobile-streak-summary{display:flex;flex-wrap:wrap;gap:8px 16px;margin:0 0 16px;padding:12px 14px;border:1px solid #FFD9B3;border-radius:14px;background:#FFF4E8;color:#9A5B1F;font-size:12px;font-weight:600;}
+}

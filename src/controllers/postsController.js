@@ -57,30 +57,45 @@ function mapPost(row) {
   };
 }
 
-// Attaches a { completed, target } day-count summary to each post whose
-// tag has a goal, in one batched query rather than one per post.
+// Progress belongs to the photo's moment, rather than the goal's latest total.
+function summarizeProgress(tasks) {
+  return tasks.reduce((acc, task) => ({
+    completed: acc.completed + task.completedDays,
+    target: acc.target + task.targetDays,
+  }), { completed: 0, target: 0 });
+}
+
+async function preserveGoalPhotos(db, authorId, tag, tasks) {
+  const { completed, target } = summarizeProgress(tasks);
+  await db.query(`INSERT IGNORE INTO post_goal_progress (post_id, completed, target)
+    SELECT id, ?, ? FROM posts WHERE author_id = ? AND tag = ?`,
+    [completed, target, authorId, tag]);
+}
+
 async function attachGoalProgress(posts) {
-  const pairs = [...new Map(
-    posts.filter((p) => p.tag).map((p) => [`${p.authorId}:${p.tag}`, [p.authorId, p.tag]])
-  ).values()];
-  if (!pairs.length) return posts;
-
-  const placeholders = pairs.map(() => '(?,?)').join(',');
-  const [goalRows] = await pool.query(
-    `SELECT author_id, tag, subtasks FROM goals WHERE (author_id, tag) IN (${placeholders})`,
-    pairs.flat()
+  if (!posts.length) return posts;
+  await ensureMemberTables();
+  const [snapshots] = await pool.query(
+    `SELECT post_id, completed, target FROM post_goal_progress WHERE post_id IN (${posts.map(() => '?').join(',')})`,
+    posts.map(post => post.id)
   );
-  const byKey = new Map(goalRows.map((g) => [`${g.author_id}:${g.tag}`, normalizeTasks(g.subtasks)]));
-
-  return posts.map((post) => {
-    const tasks = post.tag ? byKey.get(`${post.authorId}:${post.tag}`) : null;
-    if (!tasks || !tasks.length) return post;
-    const goalProgress = tasks.reduce(
-      (acc, t) => ({ completed: acc.completed + t.completedDays, target: acc.target + t.targetDays }),
-      { completed: 0, target: 0 }
-    );
-    return { ...post, goalProgress };
-  });
+  const byId = new Map(snapshots.map(row => [row.post_id, { completed: row.completed, target: row.target }]));
+  // Legacy photos have no recoverable historical total. Save their current
+  // baseline once, before subsequent check-ins can change it.
+  const pairs = [...new Map(posts.filter(post => post.tag && !byId.has(post.id))
+    .map(post => [`${post.authorId}:${post.tag}`, [post.authorId, post.tag]])).values()];
+  if (pairs.length) {
+    const [goals] = await pool.query(
+      `SELECT author_id, tag, subtasks FROM goals WHERE (author_id, tag) IN (${pairs.map(() => '(?,?)').join(',')})`, pairs.flat());
+    for (const goal of goals) {
+      await preserveGoalPhotos(pool, goal.author_id, goal.tag, normalizeTasks(goal.subtasks));
+    }
+    // Read the winning snapshot if a simultaneous upload saved it first.
+    const [saved] = await pool.query(
+      `SELECT post_id, completed, target FROM post_goal_progress WHERE post_id IN (${posts.map(() => '?').join(',')})`, posts.map(post => post.id));
+    for (const row of saved) byId.set(row.post_id, { completed: row.completed, target: row.target });
+  }
+  return posts.map(post => byId.has(post.id) ? { ...post, goalProgress: byId.get(post.id) } : post);
 }
 
 const PAGE_SIZE = 30;
@@ -129,6 +144,28 @@ async function list(req, res) {
   } catch (err) {
     console.error('list posts error:', err);
     res.status(500).json({ error: 'Could not load posts.' });
+  }
+}
+
+// Fetch directly so notification links also work for posts beyond the feed page.
+async function get(req, res) {
+  try {
+    if (!await canViewPost(req.userId, req.params.id)) {
+      return res.status(404).json({ error: 'This post is no longer available.' });
+    }
+    const [rows] = await pool.query(`SELECT p.*, u.display_name, u.photo_url AS author_photo,
+      (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS like_count,
+      (SELECT COUNT(*) FROM comments cm WHERE cm.post_id = p.id) AS comment_count,
+      (SELECT pr.reaction FROM post_reactions pr WHERE pr.post_id = p.id AND pr.user_id = ?) AS my_reaction,
+      EXISTS(SELECT 1 FROM post_likes pl WHERE pl.post_id = p.id AND pl.user_id = ?) AS liked_by_me
+      FROM posts p JOIN users u ON u.id = p.author_id WHERE p.id = ?`,
+    [req.userId, req.userId, req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'This post is no longer available.' });
+    const [post] = await attachGoalProgress([mapPost(rows[0])]);
+    res.json({ post });
+  } catch (err) {
+    console.error('get post error:', err);
+    res.status(500).json({ error: 'Could not load this post.' });
   }
 }
 
@@ -264,6 +301,7 @@ async function create(req, res) {
       return res.status(400).json({ error: 'Pick a category (Health, Wealth, or Relationships).' });
     }
 
+    await ensureMemberTables();
     const id = uuidv4();
     const mediaUrl = await uploadMedia(req.file.buffer, req.file.originalname, req.file.mimetype, 'posts');
     const mediaType = mediaTypeFromMime(req.file.mimetype);
@@ -284,7 +322,6 @@ async function create(req, res) {
       if (hasSubtaskIndex && (!/^\d+$/.test(String(req.body.goalSubtaskIndex)) || !Number.isSafeInteger(subtaskIndex))) {
         return res.status(400).json({ error: 'Choose a valid goal subtask.' });
       }
-      await ensureMemberTables();
       const connection = await pool.getConnection();
       try {
         await connection.beginTransaction();
@@ -298,6 +335,7 @@ async function create(req, res) {
           await connection.rollback();
           return res.status(409).json({ error: 'This goal task has changed. Reopen the uploader and choose it again.' });
         }
+        await preserveGoalPhotos(connection, req.userId, cleanTag, tasks);
         await connection.query(
           `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled, visibility, aspect_ratio, crop_x, crop_y)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -309,6 +347,8 @@ async function create(req, res) {
         target.done = target.completedDays >= target.targetDays;
         const taskCompleted = !wasDone && target.done;
         target.photoPostId = id;
+        const progress = summarizeProgress(tasks);
+        await connection.query('INSERT INTO post_goal_progress (post_id, completed, target) VALUES (?, ?, ?)', [id, progress.completed, progress.target]);
         await connection.query('UPDATE goals SET subtasks = ? WHERE id = ?', [JSON.stringify(tasks), rows[0].id]);
         // A goal's completion — and the trifecta check below — only ever
         // looks at top-level tasks; subtasks are optional extra tracking
@@ -345,6 +385,10 @@ async function create(req, res) {
     // new-tag check was stale and a goal already exists.
     await maybeCreateGoal(req.userId, cleanTag, req.body.goalTargetDate, req.body.goalSubtasks);
 
+    if (cleanTag) {
+      const [goals] = await pool.query('SELECT subtasks FROM goals WHERE author_id = ? AND tag = ?', [req.userId, cleanTag]);
+      if (goals.length) await preserveGoalPhotos(pool, req.userId, cleanTag, normalizeTasks(goals[0].subtasks));
+    }
     res.json({ ok: true, id });
   } catch (e) {
     console.error('create post error:', e);
@@ -609,4 +653,4 @@ async function deleteComment(req, res) {
   }
 }
 
-module.exports = { list, trendingTags, searchTags, categoryCounts, achievements, create, update, remove, like, setPostReaction, listComments, addComment, updateComment, deleteComment, toggleCommentReaction };
+module.exports = { list, get, trendingTags, searchTags, categoryCounts, achievements, create, update, remove, like, setPostReaction, listComments, addComment, updateComment, deleteComment, toggleCommentReaction };

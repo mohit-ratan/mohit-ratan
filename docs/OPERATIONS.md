@@ -103,3 +103,9 @@ New uploads use UTC upload dates in their object keys: `posts/YYYY/MM/DD/<uuid>.
 Today and the public gallery share the duration medal component. Health medals are green, Wealth silver, and Relationships orange. Targets of 1–7 days carry one star, 8–15 two, 16–30 three, 31–45 four, 46–60 five; each further 15-day band adds another star. Longer designs add laurels, crowns and ornamental rings. Gallery medals are explicitly previews, not user unlocks.
 
 The prized gold Trifecta requires recorded goal completion check-ins in all three categories within a rolling 45 × 24-hour window. It is granted once and persists under `trifecta-45`. Previous lifetime `trifecta` records remain in the database but do not qualify for the new award. No completion dates are fabricated for legacy goals. Today shows categories completed inside the current window, and the Achievement House uses the same gold design after earning it.
+
+## Photo progress snapshots and notification links
+
+- Startup creates `post_goal_progress` with a foreign key to posts. Task-linked photo uploads save their goal day totals in the same transaction as task progress. Existing photos without a snapshot keep the current goal baseline before the next check-in; exact historical counts are unavailable. Reading the feed also saves missing baselines. No schema reimport is needed.
+- Mobile feed shows remaining monthly freeze days. Like and other post-linked activity notifications open the referenced post directly, even beyond the first feed page. Deleted or inaccessible posts show an unavailable message and retain normal access checks.
+- Validation: `npm test` (38 passing, one opt-in MySQL suite skipped) and `npm --prefix client run build` passed locally. Production deployment and mobile acceptance remain to be verified.

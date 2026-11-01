@@ -3,6 +3,9 @@ let ready;
 function ensureMemberTables() {
   if (!ready) ready = (async () => {
     const statements = [
+      `CREATE TABLE IF NOT EXISTS post_goal_progress (
+        post_id VARCHAR(36) PRIMARY KEY, completed INT NOT NULL, target INT NOT NULL,
+        FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE) ENGINE=InnoDB`,
       `CREATE TABLE IF NOT EXISTS member_preferences (
         user_id VARCHAR(36) PRIMARY KEY, time_zone VARCHAR(80) NOT NULL DEFAULT 'UTC',
         reminder_enabled TINYINT NOT NULL DEFAULT 0, reminder_time CHAR(5) NOT NULL DEFAULT '19:00',

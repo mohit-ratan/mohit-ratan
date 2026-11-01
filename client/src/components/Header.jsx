@@ -343,7 +343,7 @@ export default function Header({
                         type="button"
                         key={n.id}
                         className={`bell-notif-row${n.read ? '' : ' unread'}`}
-                        onClick={() => { setRequestsOpen(false); navigate(`/profile/${n.actorId}`); }}
+                        onClick={() => { setRequestsOpen(false); navigate(n.postId ? `/?post=${encodeURIComponent(n.postId)}` : `/profile/${n.actorId}`); }}
                       >
                         <Avatar id={n.actorId} name={n.actorName} photoUrl={n.actorPhotoUrl} size={32} />
                         <span className="bell-notif-text">{notificationText(n)}<small>{timeAgo(n.createdAt)}</small></span>
