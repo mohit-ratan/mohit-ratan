@@ -1,3 +1,4 @@
+import PostProgressBar from './PostProgressBar';
 import { CategoryIcon, ThemeIcon } from '../lib/icons';
 import { useEffect, useRef, useState } from 'react';
 import api, { mediaUrl } from '../api';
@@ -119,7 +120,7 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
       {post.goalProgress?.target > 0 && (
         <button type="button" className={`feed-card-progress house-floor-${post.category}`} onClick={() => onOpen(post)}>
           <span><ThemeIcon name="target" /> {post.goalProgress.completed}/{post.goalProgress.target} task days</span>
-          <progress value={post.goalProgress.completed} max={post.goalProgress.target} aria-label="Goal progress" />
+          <PostProgressBar category={post.category} completed={post.goalProgress.completed} target={post.goalProgress.target} />
         </button>
       )}
       {post.tag && (

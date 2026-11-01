@@ -82,6 +82,7 @@ export function TrophyIcon() {
 
 // One rounded outline family for category and interface symbols.
 const THEME_PATHS = {
+  star: ['m12 3 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3L3 9.6l6.2-.9L12 3Z'],
   close: ['M6 6l12 12M18 6 6 18'],
   globe: ['M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z', 'M3 12h18M12 3c5 5 5 13 0 18-5-5-5-13 0-18Z'],
   health: ['M20 4C10 2 3 7 5 14c2 7 13 5 15-10Z', 'M4 21 16 9M10 15v-5M10 15h5'],

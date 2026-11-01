@@ -2,7 +2,7 @@ const { ensureMemberTables, recordCheckIn } = require('../lib/memberFeatures');
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const { canViewPost } = require('../lib/access');
-const { recordTaskCheckIn, celebrationLevel } = require('../lib/taskCelebration');
+const { recordTaskCheckIn, celebrationLevel, crossedGoalMilestone } = require('../lib/taskCelebration');
 const { normalizeTasks, buildFreshTaskList } = require('../lib/goalProgress');
 const { canView } = require('../lib/follows');
 const { notify } = require('../lib/notifications');
@@ -335,6 +335,7 @@ async function create(req, res) {
           await connection.rollback();
           return res.status(409).json({ error: 'This goal task has changed. Reopen the uploader and choose it again.' });
         }
+        const beforeProgress = summarizeProgress(tasks);
         await preserveGoalPhotos(connection, req.userId, cleanTag, tasks);
         await connection.query(
           `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled, visibility, aspect_ratio, crop_x, crop_y)
@@ -348,6 +349,7 @@ async function create(req, res) {
         const taskCompleted = !wasDone && target.done;
         target.photoPostId = id;
         const progress = summarizeProgress(tasks);
+        const milestone = crossedGoalMilestone(beforeProgress, progress);
         await connection.query('INSERT INTO post_goal_progress (post_id, completed, target) VALUES (?, ?, ?)', [id, progress.completed, progress.target]);
         await connection.query('UPDATE goals SET subtasks = ? WHERE id = ?', [JSON.stringify(tasks), rows[0].id]);
         // A goal's completion — and the trifecta check below — only ever
@@ -360,9 +362,10 @@ async function create(req, res) {
         // goal — otherwise the trifecta condition can't have changed.
         const trifectaEarned = goalCompleted && await checkAndAwardTrifecta(req.userId);
         const celebration = checkIn ? {
+          milestone: milestone ? { point: milestone, category, completed: progress.completed, target: progress.target } : null,
           ...checkIn, day: target.completedDays, targetDays: target.targetDays,
           taskName: target.text, tag: cleanTag, taskCompleted, goalCompleted, trifectaEarned,
-          level: celebrationLevel(checkIn.streakDays, taskCompleted, goalCompleted),
+          level: Math.max(milestone ? 3 : 1, celebrationLevel(checkIn.streakDays, taskCompleted, goalCompleted)),
         } : null;
         return res.json({ ok: true, id, taskCompleted, completedDays: target.completedDays, targetDays: target.targetDays, goalCompleted, trifectaEarned, celebration });
       } catch (error) {

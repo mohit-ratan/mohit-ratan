@@ -140,3 +140,15 @@ test('notification post lookup handles deleted and inaccessible posts', async ()
   await hidden.runGet(hidden.response.data.id);
   assert.equal(hidden.response.status, 404);
 });
+
+test('upload celebration includes the category award only when goal progress crosses a checkpoint', async () => {
+  const f = fixture({ targetDays: 20, initialDays: 4 });
+  await f.run();
+  assert.equal(f.response.data.celebration.milestone.point, 25);
+  assert.equal(f.response.data.celebration.milestone.category, 'health');
+  assert.equal(f.response.data.celebration.milestone.completed, 5);
+  assert.equal(f.response.data.celebration.milestone.target, 20);
+  assert.ok(f.response.data.celebration.level >= 3);
+  await f.run();
+  assert.equal(f.response.data.celebration.milestone, null);
+});

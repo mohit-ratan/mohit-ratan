@@ -37,3 +37,16 @@ test('effects escalate at 3, 7 and 14 days; completion receives milestone effect
   assert.equal(celebrationLevel(1, true, false), 3);
   assert.equal(celebrationLevel(1, true, true), 4);
 });
+
+test('goal milestone celebrates only a newly crossed threshold', () => {
+  const { crossedGoalMilestone } = require('../src/lib/taskCelebration');
+  assert.equal(crossedGoalMilestone({ completed: 4, target: 20 }, { completed: 5, target: 20 }), 25);
+  assert.equal(crossedGoalMilestone({ completed: 5, target: 20 }, { completed: 6, target: 20 }), null);
+  assert.equal(crossedGoalMilestone({ completed: 9, target: 20 }, { completed: 10, target: 20 }), 50);
+  assert.equal(crossedGoalMilestone({ completed: 14, target: 20 }, { completed: 15, target: 20 }), 75);
+  assert.equal(crossedGoalMilestone({ completed: 19, target: 20 }, { completed: 20, target: 20 }), 100);
+  assert.equal(crossedGoalMilestone({ completed: 20, target: 20 }, { completed: 20, target: 20 }), null);
+  // Short goals can cross several checkpoints in a single upload; show the highest.
+  assert.equal(crossedGoalMilestone({ completed: 0, target: 1 }, { completed: 1, target: 1 }), 100);
+  assert.equal(crossedGoalMilestone({ completed: 0, target: 3 }, { completed: 1, target: 3 }), 25);
+});

@@ -26,4 +26,11 @@ function celebrationLevel(streakDays, taskCompleted, goalCompleted) {
   const streakLevel = streakDays >= 14 ? 4 : streakDays >= 7 ? 3 : streakDays >= 3 ? 2 : 1;
   return Math.max(streakLevel, goalCompleted ? 4 : taskCompleted ? 3 : 1);
 }
-module.exports = { recordTaskCheckIn, celebrationLevel, calendarDay, validTimeZone };
+// Only a newly crossed checkpoint triggers the award pop; feed reads never do.
+function crossedGoalMilestone(before, after) {
+  if (!after.target || after.completed <= before.completed) return null;
+  return [100, 75, 50, 25].find(point =>
+    before.completed * 100 < point * before.target && after.completed * 100 >= point * after.target
+  ) || null;
+}
+module.exports = { crossedGoalMilestone, recordTaskCheckIn, celebrationLevel, calendarDay, validTimeZone };

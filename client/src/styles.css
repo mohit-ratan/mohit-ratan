@@ -1864,8 +1864,36 @@ button.story-ring{border:0;cursor:pointer;}
 }
 .category-nav .cat-icon:hover::after,
 .category-nav .cat-icon:focus-visible::after{opacity:1;visibility:visible;}
-/* Post labels and progress share their category's color. */
-.cat-label .category-icon{color:inherit;}
-.feed-card-progress.house-floor-health{--floor-color:var(--health);}
-.feed-card-progress.house-floor-wealth{--floor-color:var(--wealth);}
-.feed-card-progress.house-floor-relationships{--floor-color:var(--relationships);}
+/* Post metadata and progress use the shared orange accent. */
+.cat-label:is(.health,.wealth,.relationships),.cat-label .category-icon{color:var(--accent);}
+.feed-card-progress{--floor-color:var(--accent);}
+
+/* Award path: progress stars are checkpoints; the trophy is the goal award. */
+.feed-card-progress .post-progress-path{display:block;position:relative;height:52px;margin:14px 17px 0 0;}
+.post-progress-rail{position:absolute;left:0;right:0;top:12px;height:8px;overflow:hidden;border:1px solid var(--border);border-radius:999px;background:var(--surface);}
+.post-progress-fill{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),#E76B23);}
+.feed-card-progress .post-progress-marker{position:absolute;top:0;display:flex;align-items:center;justify-content:center;transform:translateX(-50%);width:30px;height:30px;border:1px solid var(--border);border-radius:50%;color:var(--accent);background:var(--surface);box-shadow:0 2px 5px rgba(199,71,12,.08);}
+.feed-card-progress .post-progress-marker.reached{background:var(--accent);color:var(--surface);border-color:var(--accent);}
+.post-progress-marker svg{width:16px;height:16px;}
+.feed-card-progress .post-progress-marker.trophy{width:34px;height:34px;top:-2px;}
+.post-progress-marker.trophy svg{width:19px;height:19px;}
+.feed-card-progress .post-progress-marker-label{position:absolute;top:calc(100% + 4px);left:50%;transform:translateX(-50%);font-size:9px;line-height:1.2;color:var(--accent);white-space:nowrap;}
+
+/* Category awards use the same artwork on the path and in the ribbon burst. */
+.post-progress-marker .category-award-icon{width:24px;height:29px;}
+.post-progress-marker.trophy .category-award-icon{width:27px;height:33px;}
+.category-award-icon .category-icon{color:var(--accent);}
+.feed-card-progress .post-progress-marker.reached{color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--accent);}
+.milestone-award-display{position:relative;margin:18px auto 22px;text-align:center;}
+.milestone-award-pop{position:relative;width:160px;margin:auto;color:var(--accent);transform-origin:50% 65%;animation:milestone-award-pop 1.4s cubic-bezier(.16,1,.3,1) both;}
+.milestone-award-pop>.category-award-icon{display:block;width:100%;height:auto;filter:drop-shadow(0 9px 12px rgba(199,71,12,.22));}
+.milestone-award-halo{position:absolute;top:10px;left:50%;width:190px;height:190px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(circle,#FFD8AF 0,rgba(255,235,219,.5) 45%,transparent 70%);animation:milestone-halo-pop 1s ease-out both;}
+.milestone-award-display>p{position:relative;font-size:12px;color:var(--accent);font-weight:600;margin:8px 0 0;}
+@keyframes milestone-award-pop{
+  0%{opacity:0;transform:perspective(600px) scale(.08) rotate(-35deg) rotateY(-180deg);}
+  55%{opacity:1;transform:perspective(600px) scale(1.2) rotate(10deg) rotateY(12deg);}
+  78%{transform:perspective(600px) scale(.94) rotate(-4deg) rotateY(-5deg);}
+  100%{opacity:1;transform:perspective(600px) scale(1) rotate(0) rotateY(0);}
+}
+@keyframes milestone-halo-pop{from{opacity:0;transform:translateX(-50%) scale(.1);}to{opacity:1;transform:translateX(-50%) scale(1);}}
+@media(prefers-reduced-motion:reduce){.milestone-award-pop,.milestone-award-halo{animation:none;}}
