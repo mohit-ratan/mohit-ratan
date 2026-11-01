@@ -1124,18 +1124,6 @@
 .house-enter-btn{border:1px solid #ced8cd;background:#fff;color:#355c45;border-radius:8px;padding:11px 16px;font-size:12px;font-weight:600;cursor:pointer;}
 .house-enter-btn:hover{background:#eef3eb;}
 .house-enter-btn:disabled{opacity:.6;cursor:wait;}
-.house-enter-btn.today-tasks-btn{
-  background:linear-gradient(135deg,var(--accent),#e0650f);
-  border-color:transparent;color:#fff;box-shadow:0 3px 10px rgba(199,71,12,.3);
-  animation:today-tasks-pulse 1.8s ease-out 3;
-}
-.house-enter-btn.today-tasks-btn:hover{background:linear-gradient(135deg,var(--accent-hover),#c4530c);color:#fff;}
-@keyframes today-tasks-pulse{
-  0%{box-shadow:0 3px 10px rgba(199,71,12,.3),0 0 0 0 rgba(199,71,12,.4);}
-  70%{box-shadow:0 3px 10px rgba(199,71,12,.3),0 0 0 6px rgba(199,71,12,0);}
-  100%{box-shadow:0 3px 10px rgba(199,71,12,.3),0 0 0 0 rgba(199,71,12,0);}
-}
-@media(prefers-reduced-motion:reduce){.today-tasks-btn{animation:none;}}
 .feed-load-more{display:flex;justify-content:center;margin-top:16px;}
 .progress-rank-list{list-style:none;padding:0;margin:16px 0 0;display:flex;flex-direction:column;gap:10px;}
 .progress-rank-row{
@@ -1809,7 +1797,7 @@ button.story-ring{border:0;cursor:pointer;}
 .header-actions{gap:10px;}
 .header-actions :is(.header-link-btn,.bell-btn,.avatar-btn){
   height:44px;min-width:44px;border:1px solid var(--border);
-  background:var(--surface);color:var(--accent-deep);box-shadow:0 2px 5px rgba(125,43,11,.04);
+  background:var(--surface);color:var(--accent);box-shadow:0 2px 5px rgba(125,43,11,.04);
   transition:background .15s,border-color .15s,box-shadow .15s;
 }
 .header-actions :is(.bell-btn,.avatar-btn){width:44px;padding:0;}
@@ -1834,11 +1822,9 @@ button.story-ring{border:0;cursor:pointer;}
   .header-inner .brand-icon{width:28px;height:28px;}
 }
 
-/* Interface symbols share rounded outlines; category colors stay recognizable. */
+/* Interface symbols share rounded outlines and the orange accent. */
 .theme-icon{display:inline-block;vertical-align:-.18em;flex-shrink:0;}
-.category-icon-health{color:#3F7752;}
-.category-icon-wealth{color:#936124;}
-.category-icon-relationships{color:#A0516A;}
+.category-icon{color:var(--accent);}
 .cat-icon .category-icon{width:23px;height:23px;}
 .cat-icon.active .category-icon{color:inherit;}
 .cat-label{display:inline-flex;align-items:center;gap:4px;}
@@ -1857,3 +1843,11 @@ button.story-ring{border:0;cursor:pointer;}
 
 .visibility-label .theme-icon{width:12px;height:12px;}
 .search-box .clear-btn .theme-icon{position:static;transform:none;pointer-events:none;}
+
+.category-nav .cat-pill{background:var(--surface);color:var(--accent);}
+.category-nav .cat-pill:hover,
+.category-nav .cat-pill.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);}
+
+.header-goal-nav .house-enter-btn{background:var(--surface);color:var(--accent);border-color:var(--border);}
+.header-goal-nav .house-enter-btn:hover{background:var(--accent-soft);border-color:var(--accent);}
+.header-goal-nav .house-enter-btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}

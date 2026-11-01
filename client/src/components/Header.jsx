@@ -411,7 +411,7 @@ export default function Header({
         {showGoalNavigation && user && (
           <nav className="feed-intro-actions header-goal-nav" aria-label="Your progress">
             <button className="house-enter-btn" type="button" onClick={() => navigate(`/profile/${user.id}/achievements`)}>My goals ↗</button>
-            <button className="house-enter-btn today-tasks-btn" type="button" onClick={() => navigate('/today')}>Today’s tasks →</button>
+            <button className="house-enter-btn" type="button" onClick={() => navigate('/today')}>Today’s tasks →</button>
             <button className="house-enter-btn" type="button" onClick={() => navigate('/following-progress')}>Following’s progress ↗</button>
           </nav>
         )}
