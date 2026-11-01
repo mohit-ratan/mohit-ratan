@@ -150,5 +150,5 @@ The prized gold Trifecta requires recorded goal completion check-ins in all thre
 
 ## Profile streak display consistency
 
-- Profile freezes protect an isolated missed yesterday before today's post is uploaded. The badge therefore does not first show zero and then revive an older streak after uploading. Freeze protection never creates days before the first real post or story, and two consecutive missed days still break the run.
-- Already recorded freezes remain valid when their monthly allowance is exhausted; refreshing does not shorten the displayed streak. New freezes consume the allowance for the missed day's calendar month. Duplicate uploads within one day still count once.
+- The profile streak is evaluated chronologically. Up to two monthly freeze days can protect missed completed days, including two consecutive days. A third missed day resets the streak to zero; the next real post or story starts at one. Today remains open until midnight, and multiple uploads in a day count once. This replaces the earlier isolated-gap-only behavior.
+- Already recorded freezes remain valid when their monthly allowance is exhausted; refreshing does not shorten the displayed streak. New freezes consume the allowance for the missed day's calendar month. A later upload cannot reconnect across an unprotected day, and a protected day cannot revive an already-broken run. Strict per-goal fire-award streaks still reset on any missed day, independently of this profile allowance.

@@ -37,18 +37,27 @@ function freshComputeStreak({ postOffsets = [], existingFreezes = [], now = new 
   return { computeStreak, restore, postOffsets, freezeRows };
 }
 
-test('a 2+ day gap breaks the streak entirely, even with freezes left', async () => {
-  // Active today and 3 days ago, with a 2-day gap (yesterday + the day
-  // before) in between — this used to bridge both gap days with freezes
-  // and report a streak of 4; it must now stop at today alone.
-  const { computeStreak, restore } = freshComputeStreak({ postOffsets: [0, 3] });
+test('two consecutive missed days use the two freezes and preserve the streak', async () => {
+  const f = freshComputeStreak({ postOffsets: [0, 3] });
   try {
-    const result = await computeStreak('u1');
-    assert.equal(result.streak, 1);
-    assert.equal(result.freezesUsedThisMonth, 0);
-  } finally { restore(); }
+    const result = await f.computeStreak('u1');
+    assert.equal(result.streak, 4);
+    assert.equal(result.freezesUsedThisMonth, 2);
+    assert.equal(result.freezesRemaining, 0);
+  } finally { f.restore(); }
 });
-
+test('three missed days reset to zero and today starts at one', async () => {
+  const f = freshComputeStreak({ postOffsets: [4, 5, 6] });
+  try {
+    const before = await f.computeStreak('u1');
+    assert.equal(before.streak, 0);
+    assert.equal(before.freezesRemaining, 0);
+    f.postOffsets.push(0);
+    const after = await f.computeStreak('u1');
+    assert.equal(after.streak, 1);
+    assert.equal((await f.computeStreak('u1')).streak, 1);
+  } finally { f.restore(); }
+});
 test('a genuinely isolated single-day gap still bridges', async () => {
   // Active today and 2 days ago, with exactly one missed day (yesterday)
   // sandwiched between real activity on both sides — still forgiven.
@@ -69,11 +78,12 @@ test('two separate isolated gaps each bridge, consuming both monthly freezes', a
   } finally { restore(); }
 });
 
-test('no activity at all today or yesterday reports a broken streak', async () => {
+test('two missed days stay protected before today is posted', async () => {
   const { computeStreak, restore } = freshComputeStreak({ postOffsets: [3] });
   try {
     const result = await computeStreak('u1');
-    assert.equal(result.streak, 0);
+    assert.equal(result.streak, 3);
+    assert.equal(result.freezesUsedThisMonth, 2);
   } finally { restore(); }
 });
 
