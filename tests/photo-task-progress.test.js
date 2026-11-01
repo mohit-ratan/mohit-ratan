@@ -4,10 +4,11 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 
-function fixture({ done = false, missing = false, fail = false, targetDays = 1, initialDays = 0, legacyPhotos = [], canView = true } = {}) {
+function fixture({ done = false, missing = false, fail = false, targetDays = 1, initialDays = 0, legacyPhotos = [], canView = true, initialGoalStreak = null } = {}) {
   const events = [];
   const snapshots = new Map();
   let photoSequence = 0;
+  let goalStreakState = initialGoalStreak;
   const photos = new Set(legacyPhotos);
   let tasks = [{ text: 'Run', done, targetDays, completedDays: done ? targetDays : initialDays }];
   const connection = {
@@ -16,6 +17,9 @@ function fixture({ done = false, missing = false, fail = false, targetDays = 1, 
     rollback: async () => events.push('rollback'),
     release: () => events.push('release'),
     query: async (sql, args) => {
+      if (sql.includes('FROM goal_streaks')) return [goalStreakState ? [{ state: goalStreakState }] : []];
+      if (sql.includes('FROM task_checkins')) return [[]];
+      if (sql.startsWith('INSERT INTO goal_streaks')) { goalStreakState = JSON.parse(args[2]); return [{}]; }
       if (sql.startsWith('SELECT')) {
         assert.deepEqual(Array.from(args), ['owner', 'fitness']);
         return [missing ? [] : [{ id: 'goal', subtasks: tasks }]];
@@ -33,7 +37,9 @@ function fixture({ done = false, missing = false, fail = false, targetDays = 1, 
       return [{}];
     },
   };
-  const sandbox = { module: { exports: {} }, console: { error() {} }, require: (name) => name === '../lib/trifecta' ? { checkAndAwardTrifecta: async () => false, trifectaStatus: async () => ({}), TRIFECTA_CATEGORIES: ['health','wealth','relationships'] } : name === '../lib/memberFeatures' ? { ensureMemberTables: async () => {}, recordCheckIn: async () => {} } : name === '../lib/taskCelebration' ? require('../src/lib/taskCelebration') : name === '../lib/access' ? { canViewPost: async () => canView } : name === '../db' ? { getConnection: async () => connection, query: async (sql, args) => {
+  const sandbox = { module: { exports: {} }, console: { error() {} }, require: (name) => name === '../lib/goalStreak' ? require('../src/lib/goalStreak') : name === '../lib/trifecta' ? { checkAndAwardTrifecta: async () => false, trifectaStatus: async () => ({}), TRIFECTA_CATEGORIES: ['health','wealth','relationships'] } : name === '../lib/memberFeatures' ? { ensureMemberTables: async () => {}, recordCheckIn: async () => {} } : name === '../lib/taskCelebration' ? require('../src/lib/taskCelebration') : name === '../lib/access' ? { canViewPost: async () => canView } : name === '../db' ? { getConnection: async () => connection, query: async (sql, args) => {
+    if (sql.includes('FROM goal_streaks')) return [goalStreakState ? [{ author_id: 'owner', tag: 'fitness', state: goalStreakState }] : []];
+    if (sql.includes('FROM task_checkins')) return [[]];
     if (sql.includes('FROM post_goal_progress')) return [[...snapshots].map(([post_id, progress]) => ({ post_id, ...progress }))];
     if (sql.includes('FROM posts p')) return [[...photos].filter(id => !sql.includes('WHERE p.id = ?') || id === args[2]).map(id => ({ id, author_id: 'owner', tag: 'fitness', created_at: new Date() }))];
     throw new Error(`Unexpected pool query: ${sql}`);
@@ -141,14 +147,27 @@ test('notification post lookup handles deleted and inaccessible posts', async ()
   assert.equal(hidden.response.status, 404);
 });
 
-test('upload celebration includes the category award only when goal progress crosses a checkpoint', async () => {
-  const f = fixture({ targetDays: 20, initialDays: 4 });
+test('uploads no longer award percentage checkpoints and final completion carries actual goal days', async () => {
+  const f = fixture({ targetDays: 6, initialDays: 4 });
   await f.run();
-  assert.equal(f.response.data.celebration.milestone.point, 25);
-  assert.equal(f.response.data.celebration.milestone.category, 'health');
-  assert.equal(f.response.data.celebration.milestone.completed, 5);
-  assert.equal(f.response.data.celebration.milestone.target, 20);
-  assert.ok(f.response.data.celebration.level >= 3);
+  assert.equal(f.response.data.celebration.streakAward, null);
+  assert.equal(f.response.data.celebration.goalAward, null);
   await f.run();
-  assert.equal(f.response.data.celebration.milestone, null);
+  assert.equal(f.response.data.celebration.goalAward.targetDays, 6);
+  assert.equal(f.response.data.celebration.goalAward.category, 'health');
+});
+
+test('a newly completed seven-day goal streak returns its fire award once', async () => {
+  const { goalStreakFromDays } = require('../src/lib/goalStreak');
+  const today = new Date();
+  const days = Array.from({ length: 6 }, (_, i) => new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - (6 - i))).toISOString().slice(0, 10));
+  const f = fixture({ targetDays: 20, initialDays: 6, initialGoalStreak: goalStreakFromDays(days, 'UTC') });
+  await f.run();
+  assert.equal(f.response.data.celebration.streakAward.days, 7);
+  assert.equal(f.response.data.celebration.goalStreakDays, 7);
+  assert.equal(f.response.data.celebration.goalAward, null);
+  await f.run();
+  assert.equal(f.response.data.celebration.streakAward, null);
+  await f.runList();
+  assert.equal(f.response.data.posts[0].goalProgress.streak.attempts[0].status, 'earned');
 });

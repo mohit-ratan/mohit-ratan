@@ -3,6 +3,10 @@ let ready;
 function ensureMemberTables() {
   if (!ready) ready = (async () => {
     const statements = [
+      `CREATE TABLE IF NOT EXISTS goal_streaks (
+        author_id VARCHAR(36) NOT NULL, tag VARCHAR(24) NOT NULL, state JSON NOT NULL,
+        PRIMARY KEY (author_id, tag),
+        FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE) ENGINE=InnoDB`,
       `CREATE TABLE IF NOT EXISTS post_goal_progress (
         post_id VARCHAR(36) PRIMARY KEY, completed INT NOT NULL, target INT NOT NULL,
         FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE) ENGINE=InnoDB`,
@@ -34,10 +38,10 @@ function ensureMemberTables() {
   })().catch(err => { ready = null; throw err; });
   return ready;
 }
-async function recordCheckIn(db, { postId, userId, tag, task, category, goalCompleted }) {
+async function recordCheckIn(db, { postId, userId, tag, task, category, goalCompleted, goalStreakDays }) {
   await db.query('INSERT INTO task_checkins (post_id,user_id,goal_tag,task_id,category,day_key,occurred_ms,goal_completed) VALUES (?,?,?,?,?,?,?,?)',
     [postId, userId, tag, task.id, category, task.lastProgressDate, Date.now(), goalCompleted ? 1 : 0]);
   await db.query(`INSERT INTO category_consistency (user_id,category,best_streak,earned_at) VALUES (?,?,?,IF(? >= 7,NOW(),NULL))
-    ON DUPLICATE KEY UPDATE best_streak=GREATEST(best_streak,VALUES(best_streak)), earned_at=COALESCE(earned_at,VALUES(earned_at))`, [userId,category,task.streakDays,task.streakDays]);
+    ON DUPLICATE KEY UPDATE best_streak=GREATEST(best_streak,VALUES(best_streak)), earned_at=COALESCE(earned_at,VALUES(earned_at))`, [userId,category,goalStreakDays ?? task.streakDays,goalStreakDays ?? task.streakDays]);
 }
 module.exports = { ensureMemberTables, recordCheckIn };

@@ -3,9 +3,9 @@ const assert=require('node:assert/strict');
 const vm=require('node:vm');
 const fs=require('node:fs');
 
-test('star boundaries are unambiguous and increase every fifteen days after day fifteen',async()=>{
+test('goal award stars use the requested four duration bands',async()=>{
  const {awardStars}=await import('../client/src/lib/awardRank.mjs');
- for(const [days,stars] of [[1,1],[7,1],[8,2],[15,2],[16,3],[30,3],[31,4],[45,4],[46,5],[60,5],[61,6]])assert.equal(awardStars(days),stars);
+ for(const [days,stars] of [[1,1],[9,1],[10,2],[20,2],[21,3],[30,3],[31,4],[45,4],[3650,4]])assert.equal(awardStars(days),stars);
 });
 test('gold award requires dated completions in all categories within 45 days and grants once',async()=>{
  const now=Date.now(), day=86400000;let events=[],earned=false;

@@ -9,7 +9,7 @@ import { CATEGORIES } from './format';
 // - "goal" trophies mirror the real rule in postsController.achievements():
 //   a goal's checklist must be non-empty and every subtask marked done.
 //   Each one uses an icon that stands for its category, not a generic cup.
-// - Consistency badges require seven consecutive days on the same category task.
+// - Consistency badges require seven consecutive days on the same category goal.
 //   Personal unlock progress is shown on /today.
 const GOAL_ICONS = { health: '💪', wealth: '💎', relationships: '🫂' };
 
@@ -30,7 +30,7 @@ export const AWARD_COLLECTIONS = CATEGORIES.map((cat) => ({
       kind: 'consistency',
       icon: '🔥',
       name: `${cat.label} Consistency Badge`,
-      rule: `Check in with a photo for the same ${cat.label.toLowerCase()} task on 7 consecutive calendar days. Multiple photos on one day count once toward the streak. Once earned, your badge stays unlocked.`,
+      rule: `Check in with a photo for the same ${cat.label.toLowerCase()} goal on 7 consecutive calendar days. Multiple photos on one day count once toward the streak. Once earned, your badge stays unlocked.`,
     },
   ],
 }));
@@ -42,7 +42,7 @@ export const AWARD_KIND_COPY = {
   },
   consistency: {
     label: 'Consistency badge',
-    blurb: "Earned after a 7-day streak on a task in this category. The badge stays earned when the streak ends.",
+    blurb: "Earned after a 7-day streak on a goal in this category. The badge stays earned when the streak ends.",
   },
 };
 

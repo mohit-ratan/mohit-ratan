@@ -100,7 +100,7 @@ New uploads use UTC upload dates in their object keys: `posts/YYYY/MM/DD/<uuid>.
 
 ## Shared award designs and 45-day gold award
 
-Today and the public gallery share the duration medal component. All category medals use the prized gold palette, with leaf, dollar, and heart symbols for Health, Wealth, and Relationships. The Trifecta retains its larger interlocking-ring medallion and detailed crown. Targets of 1–7 days carry one star, 8–15 two, 16–30 three, 31–45 four, 46–60 five; each further 15-day band adds another star. Longer designs add laurels, crowns and ornamental rings. Gallery medals are explicitly previews, not user unlocks.
+Today and the public gallery share the duration medal component. All category medals use the prized gold palette, with leaf, dollar, and heart symbols for Health, Wealth, and Relationships. The Trifecta retains its larger interlocking-ring medallion and shares the original category crown. Targets under 10 days carry one star, 10–20 two, 21–30 three, and all targets above 30 four. Medallions display the actual goal task-day target. Side laurels and cast shadows are removed. Gallery medals are explicitly previews, not user unlocks.
 
 The prized gold Trifecta requires recorded goal completion check-ins in all three categories within a rolling 45 × 24-hour window. It is granted once and persists under `trifecta-45`. Previous lifetime `trifecta` records remain in the database but do not qualify for the new award. No completion dates are fabricated for legacy goals. Today shows categories completed inside the current window, and the Achievement House uses the same gold design after earning it.
 
@@ -109,3 +109,10 @@ The prized gold Trifecta requires recorded goal completion check-ins in all thre
 - Startup creates `post_goal_progress` with a foreign key to posts. Task-linked photo uploads save their goal day totals in the same transaction as task progress. Existing photos without a snapshot keep the current goal baseline before the next check-in; exact historical counts are unavailable. Reading the feed also saves missing baselines. No schema reimport is needed.
 - Mobile feed shows remaining monthly freeze days. Like and other post-linked activity notifications open the referenced post directly, even beyond the first feed page. Deleted or inaccessible posts show an unavailable message and retain normal access checks.
 - Validation: `npm test` (38 passing, one opt-in MySQL suite skipped) and `npm --prefix client run build` passed locally. Production deployment and mobile acceptance remain to be verified.
+
+## Per-goal weekly fire awards
+
+- Startup adds `goal_streaks`. Each task-linked check-in updates this state inside the existing locked goal transaction. A goal counts one check-in per local calendar day across its tasks, using its first recorded timezone. Seven consecutive days earn a fire award, and further runs earn another every seven days.
+- An isolated missed day resets this goal streak to zero, marks an unfinished attempt missed, and activates the next attempt. Earned weeks remain earned. These strict per-goal awards do not use the separate profile streak-freeze allowance. Reads show a missed attempt immediately after the grace day ends, without creating history on reads.
+- Existing recorded task check-in dates seed the new goal history; older dates that were never recorded are not fabricated. Photo task-day snapshots remain unchanged. Fire indicators show the goal's current recorded streak status.
+- Progress paths show fire markers and a final category goal award. Only a newly earned week or goal completion shows its corresponding award in the animated pop-up; feed reads do not trigger celebrations. A completed goal takes priority when both awards are earned together.

@@ -16,10 +16,6 @@ export default function CategoryAwardIcon({ category, targetDays = 1 }) {
     <g transform="translate(62 54) scale(2)"><CategoryIcon category={category} /></g>
     <text x="80" y="117" textAnchor="middle" fill="#674711" fontFamily="Georgia,serif" fontSize="28" fontWeight="bold">{targetDays}</text>
     <text x="80" y="131" textAnchor="middle" fill="#674711" fontSize="7" letterSpacing="3">DAYS</text>
-    {stars >= 2 && <g stroke="#b17b1b" strokeWidth="2" strokeLinecap="round">
-      <path d="M27 136C5 115 8 78 23 58M133 136c22-21 19-58 4-78" />
-      {[0, 1, 2, 3].map(i => <g key={i} transform={`translate(0 ${i * 15})`}><path d="m18 68-9-5 2 10 8 5M142 68l9-5-2 10-8 5" fill={`url(#${id})`} /></g>)}
-    </g>}
     {stars >= 3 && <svg x="48" y="7" width="64" height="38" viewBox="0 0 64 38"><AwardCrown /></svg>}
     <text x="80" y="171" textAnchor="middle" fill="#a17625" fontSize="13" letterSpacing="2">{stars <= 6 ? '★'.repeat(stars) : `★ × ${stars}`}</text>
   </svg>;

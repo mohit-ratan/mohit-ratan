@@ -1760,7 +1760,7 @@ button.story-ring{border:0;cursor:pointer;}
 .progress-award-stars{bottom:-12px;font-size:14px;letter-spacing:3px;color:var(--metal);text-shadow:0 1px 0 var(--metal-light);}
 .progress-award-state{bottom:5px;}
 .awards-grid .progress-award{border:0;padding:0;width:100%;}
-.gold-unity-award{text-align:center;padding:44px 32px;margin:28px auto 0;max-width:640px;background:radial-gradient(ellipse at top,#fff0bc,#fffaf1 75%);border:1px solid #e6c574;border-radius:28px;box-shadow:0 18px 44px -20px #c99a2c55;}
+.gold-unity-award{text-align:center;padding:44px 32px;margin:28px auto 0;max-width:640px;background:radial-gradient(ellipse at top,#fff0bc,#fffaf1 75%);border:1px solid #e6c574;border-radius:28px;box-shadow:none;}
  .gold-unity-medallion{display:block;width:min(100%,440px);height:auto;margin:0 auto 22px;filter:brightness(.4) saturate(.3);}
 .gold-unity-revealed{position:relative;}
 .gold-unity-revealed::before{
@@ -1768,7 +1768,7 @@ button.story-ring{border:0;cursor:pointer;}
   width:min(80%,380px);height:min(80%,380px);border-radius:50%;
   background:radial-gradient(circle,#ffe8952e,transparent 70%);pointer-events:none;
 }
-.gold-unity-revealed .gold-unity-medallion{position:relative;filter:drop-shadow(0 14px 22px #b5812345);}
+.gold-unity-revealed .gold-unity-medallion{position:relative;filter:none;}
 .gold-unity-award h3{font-family:var(--font-display);font-size:24px;margin:0 0 8px;}
 .gold-unity-award p{font-size:14.5px;color:#7a5a12;margin:0 0 8px;}
 .gold-unity-award small{display:block;max-width:420px;margin:0 auto;font-size:12px;line-height:1.6;color:#96793a;}
@@ -1891,7 +1891,7 @@ button.story-ring{border:0;cursor:pointer;}
 .feed-card-progress .post-progress-marker.reached{color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--accent);}
 .milestone-award-display{position:relative;margin:18px auto 22px;text-align:center;}
 .milestone-award-pop{position:relative;width:160px;margin:auto;color:var(--accent);transform-origin:50% 65%;animation:milestone-award-pop 1.4s cubic-bezier(.16,1,.3,1) both;}
-.milestone-award-pop>.category-award-icon{display:block;width:100%;height:auto;filter:drop-shadow(0 9px 12px rgba(199,71,12,.22));}
+.milestone-award-pop>.category-award-icon{display:block;width:100%;height:auto;filter:none;}
 .milestone-award-halo{position:absolute;top:10px;left:50%;width:190px;height:190px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(circle,#FFD8AF 0,rgba(255,235,219,.5) 45%,transparent 70%);animation:milestone-halo-pop 1s ease-out both;}
 .milestone-award-display>p{position:relative;font-size:12px;color:var(--accent);font-weight:600;margin:8px 0 0;}
 @keyframes milestone-award-pop{
@@ -1914,6 +1914,24 @@ button.story-ring{border:0;cursor:pointer;}
 .feed-card-progress .post-progress-marker.trophy{top:0;width:40px;height:48px;border:0;border-radius:0;background:none;box-shadow:none;}
 .feed-card-progress .post-progress-marker .category-award-icon{display:block;width:40px;height:48px;}
 .feed-card-progress .post-progress-marker:not(.reached) .category-award-icon{opacity:.65;}
-.feed-card-progress .post-progress-marker.reached .category-award-icon{filter:drop-shadow(0 2px 4px #b17b1b55);}
+.feed-card-progress .post-progress-marker.reached .category-award-icon{filter:none;}
 .post-progress-marker .category-award-icon .category-icon{width:18px;height:18px;}
 .post-progress-marker .category-award-icon svg:not(.theme-icon){width:64px;height:38px;}
+
+/* Keep gold awards clean, without cast shadows or surrounding glow. */
+.progress-award-aura,.gold-unity-revealed::before,.milestone-award-halo{display:none;}
+
+/* Weekly goal streak awards: missed attempts grey out; earned flames remain. */
+.feed-card-progress .post-progress-scroll{display:block;width:100%;overflow-x:auto;padding:3px 3px 0;}
+.fire-award-icon{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid var(--accent);border-radius:50%;color:var(--accent);background:var(--surface);}
+.fire-award-icon>.theme-icon{width:24px;height:24px;}
+.feed-card-progress .fire-marker{align-items:flex-start;padding-top:5px;}
+.feed-card-progress .fire-earned .fire-award-icon{color:var(--surface);background:var(--accent);}
+.feed-card-progress .fire-missed .fire-award-icon,
+.feed-card-progress .fire-upcoming .fire-award-icon{color:#929292;border-color:#d0d0d0;background:#f3f3f3;}
+.feed-card-progress .fire-missed .post-progress-marker-label,
+.feed-card-progress .fire-upcoming .post-progress-marker-label{color:#777;}
+.feed-card-progress .fire-active .fire-award-icon{border-width:2px;background:var(--accent-soft);}
+.feed-card-progress .fire-marker .fire-award-icon>.theme-icon{width:24px;height:24px;}
+.milestone-award-pop>.fire-award-icon{width:150px;height:150px;border:3px double var(--accent);background:var(--accent-soft);}
+.milestone-award-pop>.fire-award-icon>.theme-icon{width:92px;height:92px;}

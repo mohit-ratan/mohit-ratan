@@ -28,7 +28,7 @@ export default function AwardsGalleryPage() {
       <main id="awards-main">
         <section className="awards-hero">
           <p className="intro-eyebrow">EVERY DESIGN, EXPLAINED</p>
-          <h1>The Awards Gallery</h1><p>1–7 days: ★ · 8–15: ★★ · 16–30: ★★★. Every additional 15 days adds a star. Every award shares the prized gold finish. Leaf, dollar, and heart symbols identify each category; detail grows with the challenge.</p>
+          <h1>The Awards Gallery</h1><p>Under 10 days: ★ · 10–20: ★★ · 21–30: ★★★ · Over 30: ★★★★. Each goal award shows your actual goal task days. Every award shares the prized gold finish. Leaf, dollar, and heart symbols identify each category; detail grows with the challenge.</p>
           <p className="intro-lead">
             A look at every award design in PackSomeWork — what it celebrates and exactly how it's earned. Nothing shown
             here has been awarded to you; it's a catalog of designs, not a trophy case. Your own earned awards live in
@@ -43,7 +43,7 @@ export default function AwardsGalleryPage() {
               <h2 id={`awards-${collection.category}-title`}>{collection.label} awards</h2>
             </div>
             <div className="awards-grid">
-              {[7,15,30,45].map(days=><article className={`award-card award-card-${collection.category}`} key={days}><ProgressAward preview category={collection.category} task={{targetDays:days,completedDays:days,text:`${collection.label} · ${days} days`}} /></article>)}
+              {[9,20,30,45].map(days=><article className={`award-card award-card-${collection.category}`} key={days}><ProgressAward preview category={collection.category} task={{targetDays:days,completedDays:days,text:`${collection.label} · ${days} days`}} /></article>)}
             </div>
           </section>
         ))}

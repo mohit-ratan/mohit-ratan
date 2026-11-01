@@ -1,8 +1,9 @@
+const { currentGoalStreak, checkInGoal, goalStreakFromDays } = require('../lib/goalStreak');
 const { ensureMemberTables, recordCheckIn } = require('../lib/memberFeatures');
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const { canViewPost } = require('../lib/access');
-const { recordTaskCheckIn, celebrationLevel, crossedGoalMilestone } = require('../lib/taskCelebration');
+const { recordTaskCheckIn, celebrationLevel } = require('../lib/taskCelebration');
 const { normalizeTasks, buildFreshTaskList } = require('../lib/goalProgress');
 const { canView } = require('../lib/follows');
 const { notify } = require('../lib/notifications');
@@ -29,6 +30,7 @@ async function deleteGoalIfOrphaned(authorId, tag) {
     [authorId, tag]
   );
   if (!remaining.length) {
+    await pool.query('DELETE FROM goal_streaks WHERE author_id = ? AND tag = ?', [authorId, tag]);
     await pool.query('DELETE FROM goals WHERE author_id = ? AND tag = ?', [authorId, tag]);
   }
 }
@@ -95,7 +97,27 @@ async function attachGoalProgress(posts) {
       `SELECT post_id, completed, target FROM post_goal_progress WHERE post_id IN (${posts.map(() => '?').join(',')})`, posts.map(post => post.id));
     for (const row of saved) byId.set(row.post_id, { completed: row.completed, target: row.target });
   }
-  return posts.map(post => byId.has(post.id) ? { ...post, goalProgress: byId.get(post.id) } : post);
+  const goalPairs = [...new Map(posts.filter(post => post.tag).map(post => [`${post.authorId}:${post.tag}`, [post.authorId, post.tag]])).values()];
+  const streaks = new Map();
+  if (goalPairs.length) {
+    const [rows] = await pool.query(`SELECT author_id, tag, state FROM goal_streaks WHERE (author_id, tag) IN (${goalPairs.map(() => '(?,?)').join(',')})`, goalPairs.flat());
+    for (const row of rows) streaks.set(`${row.author_id}:${row.tag}`, currentGoalStreak(row.state));
+    const missing = goalPairs.filter(([authorId, tag]) => !streaks.has(`${authorId}:${tag}`));
+    if (missing.length) {
+      const [history] = await pool.query(`SELECT ci.user_id, ci.goal_tag, ci.day_key, g.subtasks
+        FROM task_checkins ci JOIN goals g ON g.author_id = ci.user_id AND g.tag = ci.goal_tag
+        WHERE (ci.user_id, ci.goal_tag) IN (${missing.map(() => '(?,?)').join(',')}) ORDER BY ci.day_key`, missing.flat());
+      for (const [authorId, tag] of missing) {
+        const days = history.filter(row => row.user_id === authorId && row.goal_tag === tag);
+        if (days.length) {
+          const tasks = normalizeTasks(days[0].subtasks);
+          const zone = tasks.find(task => task.streakTimeZone)?.streakTimeZone;
+          streaks.set(`${authorId}:${tag}`, currentGoalStreak(goalStreakFromDays(days.map(row => row.day_key), zone)));
+        }
+      }
+    }
+  }
+  return posts.map(post => byId.has(post.id) ? { ...post, goalProgress: { ...byId.get(post.id), streak: streaks.get(`${post.authorId}:${post.tag}`) || null } } : post);
 }
 
 const PAGE_SIZE = 30;
@@ -335,7 +357,6 @@ async function create(req, res) {
           await connection.rollback();
           return res.status(409).json({ error: 'This goal task has changed. Reopen the uploader and choose it again.' });
         }
-        const beforeProgress = summarizeProgress(tasks);
         await preserveGoalPhotos(connection, req.userId, cleanTag, tasks);
         await connection.query(
           `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled, visibility, aspect_ratio, crop_x, crop_y)
@@ -349,23 +370,39 @@ async function create(req, res) {
         const taskCompleted = !wasDone && target.done;
         target.photoPostId = id;
         const progress = summarizeProgress(tasks);
-        const milestone = crossedGoalMilestone(beforeProgress, progress);
+        let goalStreak = null;
+        let streakAward = null;
+        if (checkIn) {
+          const [streakRows] = await connection.query('SELECT state FROM goal_streaks WHERE author_id = ? AND tag = ?', [req.userId, cleanTag]);
+          let priorState = streakRows[0]?.state;
+          if (!priorState) {
+            const [history] = await connection.query('SELECT day_key FROM task_checkins WHERE user_id = ? AND goal_tag = ? ORDER BY day_key', [req.userId, cleanTag]);
+            priorState = goalStreakFromDays(history.map(row => row.day_key), target.streakTimeZone || req.body.timeZone);
+          }
+          const recorded = checkInGoal(priorState, target.streakTimeZone || req.body.timeZone);
+          goalStreak = recorded.state;
+          streakAward = recorded.award;
+          await connection.query(`INSERT INTO goal_streaks (author_id, tag, state) VALUES (?, ?, ?)
+            ON DUPLICATE KEY UPDATE state = VALUES(state)`, [req.userId, cleanTag, JSON.stringify(goalStreak)]);
+        }
         await connection.query('INSERT INTO post_goal_progress (post_id, completed, target) VALUES (?, ?, ?)', [id, progress.completed, progress.target]);
         await connection.query('UPDATE goals SET subtasks = ? WHERE id = ?', [JSON.stringify(tasks), rows[0].id]);
         // A goal's completion — and the trifecta check below — only ever
         // looks at top-level tasks; subtasks are optional extra tracking
         // underneath a task and never gate it or the goal.
         const goalCompleted = tasks.every((task) => task.done);
-        if (checkIn) await recordCheckIn(connection, { postId: id, userId: req.userId, tag: cleanTag, task: target, category, goalCompleted });
+        if (checkIn) await recordCheckIn(connection, { postId: id, userId: req.userId, tag: cleanTag, task: target, category, goalCompleted, goalStreakDays: goalStreak?.streakDays });
         await connection.commit();
         // Only worth the extra query when this check-in just finished a
         // goal — otherwise the trifecta condition can't have changed.
         const trifectaEarned = goalCompleted && await checkAndAwardTrifecta(req.userId);
         const celebration = checkIn ? {
-          milestone: milestone ? { point: milestone, category, completed: progress.completed, target: progress.target } : null,
+          streakAward: streakAward ? { ...streakAward, category } : null,
+          goalAward: goalCompleted ? { category, targetDays: progress.target } : null,
+          goalStreakDays: goalStreak?.streakDays || 0,
           ...checkIn, day: target.completedDays, targetDays: target.targetDays,
           taskName: target.text, tag: cleanTag, taskCompleted, goalCompleted, trifectaEarned,
-          level: Math.max(milestone ? 3 : 1, celebrationLevel(checkIn.streakDays, taskCompleted, goalCompleted)),
+          level: Math.max(streakAward ? 3 : 1, celebrationLevel(checkIn.streakDays, taskCompleted, goalCompleted)),
         } : null;
         return res.json({ ok: true, id, taskCompleted, completedDays: target.completedDays, targetDays: target.targetDays, goalCompleted, trifectaEarned, celebration });
       } catch (error) {

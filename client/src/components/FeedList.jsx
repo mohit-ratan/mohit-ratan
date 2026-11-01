@@ -120,7 +120,7 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
       {post.goalProgress?.target > 0 && (
         <button type="button" className={`feed-card-progress house-floor-${post.category}`} onClick={() => onOpen(post)}>
           <span><ThemeIcon name="target" /> {post.goalProgress.completed}/{post.goalProgress.target} task days</span>
-          <PostProgressBar category={post.category} completed={post.goalProgress.completed} target={post.goalProgress.target} />
+          <PostProgressBar streak={post.goalProgress.streak} category={post.category} completed={post.goalProgress.completed} target={post.goalProgress.target} />
         </button>
       )}
       {post.tag && (

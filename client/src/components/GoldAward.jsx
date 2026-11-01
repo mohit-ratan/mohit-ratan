@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import AwardCrown from './AwardCrown';
 
 export default function GoldAward({ earned = false, preview = false, categories = [] }) {
   const id = useId();
@@ -13,14 +14,7 @@ export default function GoldAward({ earned = false, preview = false, categories 
       <circle cx="140" cy="164" r="110" fill={`url(#${gold})`} stroke="#fff0b7" strokeWidth="2"/>
       <circle cx="140" cy="164" r="103" fill="none" stroke="#845c18" strokeOpacity=".55"/>
       <path d="M45 135a100 100 0 0 1 71-67" fill="none" stroke="#fff6d6" strokeWidth="3" strokeLinecap="round" opacity=".8"/>
-      <g strokeLinejoin="round">
-        <path d="m96 25 18 15 8-20 18 17 18-17 8 20 18-15-12 32h-64Z" fill={`url(#${gold})`} stroke="#ac7c23" strokeWidth="1.5"/>
-        <path d="m122 20 18-12 18 12-18 17Z" fill={`url(#${gold})`} stroke="#ac7c23" strokeWidth="1.2"/>
-        <path d="m105 31 8 20h54l8-20" fill="none" stroke="#fff0b7" strokeWidth="1.5" opacity=".8"/>
-        <rect x="107" y="55" width="66" height="8" rx="3" fill={`url(#${edge})`} stroke="#ac7c23"/>
-        <path d="m140 42 4 5-4 5-4-5Z" fill="#fff4c4" stroke="#ac7c23"/>
-        <g fill="#fff0b4" stroke="#b88829"><circle cx="96" cy="24" r="3"/><circle cx="122" cy="19" r="2.5"/><circle cx="140" cy="8" r="3.5"/><circle cx="158" cy="19" r="2.5"/><circle cx="184" cy="24" r="3"/><circle cx="117" cy="47" r="2"/><circle cx="163" cy="47" r="2"/></g>
-      </g>
+      <svg x="100" y="12" width="80" height="48" viewBox="0 0 64 38"><AwardCrown /></svg>
       <g aria-hidden="true">
         {[[140, 108], [117, 148], [163, 148]].map(([cx, cy]) => (
           <g key={`${cx}-${cy}`}>

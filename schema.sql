@@ -213,3 +213,12 @@ CREATE TABLE IF NOT EXISTS streak_freeze_uses (
   PRIMARY KEY (user_id, used_on),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+-- Additive per-goal streak history; existing deployments create this at startup.
+CREATE TABLE IF NOT EXISTS goal_streaks (
+  author_id VARCHAR(36) NOT NULL,
+  tag VARCHAR(24) NOT NULL,
+  state JSON NOT NULL,
+  PRIMARY KEY (author_id, tag),
+  FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
