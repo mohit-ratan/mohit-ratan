@@ -152,3 +152,9 @@ The prized gold Trifecta requires recorded goal completion check-ins in all thre
 
 - The profile streak is evaluated chronologically. Up to two monthly freeze days can protect missed completed days, including two consecutive days. A third missed day resets the streak to zero; the next real post or story starts at one. Today remains open until midnight, and multiple uploads in a day count once. This replaces the earlier isolated-gap-only behavior.
 - Already recorded freezes remain valid when their monthly allowance is exhausted; refreshing does not shorten the displayed streak. New freezes consume the allowance for the missed day's calendar month. A later upload cannot reconnect across an unprotected day, and a protected day cannot revive an already-broken run. Strict per-goal fire-award streaks still reset on any missed day, independently of this profile allowance.
+
+## Month-boundary freeze ledger correction
+
+- Freeze spending remains authoritative even when earlier posts or stories are deleted. It is no longer filtered against the oldest remaining activity date, which could incorrectly refund October credits before a November upload.
+- Recorded freeze claims are processed in their original creation order, with at most two honored per missed-day calendar month. Extra legacy claims are ignored without deleting data. November credits cannot cover an unprotected October day.
+- Regression coverage includes November 1 after both October credits were spent, excess October claims left by previous code, deleted earlier activity, repeated reads, and keeping November’s two new credits available while today’s streak starts at one.

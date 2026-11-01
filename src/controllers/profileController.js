@@ -27,18 +27,31 @@ function startOfLocalDay(ts) {
 async function computeStreak(authorId) {
   const [postDates] = await pool.query('SELECT created_at FROM posts WHERE author_id = ?', [authorId]);
   const [storyDates] = await pool.query('SELECT created_at FROM stories WHERE author_id = ?', [authorId]);
-  const [freezeRows] = await pool.query('SELECT used_on FROM streak_freeze_uses WHERE user_id = ?', [authorId]);
+  const [freezeRows] = await pool.query('SELECT used_on, created_at FROM streak_freeze_uses WHERE user_id = ? ORDER BY created_at ASC, used_on ASC', [authorId]);
   const today = startOfLocalDay(new Date());
   const timestamps = [...postDates, ...storyDates].map(row => startOfLocalDay(row.created_at)).filter(day => Number.isFinite(day) && day <= today);
-  if (!timestamps.length) return { streak: 0, freezesUsedThisMonth: 0, freezesRemaining: STREAK_FREEZE_MONTHLY_LIMIT };
   const earliest = timestamps.reduce((minimum, day) => Math.min(minimum, day), Infinity);
   const activeDays = new Set(timestamps);
-  const usedDays = new Set(freezeRows.map(row => startOfLocalDay(row.used_on)).filter(day => day >= earliest && day < today));
+  const usedDays = new Set();
   const usedByMonth = new Map();
-  for (const day of usedDays) {
+  // Spending belongs to the ledger, even if an older post/story was deleted.
+  // Honor the first two claims in each month, never extra legacy claims
+  // written by the old month-boundary calculation.
+  for (const row of freezeRows) {
+    const day = startOfLocalDay(row.used_on);
+    if (!Number.isFinite(day) || day >= today || usedDays.has(day)) continue;
     const month = toSqlDate(new Date(day)).slice(0, 7);
-    usedByMonth.set(month, (usedByMonth.get(month) || 0) + 1);
+    const used = usedByMonth.get(month) || 0;
+    if (used >= STREAK_FREEZE_MONTHLY_LIMIT) continue;
+    usedDays.add(day);
+    usedByMonth.set(month, used + 1);
   }
+  const freezeSummary = () => {
+    const currentMonth = toSqlDate(new Date()).slice(0, 7);
+    const freezesUsedThisMonth = usedByMonth.get(currentMonth) || 0;
+    return { freezesUsedThisMonth, freezesRemaining: Math.max(0, STREAK_FREEZE_MONTHLY_LIMIT - freezesUsedThisMonth) };
+  };
+  if (!timestamps.length) return { streak: 0, ...freezeSummary() };
   // Today remains open until midnight. If not posted yet, evaluate only
   // completed days, so a third miss resets after that day's deadline.
   const end = new Date(today);
@@ -68,9 +81,7 @@ async function computeStreak(authorId) {
     }
     streak += 1;
   }
-  const currentMonth = toSqlDate(new Date()).slice(0, 7);
-  const freezesUsedThisMonth = usedByMonth.get(currentMonth) || 0;
-  return { streak, freezesUsedThisMonth, freezesRemaining: Math.max(0, STREAK_FREEZE_MONTHLY_LIMIT - freezesUsedThisMonth) };
+  return { streak, ...freezeSummary() };
 }
 
 async function getProfile(req, res) {

@@ -141,3 +141,41 @@ test('freeze allowance belongs to the missed day month, not the day the badge is
     assert.equal((await f.computeStreak('u1')).streak, 5);
   } finally { f.restore(); }
 });
+
+test('November allowance cannot cover October after both October freezes were spent', async () => {
+  const f = freshComputeStreak({
+    now: new Date('2026-11-01T12:00:00Z'),
+    postOffsets: [0, 2, 3, 4, 5],
+    existingFreezes: ['2026-10-05', '2026-10-15'],
+  });
+  try {
+    // Earlier activity may have been deleted; its freeze spending still counts.
+    const result = await f.computeStreak('u1');
+    assert.equal(result.streak, 1);
+    assert.equal(result.freezesRemaining, 2);
+    assert.equal(f.freezeRows.length, 2);
+    assert.equal((await f.computeStreak('u1')).streak, 1);
+  } finally { f.restore(); }
+});
+test('extra October freeze claims saved by older code cannot keep the old streak alive', async () => {
+  const f = freshComputeStreak({
+    now: new Date('2026-11-01T12:00:00Z'),
+    postOffsets: [0, 2, 3, 4, 5, 31],
+    existingFreezes: ['2026-10-05', '2026-10-15', '2026-10-31'],
+  });
+  try {
+    const result = await f.computeStreak('u1');
+    assert.equal(result.streak, 1);
+    assert.equal(result.freezesRemaining, 2);
+    assert.equal(f.freezeRows.length, 3, 'legacy rows are ignored, not destructively removed');
+  } finally { f.restore(); }
+});
+test('removing old activity does not refund already-spent freezes in the current month', async () => {
+  const f = freshComputeStreak({ postOffsets: [0], existingFreezes: ['2026-10-01', '2026-10-03'] });
+  try {
+    const result = await f.computeStreak('u1');
+    assert.equal(result.streak, 1);
+    assert.equal(result.freezesUsedThisMonth, 2);
+    assert.equal(result.freezesRemaining, 0);
+  } finally { f.restore(); }
+});
