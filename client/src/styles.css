@@ -2010,3 +2010,29 @@ svg.fire-award-icon{display:inline-block;vertical-align:middle;width:38px;height
 .composer-workspace :is(.goal-template-btn,.goal-add-btn):hover{background:var(--accent-soft);border-color:var(--accent);}
 .composer-workspace .goal-remove-btn{color:var(--accent);}
 .composer-workspace .remove-media .theme-icon{width:16px;height:16px;}
+
+/* Profile month recaps: real milestones and a collage of visible posts. */
+.monthly-recaps{padding:22px;margin:18px 0;background:linear-gradient(150deg,var(--surface),var(--bg));}
+.monthly-recaps-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px;}
+.monthly-recaps-heading h2{font-family:var(--font-display);font-weight:500;font-size:25px;margin:5px 0 0;}
+.monthly-recap-selector{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);}
+.monthly-recap-selector select{max-width:180px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--accent);font:inherit;}
+.monthly-recap-title{display:flex;align-items:center;gap:7px;color:var(--accent);}
+.monthly-recap-title h3{font-family:var(--font-display);font-size:24px;font-weight:500;margin:0;}
+.monthly-recap-categories{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0 16px;}
+.monthly-recap-categories span{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--accent);}
+.monthly-recap-collage{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;overflow:hidden;border-radius:12px;}
+.monthly-recap-collage a{display:block;aspect-ratio:1;min-width:0;overflow:hidden;background:var(--surface-2);}
+.monthly-recap-collage img{display:block;width:100%;height:100%;object-fit:cover;}
+.monthly-recap-collage a:focus-visible,.monthly-recap-selector select:focus-visible{outline:2px solid var(--accent);outline-offset:-3px;}
+.monthly-recap-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:20px 0;}
+.monthly-recap-stats>div{padding:12px 8px;border-radius:12px;background:var(--accent-soft);text-align:center;}
+.monthly-recap-stats dd{margin:0;font-size:24px;font-weight:700;color:var(--accent);}
+.monthly-recap-stats dt{font-size:10px;color:var(--accent-deep);}
+.monthly-recap-highlights{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px;}
+.monthly-recap-highlights li{display:flex;align-items:flex-start;gap:8px;font-size:13px;line-height:1.7;color:var(--text-muted);}
+.monthly-recap-highlights .theme-icon{margin-top:3px;color:var(--accent);}
+.monthly-recap-footer{font-family:var(--font-display);font-size:19px;color:var(--accent-deep);margin:20px 0;}
+.monthly-recap-note{display:block;margin-top:14px;font-size:10px;line-height:1.6;color:var(--text-faint);}
+.monthly-recap-empty{font-size:13px;line-height:1.7;color:var(--text-muted);}
+@media(max-width:480px){.monthly-recaps{padding:16px;}.monthly-recap-stats{gap:6px;}.monthly-recap-stats dd{font-size:22px;}.monthly-recap-stats dt{font-size:9px;}}

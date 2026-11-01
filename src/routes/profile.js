@@ -1,11 +1,13 @@
 const express = require('express');
 const profileController = require('../controllers/profileController');
+const monthlyRecapController = require('../controllers/monthlyRecapController');
 const { requireAuth } = require('../middleware/auth');
 const { uploadSingle } = require('../upload');
 
 const router = express.Router();
 
 router.get('/:id', requireAuth, profileController.getProfile);
+router.get('/:id/monthly-recaps', requireAuth, monthlyRecapController.list);
 router.get('/:id/activity', requireAuth, profileController.getActivity);
 router.put('/me', requireAuth, profileController.updateProfile);
 router.post('/me/photo', requireAuth, uploadSingle('photo'), profileController.uploadPhoto);

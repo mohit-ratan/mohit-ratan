@@ -8,6 +8,7 @@ import Avatar from '../components/Avatar';
 import PostGrid from '../components/PostGrid';
 import PostDetailModal from '../components/PostDetailModal';
 import TrophyCase from '../components/TrophyCase';
+import MonthlyRecaps from '../components/MonthlyRecaps';
 import FollowRequests from '../components/FollowRequests';
 import FollowListPanel from '../components/FollowListPanel';
 import ActivityHeatmap from '../components/ActivityHeatmap';
@@ -343,8 +344,9 @@ export default function ProfilePage() {
             {isMe && <p><Link to="/account">Account & help →</Link> · <Link to="/privacy">Privacy information</Link></p>}
             {canView ? (
               <>
-                <div className="profile-posts-heading"><h2>{isMe ? 'Your moments' : 'Moments'}</h2><span>{posts.length} {posts.length === 1 ? 'post' : 'posts'}</span></div>
                 <TrophyCase streakAwards={streakAwards} trophies={trophies} authorId={authorId} trifecta={trifecta} />
+                <MonthlyRecaps key={authorId} authorId={authorId} isMe={isMe} />
+                <div className="profile-posts-heading"><h2>{isMe ? 'Your moments' : 'Moments'}</h2><span>{posts.length} {posts.length === 1 ? 'post' : 'posts'}</span></div>
                 <PostGrid
                   posts={posts}
                   onOpen={setViewPost}
