@@ -345,7 +345,7 @@ export default function ProfilePage() {
             {canView ? (
               <>
                 <TrophyCase streakAwards={streakAwards} trophies={trophies} authorId={authorId} trifecta={trifecta} />
-                <MonthlyRecaps key={authorId} authorId={authorId} isMe={isMe} />
+                <MonthlyRecaps key={authorId} authorId={authorId} isMe={isMe} profile={profile} />
                 <div className="profile-posts-heading"><h2>{isMe ? 'Your moments' : 'Moments'}</h2><span>{posts.length} {posts.length === 1 ? 'post' : 'posts'}</span></div>
                 <PostGrid
                   posts={posts}

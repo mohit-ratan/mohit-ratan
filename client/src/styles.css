@@ -2038,9 +2038,14 @@ svg.fire-award-icon{display:inline-block;vertical-align:middle;width:38px;height
 @media(max-width:480px){.monthly-recaps{padding:16px;}.monthly-recap-stats{gap:6px;}.monthly-recap-stats dd{font-size:22px;}.monthly-recap-stats dt{font-size:9px;}}
 
 /* An in-app monthly reel with original instrumental beds. */
-.monthly-recap-play{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0;padding:11px 16px;border:1px solid var(--accent);border-radius:999px;background:var(--accent);color:#fff;font:inherit;font-size:12px;font-weight:600;cursor:pointer;}
-.monthly-recap-play>span{font-size:10px;font-weight:400;opacity:.85;}
-.monthly-recap-play:hover{background:var(--accent-hover);}
+.monthly-recap-play{display:inline-flex;flex-direction:column;align-items:center;gap:9px;margin:14px 0 6px;padding:4px 6px;border:0;background:none;color:var(--text);font:inherit;cursor:pointer;border-radius:12px;}
+.monthly-reel-profile-ring{position:relative;display:grid;place-items:center;width:80px;height:80px;padding:3px;border-radius:50%;background:conic-gradient(from 30deg,#F99A40,var(--accent),#F77E2D,#FFBF73,#F99A40);}
+.monthly-reel-profile-photo{display:grid;place-items:center;width:74px;height:74px;border:3px solid var(--surface);border-radius:50%;background:var(--surface);}
+.monthly-reel-profile-badge{position:absolute;bottom:-1px;right:-1px;display:grid;place-items:center;width:27px;height:27px;border:2px solid var(--surface);border-radius:50%;background:var(--accent);color:var(--surface);}
+.monthly-reel-profile-badge .theme-icon{width:15px;height:15px;}
+.monthly-reel-month-label{font-size:11px;font-weight:600;line-height:1.4;color:var(--text-muted);}
+.monthly-recap-play:hover .monthly-reel-month-label{color:var(--accent);}
+.monthly-recap-play:hover .monthly-reel-profile-ring{filter:saturate(1.25);}
 .monthly-reel-backdrop{position:fixed;inset:0;z-index:2200;background:rgba(36,24,18,.88);backdrop-filter:blur(12px);display:grid;place-items:center;padding:12px;}
 .monthly-reel{display:grid;grid-template-rows:auto minmax(0,1fr) auto auto;width:min(440px,100%);height:min(900px,calc(100dvh - 24px));border-radius:22px;overflow:hidden;background:var(--bg);box-shadow:0 24px 80px #0005;}
 .monthly-reel-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;}

@@ -1,11 +1,12 @@
 import MonthlyReel from './MonthlyReel';
+import Avatar from './Avatar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import api, { mediaUrl } from '../api';
 import { CategoryIcon, ThemeIcon } from '../lib/icons';
 import { CAT_MAP } from '../lib/format';
 
-export default function MonthlyRecaps({ authorId, isMe }) {
+export default function MonthlyRecaps({ authorId, isMe, profile }) {
   const [params] = useSearchParams();
   const location = useLocation();
   const monthParam = params.get('recap');
@@ -61,7 +62,13 @@ export default function MonthlyRecaps({ authorId, isMe }) {
     {error && <p className="inline-error" role="alert">{error} <button type="button" onClick={() => load(failedBefore)}>Try again</button></p>}
     {recap ? <article className="monthly-recap" key={recap.month}>
       <div className="monthly-recap-title"><ThemeIcon name="sparkle" /><h3>{recap.label}</h3></div>
-      {recap.images.length > 0 && <button type="button" className="monthly-recap-play" onClick={() => setReel(recap)}><ThemeIcon name="play" />Play monthly reel<span>Photos, highlights & music</span></button>}
+      {recap.images.length > 0 && <button type="button" className="monthly-recap-play" aria-label={`Play ${recap.label} monthly reel`} title={`Play ${recap.label} reel`} onClick={() => setReel(recap)}>
+        <span className="monthly-reel-profile-ring">
+          <span className="monthly-reel-profile-photo"><Avatar id={authorId} name={profile?.displayName || 'Profile'} photoUrl={profile?.photoUrl} size={64} /></span>
+          <span className="monthly-reel-profile-badge"><ThemeIcon name="reel" /></span>
+        </span>
+        <span className="monthly-reel-month-label">{recap.label}</span>
+      </button>}
       <div className="monthly-recap-categories">{recap.categories.map(item => <span key={item.category}><CategoryIcon category={item.category} />{CAT_MAP[item.category]?.label}</span>)}</div>
       {recap.images.length > 0 && <div className="monthly-recap-collage">{recap.images.map(photo => <Link key={photo.id} to={`/?post=${encodeURIComponent(photo.id)}`} aria-label={`Open photo from ${recap.label}`}><img src={mediaUrl(photo.mediaUrl)} alt={`A moment shared in ${recap.label}`} loading="lazy" style={{ objectPosition: `${photo.cropX}% ${photo.cropY}%` }} /></Link>)}</div>}
       <dl className="monthly-recap-stats">
