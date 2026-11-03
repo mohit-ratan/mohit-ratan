@@ -2301,3 +2301,14 @@ button.cheer-count:hover{border-color:var(--accent);}
   .feed-section-actions>span{display:none;}
   .feed-section-actions .feed-share-post{min-height:44px;padding:9px 11px;}
 }
+
+.profile-progress-nav{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0;}
+.header-actions .following-progress-icon{width:44px;padding:0;justify-content:center;}
+.feed-col>.feed-stories-row,.feed-col>.category-nav,.feed-col>.create-bar{max-width:620px;width:100%;margin-inline:auto;}
+.feed-col>.category-nav{padding-block:12px;margin-bottom:4px;}
+.feed-col>.create-bar{margin-bottom:18px;}
+@media(max-width:680px){.profile-progress-nav{gap:8px;}.profile-progress-nav .house-enter-btn{padding:9px 11px;font-size:12px;}}
+@media(max-width:680px){
+  .header-actions{gap:4px;}
+  .header-actions :is(.header-link-btn,.bell-btn,.avatar-btn){width:36px;min-width:36px;height:40px;padding:0;}
+}

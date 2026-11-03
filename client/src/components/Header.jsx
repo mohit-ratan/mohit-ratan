@@ -1,11 +1,12 @@
+import CategoryNav from './CategoryNav';
 import { notificationTarget } from '../lib/notificationTarget.mjs';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BrandLogo from './BrandLogo';
 import Avatar from './Avatar';
 import api from '../api';
-import { CATEGORIES, timeAgo } from '../lib/format';
-import { SearchIcon, BellIcon, TrophyIcon, CategoryIcon, ThemeIcon } from '../lib/icons';
+import { timeAgo } from '../lib/format';
+import { SearchIcon, BellIcon, TrophyIcon, ThemeIcon } from '../lib/icons';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -17,7 +18,7 @@ export default function Header({
   onSearchChange,
   streak = 0,
   freezesRemaining,
-  showGoalNavigation = false,
+  hideCategories = false,
 }) {
   const navigate = useNavigate();
   const showToast = useToast();
@@ -285,6 +286,8 @@ export default function Header({
           )}
         </div>
         <div className="header-actions">
+          {user && <button type="button" className="header-link-btn following-progress-icon" title="Following’s progress" aria-label="Following’s progress" onClick={() => navigate('/following-progress')}><ThemeIcon name="people" /></button>}
+
           <button type="button" className="header-link-btn" title="Awards gallery" aria-label="Awards gallery" onClick={() => navigate('/awards')}>
             <TrophyIcon /> <span>Awards</span>
           </button>
@@ -431,35 +434,7 @@ export default function Header({
         </div>
       </div>
       <div className="wrap">
-        {showGoalNavigation && user && (
-          <nav className="feed-intro-actions header-goal-nav" aria-label="Your progress">
-            <button className="house-enter-btn" type="button" onClick={() => navigate(`/profile/${user.id}/achievements`)}>My goals ↗</button>
-            <button className="house-enter-btn" type="button" onClick={() => navigate('/today')}>Today’s tasks →</button>
-            <button className="house-enter-btn" type="button" onClick={() => navigate('/following-progress')}>Following’s progress ↗</button>
-          </nav>
-        )}
-        <nav className="category-nav" aria-label="Filter by category">
-          <button
-            type="button"
-            className={`cat-pill${activeCategory === 'all' ? ' active' : ''}`}
-            aria-pressed={activeCategory === 'all'}
-            onClick={() => handleCategoryClick('all')}
-          >
-            <span className="dot" style={{ color: 'var(--accent)' }} />All <span className="count">{counts.all ?? ''}</span>
-          </button>
-          {CATEGORIES.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              className={`cat-pill cat-icon${activeCategory === c.id ? ' active' : ''}`}
-              aria-label={c.label}
-              aria-pressed={activeCategory === c.id}
-              onClick={() => handleCategoryClick(c.id)}
-            >
-              <CategoryIcon category={c.id} />
-            </button>
-          ))}
-        </nav>
+        {!hideCategories && <CategoryNav activeCategory={activeCategory} counts={counts} onCategoryChange={handleCategoryClick} />}
       </div>
     </header>
   );

@@ -325,6 +325,11 @@ export default function ProfilePage() {
                   </div>
                   <div className="profile-editor-actions"><button type="submit" className="pill-btn primary" disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</button>{profile.photoUrl && <button type="button" className="remove-photo-link" onClick={removePhoto}>Remove photo</button>}</div>
                 </form>}
+                {isMe && <nav className="profile-progress-nav" aria-label="Your progress">
+                  <button type="button" className="house-enter-btn" onClick={() => navigate(`/profile/${user.id}/achievements`)}>My goals ↗</button>
+                  <button type="button" className="house-enter-btn" onClick={() => navigate('/today')}>Today’s tasks →</button>
+                  <button type="button" className="house-enter-btn" onClick={() => navigate('/following-progress')}>Following’s progress ↗</button>
+                </nav>}
                 <div className="profile-bottom-row">
                   <dl className="profile-metrics">
                     <div><dd>{posts.length}</dd><dt>Posts</dt></div>

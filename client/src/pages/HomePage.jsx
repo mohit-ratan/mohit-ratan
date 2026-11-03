@@ -1,3 +1,5 @@
+import CategoryNav from '../components/CategoryNav';
+import Avatar from '../components/Avatar';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../api';
@@ -216,7 +218,7 @@ export default function HomePage() {
   return (
     <>
       <Header
-        showGoalNavigation
+        hideCategories
         activeCategory={category}
         onCategoryChange={(c) => updateFilters({ category: c, tag: null })}
         counts={counts}
@@ -239,12 +241,17 @@ export default function HomePage() {
                 onAddStory={() => setModal({ type: 'addStory' })}
               />
             </div>
+            <CategoryNav activeCategory={category} counts={counts} onCategoryChange={c => updateFilters({ category: c, tag: null })} />
+            <div className="card create-bar">
+              <Avatar id={user?.id} name={user?.displayName} photoUrl={user?.photoUrl} size={36} />
+              <button className="create-bar-btn" type="button" onClick={() => setModal({ type: 'create' })}><CameraSmallIcon />Create post</button>
+            </div>
             {tagFilter && (
               <div className="active-filter">
                 Filtering by <span className="chip">#{tagFilter}<button aria-label="Clear tag filter" onClick={() => setTagFilter(null)}><ThemeIcon name="close" /></button></span>
               </div>
             )}
-            <div className="feed-section-title"><h2>{searchQuery ? 'Search results' : category === 'all' ? 'Latest moments' : `${category[0].toUpperCase()}${category.slice(1)} moments`}</h2><div className="feed-section-actions"><span>{!loading && !feedError ? `${visiblePosts.length} posts` : ''}</span><button className="feed-share-post" type="button" onClick={() => setModal({ type: 'create' })}><CameraSmallIcon /><span>Create post</span></button></div></div>
+            <div className="feed-section-title"><h2>{searchQuery ? 'Search results' : category === 'all' ? 'Latest moments' : `${category[0].toUpperCase()}${category.slice(1)} moments`}</h2><span>{!loading && !feedError ? `${visiblePosts.length} posts` : ''}</span></div>
             {loading && <div className="feed-skeleton" role="status" aria-label="Loading posts">{[0,1,2,3,4,5].map((i) => <span key={i} />)}</div>}
             {feedError && <div className="card empty-state" role="alert"><h3>We couldn’t load your feed</h3><p>{feedError}</p><button className="house-enter-btn" type="button" onClick={() => loadPosts(0)}>Try again</button></div>}
             {!loading && !feedError && (
