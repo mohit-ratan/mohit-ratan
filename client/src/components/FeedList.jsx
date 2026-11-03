@@ -1,3 +1,4 @@
+import CheerSummary from './CheerSummary';
 import FeedVideo from './FeedVideo';
 import PostProgressBar from './PostProgressBar';
 import { CategoryIcon, ThemeIcon } from '../lib/icons';
@@ -23,6 +24,8 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
   const showFilledHeart = liked || (user?.id === post.authorId && likeCount > 0);
   const [likePending, setLikePending] = useState(false);
+  const [cheerUpdate, setCheerUpdate] = useState(null);
+  const cheers = cheerUpdate && cheerUpdate.source === post.cheers ? cheerUpdate.items : (post.cheers || []);
   const [myReaction, setMyReaction] = useState(post.myReaction || null);
   const [reactionPending, setReactionPending] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -65,6 +68,7 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
     try {
       const { data } = await api.post(`/api/posts/${post.id}/reaction`, { reaction: key });
       setMyReaction(data.myReaction);
+      if (data.cheers) setCheerUpdate({ source: post.cheers, items: data.cheers });
     } catch {
       setMyReaction(before);
     } finally {
@@ -120,6 +124,7 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
           {pickerOpen && <CheerPicker onPick={pickReaction} current={myReaction} onRemove={() => pickReaction(myReaction)} />}
         </div>
       </div>
+      <CheerSummary cheers={cheers} current={myReaction} />
       {post.goalProgress?.target > 0 && (
         <button type="button" className={`feed-card-progress house-floor-${post.category}`} onClick={() => onOpen(post)}>
           <span><ThemeIcon name="target" /> {post.goalProgress.completed}/{post.goalProgress.target} task days</span>

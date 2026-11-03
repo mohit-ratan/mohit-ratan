@@ -2257,3 +2257,9 @@ svg.fire-award-icon{display:inline-block;vertical-align:middle;width:38px;height
 @media(max-width:680px){
   .cheer-picker{position:fixed;left:12px;right:12px;bottom:calc(82px + env(safe-area-inset-bottom));width:auto;max-width:420px;margin-inline:auto;z-index:1100;}
 }
+
+.cheer-summary{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:2px 16px 12px;}
+.cheer-count{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--border);border-radius:999px;background:var(--bg);padding:6px 9px;font-size:12px;color:var(--heading);font-variant-numeric:tabular-nums;}
+.cheer-count-mine{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);}
+.cheer-count small{font-size:10px;}
+.modal-detail-scroll .cheer-summary{padding:0;}

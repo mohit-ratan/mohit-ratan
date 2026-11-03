@@ -1,3 +1,4 @@
+const { cheerCounts } = require('../lib/postCheers');
 const { preparePostVideo } = require('../lib/postVideo');
 const { currentGoalStreak, checkInGoal, goalStreakFromDays, goalStreakAwards } = require('../lib/goalStreak');
 const { ensureMemberTables, recordCheckIn } = require('../lib/memberFeatures');
@@ -170,6 +171,8 @@ async function list(req, res) {
     const [rows] = await pool.query(sql, params);
     const hasMore = rows.length > PAGE_SIZE;
     const posts = await attachGoalProgress(rows.slice(0, PAGE_SIZE).map(mapPost));
+    const cheers = await cheerCounts(pool, posts.map(post => post.id));
+    for (const post of posts) post.cheers = cheers.get(post.id) || [];
     res.json({ posts, hasMore });
   } catch (err) {
     console.error('list posts error:', err);
@@ -192,6 +195,7 @@ async function get(req, res) {
     [req.userId, req.userId, req.params.id]);
     if (!rows.length) return res.status(404).json({ error: 'This post is no longer available.' });
     const [post] = await attachGoalProgress([mapPost(rows[0])]);
+    post.cheers = (await cheerCounts(pool, [post.id])).get(post.id) || [];
     res.json({ post });
   } catch (err) {
     console.error('get post error:', err);
@@ -588,7 +592,7 @@ async function setPostReaction(req, res) {
     );
     if (existing.length && existing[0].reaction === reaction) {
       await pool.query('DELETE FROM post_reactions WHERE post_id = ? AND user_id = ?', [id, req.userId]);
-      return res.json({ myReaction: null });
+      return res.json({ myReaction: null, cheers: (await cheerCounts(pool, [id])).get(id) || [] });
     }
     await pool.query(
       'INSERT INTO post_reactions (post_id, user_id, reaction) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE reaction = VALUES(reaction)',
@@ -598,7 +602,7 @@ async function setPostReaction(req, res) {
       const [postRows] = await pool.query('SELECT author_id FROM posts WHERE id = ?', [id]);
       if (postRows[0]) await notify(postRows[0].author_id, req.userId, 'reaction', id);
     }
-    res.json({ myReaction: reaction });
+    res.json({ myReaction: reaction, cheers: (await cheerCounts(pool, [id])).get(id) || [] });
   } catch (err) {
     console.error('set post reaction error:', err);
     res.status(500).json({ error: 'Could not update reaction.' });

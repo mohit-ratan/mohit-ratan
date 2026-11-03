@@ -1,3 +1,4 @@
+import CheerSummary from './CheerSummary';
 import PostLikesModal from './PostLikesModal';
 import { CategoryIcon, ThemeIcon } from '../lib/icons';
 import useDialog from '../hooks/useDialog';
@@ -205,6 +206,7 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
             <span className="footer-time">{timeAgo(post.createdAt)}</span>
           </div>
           <div className="modal-detail-scroll">
+            <CheerSummary cheers={post.cheers} current={post.myReaction} />
             {post.tag && (
               <div className="tags-row">
                 <span className="tag-chip" onClick={() => onOpenTag(post.tag)}>#{post.tag}</span>

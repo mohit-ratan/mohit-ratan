@@ -103,6 +103,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
     const fileKind = file.type.startsWith('video') ? 'video' : 'image';
     if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) { showToast('Choose a photo or video.', true); return; }
     setVideoDuration(0); setVideoStart(0); setVideoEnd(0); setVideoCover(0);
+    if (fileKind === 'video') { setChosenVibeId(''); setVibeLabel(''); }
     const nextMedia = {
       file,
       originalFile: file,
@@ -219,7 +220,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
         form.append('cropX', pan.x);
         form.append('cropY', pan.y);
       }
-      form.append('vibe', vibeLabel.slice(0, 60));
+      form.append('vibe', media.kind === 'video' ? '' : vibeLabel.slice(0, 60));
       form.append('tag', normalizedTag);
       form.append('aiStyled', String(!!(media.kind === 'image' && media.styled)));
       if (isPost) form.append('category', selectedTask ? linkedGoal.category : chosenCat);
@@ -281,6 +282,8 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                     const duration = e.currentTarget.duration;
                     if (!Number.isFinite(duration) || duration < 1) { showToast('Choose a playable video at least one second long.', true); removeMedia(); return; }
                     setVideoDuration(duration); setVideoEnd(Math.min(60, duration));
+                    const ratio = e.currentTarget.videoWidth / e.currentTarget.videoHeight;
+                    setAspectRatio(ratio < .9 ? 'portrait' : ratio > 1.2 ? 'landscape' : 'square');
                   }}
                   onTimeUpdate={e => { if (isPost && videoEnd && e.currentTarget.currentTime >= videoEnd) { e.currentTarget.pause(); e.currentTarget.currentTime = videoStart; } }}
                   onPlay={e => { if (isPost && e.currentTarget.currentTime < videoStart) e.currentTarget.currentTime = videoStart; }}
@@ -311,7 +314,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
             </label>
           )}
 
-          <div className="vibe-rail">
+          {media?.kind !== 'video' && mediaChoice !== 'video' && <div className="vibe-rail">
             <span className="vibe-rail-label">Look</span>
             {VIBE_ITEMS.map((it) => (
               <button
@@ -327,7 +330,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                 <ThemeIcon name={LOOK_ICONS[it.id]} />
               </button>
             ))}
-          </div>
+          </div>}
         </div>
 
         <div className="modal-detail-pane">
@@ -465,7 +468,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                 <span className="tag-hint">{visibility === 'public' ? 'Anyone can see this post, even people who don’t follow you.' : 'Only people you’ve accepted as followers can see this post.'}</span>
               </div>
             )}
-            {isPost && (
+            {isPost && media?.kind !== 'video' && mediaChoice !== 'video' && (
               <div className="visibility-choice-row">
                 <label className="composer-field-label">Photo shape</label>
                 <div className="visibility-choice-options">
@@ -475,11 +478,11 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                 </div>
               </div>
             )}
-            <div className="composer-note">
+            {media?.kind !== 'video' && mediaChoice !== 'video' && <div className="composer-note">
               {media?.kind === 'image'
                 ? 'Tap a filter to apply it automatically. Choose No look to restore your original photo.'
-                : media?.kind === 'video' ? 'Tap a filter to preview it on your video.' : 'Choose a photo or video to preview a look.'}
-            </div>
+                : media?.kind === 'video' ? 'Tap a filter to preview it on your video.' : 'Choose a photo to preview a look.'}
+            </div>}
             </div>
           </fieldset>
           <div className="modal-detail-footer">

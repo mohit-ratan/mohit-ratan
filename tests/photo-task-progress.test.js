@@ -17,7 +17,8 @@ function fixture({ done = false, missing = false, fail = false, targetDays = 1, 
     rollback: async () => events.push('rollback'),
     release: () => events.push('release'),
     query: async (sql, args) => {
-      if (sql.includes('FROM goal_streaks')) return [goalStreakState ? [{ state: goalStreakState }] : []];
+      if (sql.startsWith('SELECT post_id, reaction, COUNT')) return [[]];
+    if (sql.includes('FROM goal_streaks')) return [goalStreakState ? [{ state: goalStreakState }] : []];
       if (sql.includes('FROM task_checkins')) return [[]];
       if (sql.startsWith('INSERT INTO goal_streaks')) { goalStreakState = JSON.parse(args[2]); return [{}]; }
       if (sql.startsWith('SELECT')) {
@@ -37,7 +38,8 @@ function fixture({ done = false, missing = false, fail = false, targetDays = 1, 
       return [{}];
     },
   };
-  const sandbox = { module: { exports: {} }, console: { error() {} }, require: (name) => name === '../lib/postVideo' ? require('../src/lib/postVideo') : name === '../lib/goalStreak' ? require('../src/lib/goalStreak') : name === '../lib/trifecta' ? { checkAndAwardTrifecta: async () => false, trifectaStatus: async () => ({}), TRIFECTA_CATEGORIES: ['health','wealth','relationships'] } : name === '../lib/memberFeatures' ? { ensureMemberTables: async () => {}, recordCheckIn: async () => {} } : name === '../lib/taskCelebration' ? require('../src/lib/taskCelebration') : name === '../lib/access' ? { canViewPost: async () => canView } : name === '../db' ? { getConnection: async () => connection, query: async (sql, args) => {
+  const sandbox = { module: { exports: {} }, console: { error() {} }, require: (name) => name === '../lib/postCheers' ? require('../src/lib/postCheers') : name === '../lib/postVideo' ? require('../src/lib/postVideo') : name === '../lib/goalStreak' ? require('../src/lib/goalStreak') : name === '../lib/trifecta' ? { checkAndAwardTrifecta: async () => false, trifectaStatus: async () => ({}), TRIFECTA_CATEGORIES: ['health','wealth','relationships'] } : name === '../lib/memberFeatures' ? { ensureMemberTables: async () => {}, recordCheckIn: async () => {} } : name === '../lib/taskCelebration' ? require('../src/lib/taskCelebration') : name === '../lib/access' ? { canViewPost: async () => canView } : name === '../db' ? { getConnection: async () => connection, query: async (sql, args) => {
+    if (sql.startsWith('SELECT post_id, reaction, COUNT')) return [[]];
     if (sql.includes('FROM goal_streaks')) return [goalStreakState ? [{ author_id: 'owner', tag: 'fitness', state: goalStreakState }] : []];
     if (sql.includes('FROM task_checkins')) return [[]];
     if (sql.includes('FROM post_goal_progress')) return [[...snapshots].map(([post_id, progress]) => ({ post_id, ...progress }))];
