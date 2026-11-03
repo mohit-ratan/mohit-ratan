@@ -7,6 +7,7 @@ const path = require('node:path');
 function fixture(allowed, rows = []) {
   const calls = [];
   const sandbox = { module: { exports: {} }, console, require(name) {
+    if (name === '../lib/reactions') return require('../src/lib/reactions');
     if (name === '../lib/access') return { canViewPost: async () => allowed };
     if (name === '../db') return { query: async (sql, params) => { calls.push({ sql, params }); return [rows]; } };
     return {};
@@ -29,8 +30,8 @@ test('likes return profile summaries with pagination and mutual block filtering'
   await handler({ userId: 'viewer', params: { id: 'post' }, query: { offset: '50' } }, res);
   assert.equal(res.body.users.length, 50);
   assert.equal(res.body.hasMore, true);
-  assert.deepEqual(res.body.users[0], { id: '0', displayName: 'Member 0', photoUrl: null });
-  assert.deepEqual(Array.from(calls[0].params), ['post', 'viewer', 'viewer', 50]);
+  assert.deepEqual(res.body.users[0], { id: '0', displayName: 'Member 0', photoUrl: null, followStatus: 'none' });
+  assert.deepEqual(Array.from(calls[0].params), ['viewer', 'post', 'viewer', 'viewer', 50]);
   assert.match(calls[0].sql, /b.blocker_id = \? AND b.blocked_id = u.id/);
   assert.match(calls[0].sql, /b.blocked_id = \? AND b.blocker_id = u.id/);
 });
@@ -39,5 +40,24 @@ test('an empty list has no next page and negative offsets are clamped', async ()
   const { handler, calls, res } = fixture(true);
   await handler({ userId: 'viewer', params: { id: 'post' }, query: { offset: '-5' } }, res);
   assert.deepEqual(res.body, { users: [], hasMore: false });
-  assert.equal(calls[0].params[3], 0);
+  assert.equal(calls[0].params[4], 0);
+});
+
+
+test('comment people lists deduplicate commenters and include follow status', async () => {
+  const { handler, calls, res } = fixture(true, [{ id: 'friend', display_name: 'Friend', photo_url: null, follow_status: 'accepted' }, { id: 'viewer', display_name: 'Me', photo_url: null }]);
+  await handler({ userId: 'viewer', params: { id: 'post', kind: 'comments' }, query: {} }, res);
+  assert.match(calls[0].sql, /SELECT DISTINCT/);
+  assert.match(calls[0].sql, /FROM comments activity/);
+  assert.equal(res.body.users[0].followStatus, 'accepted');
+  assert.equal(res.body.users[1].followStatus, 'me');
+});
+
+test('cheer lists filter by selected cheer and reject unsupported kinds', async () => {
+  const { handler, calls, res } = fixture(true);
+  await handler({ userId: 'viewer', params: { id: 'post', kind: 'cheers' }, query: { reaction: '🔥' } }, res);
+  assert.match(calls[0].sql, /activity.reaction = \?/);
+  assert.equal(calls[0].params[4], '🔥');
+  await handler({ userId: 'viewer', params: { id: 'post', kind: 'other' }, query: {} }, res);
+  assert.equal(res.code, 400);
 });

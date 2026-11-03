@@ -2,9 +2,24 @@ import { useEffect, useState } from 'react';
 import api from '../api';
 import useDialog from '../hooks/useDialog';
 import Avatar from './Avatar';
+import { useAuth } from '../context/AuthContext';
 
-export default function PostLikesModal({ postId, onClose, onOpenAuthor }) {
+export default function PostLikesModal({ postId, onClose, onOpenAuthor, kind = 'likes', reaction }) {
   const dialogRef = useDialog(onClose);
+  const { user } = useAuth();
+  const [actionError, setActionError] = useState('');
+  const [followingIds, setFollowingIds] = useState(new Set());
+  const title = { likes: 'Liked by', comments: 'People who commented', cheers: reaction ? `${reaction} Cheers` : 'Cheered by' }[kind];
+  async function follow(person) {
+    if (followingIds.has(person.id)) return;
+    setActionError('');
+    setFollowingIds(current => new Set(current).add(person.id));
+    try {
+      const { data } = await api.post(`/api/follows/${person.id}`);
+      setUsers(current => current.map(item => item.id === person.id ? { ...item, followStatus: data.status } : item));
+    } catch (err) { setActionError(err.message); }
+    finally { setFollowingIds(current => { const next = new Set(current); next.delete(person.id); return next; }); }
+  }
   const [users, setUsers] = useState([]);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(false);
@@ -13,21 +28,27 @@ export default function PostLikesModal({ postId, onClose, onOpenAuthor }) {
   const [retry, setRetry] = useState(0);
   useEffect(() => {
     let cancelled = false;
-    api.get(`/api/posts/${postId}/likes`, { params: { offset } }).then(({ data }) => {
+    api.get(`/api/posts/${postId}/people/${kind}`, { params: { offset, reaction } }).then(({ data }) => {
       if (cancelled) return;
       setUsers(current => offset === 0 ? data.users : [...current, ...data.users]);
       setHasMore(data.hasMore);
     }).catch(err => { if (!cancelled) setError(err.message); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [postId, offset, retry]);
+  }, [postId, kind, reaction, offset, retry]);
   return <div className="modal-backdrop post-likes-backdrop" onMouseDown={e => { e.stopPropagation(); if (e.target === e.currentTarget) onClose(); }}>
     <div className="post-likes-dialog" ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="post-likes-title">
-      <div className="post-likes-heading"><h2 id="post-likes-title">Liked by</h2><button type="button" className="pill-btn" onClick={onClose} aria-label="Close likes">✕</button></div>
+      <div className="post-likes-heading"><h2 id="post-likes-title">{title}</h2><button type="button" className="pill-btn" onClick={onClose} aria-label="Close people list">✕</button></div>
       <div className="post-likes-list">
-        {users.map(person => <button type="button" className="post-likes-person" key={person.id} onClick={() => { onClose(); onOpenAuthor?.(person.id); }}><Avatar id={person.id} name={person.displayName} photoUrl={person.photoUrl} size={40} /><span>{person.displayName}</span><span aria-hidden="true">→</span></button>)}
-        {loading && <p role="status">Loading likes…</p>}
-        {!loading && !error && !users.length && <p>No likes yet. Be the first to like this post.</p>}
+        {actionError && <p role="alert" className="auth-error">{actionError}</p>}
+        {users.map(person => <div className="post-person-row" key={person.id}>
+          <button type="button" className="post-likes-person" onClick={() => { onClose(); onOpenAuthor?.(person.id); }}><Avatar id={person.id} name={person.displayName} photoUrl={person.photoUrl} size={40} /><span>{person.displayName}</span></button>
+          {person.id !== user?.id && <button type="button" className={`pill-btn post-person-follow${!person.followStatus || person.followStatus === 'none' ? ' primary' : ''}`} disabled={followingIds.has(person.id) || person.followStatus === 'accepted' || person.followStatus === 'pending'} onClick={() => follow(person)}>
+            {followingIds.has(person.id) ? 'Sending…' : person.followStatus === 'accepted' ? 'Following' : person.followStatus === 'pending' ? 'Requested' : 'Follow'}
+          </button>}
+        </div>)}
+        {loading && <p role="status">Loading people…</p>}
+        {!loading && !error && !users.length && <p>No people to show yet.</p>}
         {error && <div role="alert"><p>{error}</p><button type="button" className="pill-btn" onClick={() => { setLoading(true); setError(''); setRetry(value => value + 1); }}>Try again</button></div>}
         {!loading && !error && hasMore && <button type="button" className="pill-btn" onClick={() => { setLoading(true); setOffset(users.length); }}>Show more</button>}
       </div>

@@ -1,3 +1,4 @@
+import PostLikesModal from './PostLikesModal';
 import CheerSummary from './CheerSummary';
 import FeedVideo from './FeedVideo';
 import PostProgressBar from './PostProgressBar';
@@ -16,6 +17,7 @@ const ASPECT_RATIOS = { square: '1 / 1', portrait: '4 / 5', landscape: '16 / 9' 
 
 function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
   const { user } = useAuth();
+  const [peopleList, setPeopleList] = useState(null);
   const cat = CAT_MAP[post.category] || CAT_MAP.health;
   const isVideo = post.mediaUrl && post.mediaType === 'video';
   const isImage = post.mediaUrl && post.mediaType !== 'video';
@@ -100,11 +102,13 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
       </button>}
       <div className="feed-card-actions">
         <button type="button" className={`action-btn like-btn${showFilledHeart ? ' liked' : ''}`} aria-pressed={liked} aria-label={liked ? 'Unlike post' : 'Like post'} disabled={likePending} onClick={toggleLike}>
-          <HeartIcon filled={showFilledHeart} />{likeCount > 0 ? likeCount : 'Like'}
+          <HeartIcon filled={showFilledHeart} />{likeCount ? '' : 'Like'}
         </button>
-        <button type="button" className="action-btn" onClick={() => onOpen(post)}>
-          <CommentIcon />{post.commentCount > 0 ? post.commentCount : 'Comment'}
+        {likeCount > 0 && <button type="button" className="engagement-count" aria-label={`See ${likeCount} people who liked this post`} onClick={() => setPeopleList({ kind: 'likes' })}>{likeCount}</button>}
+        <button type="button" className="action-btn" aria-label="Comment on this post" onClick={() => onOpen(post)}>
+          <CommentIcon />{post.commentCount > 0 ? '' : 'Comment'}
         </button>
+        {post.commentCount > 0 && <button type="button" className="engagement-count" aria-label={`See people who left ${post.commentCount} comments`} onClick={() => setPeopleList({ kind: 'comments' })}>{post.commentCount}</button>}
         <div className="feed-reaction-trigger-wrap" ref={pickerRef}>
           <button
             type="button"
@@ -124,7 +128,7 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
           {pickerOpen && <CheerPicker onPick={pickReaction} current={myReaction} onRemove={() => pickReaction(myReaction)} />}
         </div>
       </div>
-      <CheerSummary cheers={cheers} current={myReaction} />
+      <CheerSummary cheers={cheers} current={myReaction} onOpen={reaction => setPeopleList({ kind: 'cheers', reaction })} />
       {post.goalProgress?.target > 0 && (
         <button type="button" className={`feed-card-progress house-floor-${post.category}`} onClick={() => onOpen(post)}>
           <span><ThemeIcon name="target" /> {post.goalProgress.completed}/{post.goalProgress.target} task days</span>
@@ -136,6 +140,7 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
           <span className="tag-chip" onClick={() => onOpenTag(post.tag)}>#{post.tag}</span>
         </div>
       )}
+      {peopleList && <PostLikesModal postId={post.id} kind={peopleList.kind} reaction={peopleList.reaction} onClose={() => setPeopleList(null)} onOpenAuthor={onOpenAuthor} />}
     </article>
   );
 }

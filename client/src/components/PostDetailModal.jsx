@@ -22,6 +22,7 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
   const dialogRef = useDialog(onClose);
   const isMe = user?.id === post.authorId;
   const [likesOpen, setLikesOpen] = useState(false);
+  const [peopleList, setPeopleList] = useState(null);
   const [liked, setLiked] = useState(!!post.likedByMe);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
   const showFilledHeart = liked || (isMe && likeCount > 0);
@@ -206,7 +207,8 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
             <span className="footer-time">{timeAgo(post.createdAt)}</span>
           </div>
           <div className="modal-detail-scroll">
-            <CheerSummary cheers={post.cheers} current={post.myReaction} />
+            <CheerSummary cheers={post.cheers} current={post.myReaction} onOpen={reaction => setPeopleList({ kind: 'cheers', reaction })} />
+            {comments.length > 0 && <button type="button" className="post-comment-count" onClick={() => setPeopleList({ kind: 'comments' })}>{comments.length} {comments.length === 1 ? 'comment' : 'comments'}</button>}
             {post.tag && (
               <div className="tags-row">
                 <span className="tag-chip" onClick={() => onOpenTag(post.tag)}>#{post.tag}</span>
@@ -303,6 +305,7 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
           }}
         />
       )}
+      {peopleList && <PostLikesModal postId={post.id} kind={peopleList.kind} reaction={peopleList.reaction} onClose={() => setPeopleList(null)} onOpenAuthor={onOpenAuthor} />}
       {likesOpen && <PostLikesModal postId={post.id} onClose={() => setLikesOpen(false)} onOpenAuthor={onOpenAuthor} />}
       {photoTask && (
         <ComposerModal

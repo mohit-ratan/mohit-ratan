@@ -2263,3 +2263,27 @@ svg.fire-award-icon{display:inline-block;vertical-align:middle;width:38px;height
 .cheer-count-mine{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);}
 .cheer-count small{font-size:10px;}
 .modal-detail-scroll .cheer-summary{padding:0;}
+
+/* One shared entry point for stories and new posts. */
+.feed-share-bar{display:flex;align-items:center;gap:18px;max-width:620px;width:100%;margin-inline:auto;padding:14px 18px;}
+.feed-share-bar .stories-bar{flex:1;min-width:0;padding:0 2px 2px;}
+.feed-share-post{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;min-height:44px;padding:12px 18px;border:1px solid var(--accent);border-radius:12px;background:var(--accent-soft);color:var(--accent);font:600 13px var(--font-body);cursor:pointer;}
+.feed-share-post svg{width:18px;height:18px;}
+.feed-share-post:hover{background:var(--accent);color:var(--accent-contrast);}
+.feed-share-post:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+@media(max-width:680px){
+  .feed-share-bar{gap:12px;padding:12px;}
+  .feed-share-post{padding:11px 13px;font-size:12px;}
+}
+
+.engagement-count,.post-comment-count{border:0;background:none;color:var(--heading);font:600 12px var(--font-body);padding:8px 4px;cursor:pointer;}
+.engagement-count{margin-left:-10px;min-width:24px;}
+.engagement-count:hover,.post-comment-count:hover{text-decoration:underline;color:var(--accent);}
+.post-comment-count{align-self:flex-start;}
+button.cheer-count{font-family:var(--font-body);cursor:pointer;}
+button.cheer-count:hover{border-color:var(--accent);}
+.post-person-row{display:flex;align-items:center;gap:10px;padding:2px 0;}
+.post-person-row .post-likes-person{flex:1;min-width:0;}
+.post-person-row .post-likes-person>span:last-child{margin-left:0;color:var(--heading);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.post-person-follow{flex-shrink:0;min-width:84px;}
+.post-person-follow:disabled{opacity:1;color:var(--text-muted);background:var(--surface-2);border-color:var(--border);cursor:default;}

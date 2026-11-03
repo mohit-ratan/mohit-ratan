@@ -537,23 +537,33 @@ async function remove(req, res) {
   }
 }
 
-async function listLikes(req, res) {
+async function listPostPeople(req, res) {
   try {
+    const kind = req.params.kind || 'likes';
+    const sources = { likes: ['post_likes', 'user_id'], comments: ['comments', 'author_id'], cheers: ['post_reactions', 'user_id'] };
+    if (!sources[kind]) return res.status(400).json({ error: 'Choose likes, comments, or cheers.' });
     if (!(await canViewPost(req.userId, req.params.id))) return res.status(404).json({ error: 'Post not found.' });
     const offset = Math.max(0, Math.min(1000000, Math.floor(Number(req.query.offset) || 0)));
+    const [table, personColumn] = sources[kind];
+    const reaction = kind === 'cheers' ? req.query.reaction : null;
+    if (reaction && !ALLOWED_REACTIONS.has(reaction)) return res.status(400).json({ error: 'Not a valid cheer.' });
     const [rows] = await pool.query(`
-      SELECT u.id, u.display_name, u.photo_url FROM post_likes pl
-      JOIN users u ON u.id = pl.user_id
-      WHERE pl.post_id = ? AND NOT EXISTS (
+      SELECT DISTINCT u.id, u.display_name, u.photo_url,
+        (SELECT f.status FROM follows f WHERE f.follower_id = ? AND f.followee_id = u.id LIMIT 1) AS follow_status
+      FROM ${table} activity JOIN users u ON u.id = activity.${personColumn}
+      WHERE activity.post_id = ? AND NOT EXISTS (
         SELECT 1 FROM blocks b WHERE (b.blocker_id = ? AND b.blocked_id = u.id)
           OR (b.blocked_id = ? AND b.blocker_id = u.id)
-      ) ORDER BY u.id LIMIT 51 OFFSET ?`, [req.params.id, req.userId, req.userId, offset]);
-    res.json({ users: rows.slice(0, 50).map(u => ({ id: u.id, displayName: u.display_name, photoUrl: u.photo_url })), hasMore: rows.length > 50 });
+      ) ${reaction ? 'AND activity.reaction = ?' : ''}
+      ORDER BY u.id LIMIT 51 OFFSET ?`, [req.userId, req.params.id, req.userId, req.userId, ...(reaction ? [reaction] : []), offset]);
+    res.json({ users: rows.slice(0, 50).map(u => ({ id: u.id, displayName: u.display_name, photoUrl: u.photo_url, followStatus: u.id === req.userId ? 'me' : (u.follow_status || 'none') })), hasMore: rows.length > 50 });
   } catch (err) {
-    console.error('list likes error:', err);
-    res.status(500).json({ error: 'Could not load likes.' });
+    console.error('list post people error:', err);
+    res.status(500).json({ error: 'Could not load this list.' });
   }
 }
+
+const listLikes = listPostPeople;
 
 async function like(req, res) {
   try {
@@ -736,4 +746,4 @@ async function deleteComment(req, res) {
   }
 }
 
-module.exports = { list, get, trendingTags, searchTags, categoryCounts, achievements, create, update, remove, listLikes, like, setPostReaction, listComments, addComment, updateComment, deleteComment, toggleCommentReaction };
+module.exports = { list, get, trendingTags, searchTags, categoryCounts, achievements, create, update, remove, listLikes, listPostPeople, like, setPostReaction, listComments, addComment, updateComment, deleteComment, toggleCommentReaction };

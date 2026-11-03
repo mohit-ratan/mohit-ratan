@@ -12,7 +12,6 @@ import SideColumn from '../components/SideColumn';
 import FollowListPanel from '../components/FollowListPanel';
 import SuggestedFollows from '../components/SuggestedFollows';
 import AccountabilityWidget from '../components/AccountabilityWidget';
-import Avatar from '../components/Avatar';
 import ComposerModal from '../components/ComposerModal';
 import PostDetailModal from '../components/PostDetailModal';
 import StoryViewerModal from '../components/StoryViewerModal';
@@ -233,15 +232,14 @@ export default function HomePage() {
             {linkedPostError && <div className="inline-error" role="alert">{linkedPostError} <button type="button" onClick={closeLinkedPost}>Dismiss</button></div>}
             {!seenTour ? <WelcomeTour onDone={markTourSeen} /> : hasGoals === false && <FirstGoalGuide onStart={goal => setModal({ type: 'create', goal })} />}
             {storyError && <div className="inline-error" role="alert">Statuses couldn’t refresh. <button type="button" onClick={loadStories}>Retry</button></div>}
-            <StoriesBar
-              stories={stories}
-              onOpenAuthor={openStoryViewer}
-              onAddStory={() => setModal({ type: 'addStory' })}
-            />
-            <div className="card create-bar">
-              <Avatar id={user?.id} name={user?.displayName} photoUrl={user?.photoUrl} size={36} />
-              <button className="create-bar-btn" type="button" onClick={() => setModal({ type: 'create' })}>
-                <CameraSmallIcon />Create post
+            <div className="card feed-share-bar">
+              <StoriesBar
+                stories={stories}
+                onOpenAuthor={openStoryViewer}
+                onAddStory={() => setModal({ type: 'addStory' })}
+              />
+              <button className="feed-share-post" type="button" onClick={() => setModal({ type: 'create' })}>
+                <CameraSmallIcon /><span>Create post</span>
               </button>
             </div>
             {tagFilter && (
