@@ -413,7 +413,7 @@ export default function Header({
                   className="me-menu-item"
                   onClick={() => { setMenuOpen(false); navigate('/account'); }}
                 >
-                  Account settings & help
+                  Account settings
                 </button>
                 <button
                   type="button"
