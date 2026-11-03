@@ -2166,3 +2166,49 @@ svg.fire-award-icon{display:inline-block;vertical-align:middle;width:38px;height
   .side-col>*{flex-shrink:0;}
   .side-col .follow-list{max-height:none;overflow-y:visible;}
 }
+
+/* Shared warm palette for page headings, people, and goal controls. */
+:is(.feed-intro,.daily-heading,.information-page,.achievements-page,.monthly-recaps-heading,.earned-awards-section,.empty-state) :is(h1,h2,h3),
+:is(.goal-summary-title,.post-likes-heading) :is(h2,h3,h4),.modal-title{
+  font-family:var(--font-display);font-weight:600;color:var(--heading);letter-spacing:-.02em;
+}
+:is(.progress-rank-name,.c-author,.post-likes-person>span:first-of-type){
+  font-family:var(--font-display);font-weight:600;color:var(--heading);
+}
+.action-btn.liked{color:var(--accent);}
+.post-like-count{color:var(--heading);}
+.post-goal-panel{
+  --floor-color:var(--accent);--floor-bg:var(--accent-soft);
+  background:var(--bg);border-color:var(--border);color:var(--text);
+}
+.post-goal-panel h3{font-size:17px;line-height:1.35;}
+.goal-target-date,.goal-task-count,.goal-progress-label,
+.post-goal-tasks li span{color:var(--text-muted);}
+.post-goal-tasks strong{font-weight:500;color:var(--heading);line-height:1.5;}
+.post-goal-tasks-nested{border-color:var(--border);}
+.goal-task-summary strong{color:var(--heading);font-variant-numeric:tabular-nums;}
+.goal-task-photo{background:var(--surface-2);border-color:var(--border);color:var(--accent);border-radius:var(--radius-s);}
+.goal-task-photo:hover{background:var(--accent-soft);border-color:var(--accent);}
+.goal-task-photo:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+:is(.post-goal-panel,.goal-category,.daily-panel,.progress-rank-details,.feed-card-progress,.intro-preview,.task-party-card) progress{
+  appearance:none;border:0;border-radius:999px;overflow:hidden;
+  background:var(--border);accent-color:var(--accent);color:var(--accent);height:7px;
+}
+:is(.post-goal-panel,.goal-category,.daily-panel,.progress-rank-details,.feed-card-progress,.intro-preview,.task-party-card) progress::-webkit-progress-bar{
+  background:var(--border);border-radius:999px;
+}
+:is(.post-goal-panel,.goal-category,.daily-panel,.progress-rank-details,.feed-card-progress,.intro-preview,.task-party-card) progress::-webkit-progress-value{
+  background:var(--accent);border-radius:999px;
+}
+:is(.post-goal-panel,.goal-category,.daily-panel,.progress-rank-details,.feed-card-progress,.intro-preview,.task-party-card) progress::-moz-progress-bar{
+  background:var(--accent);border-radius:999px;
+}
+.modal-detail-scroll{scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+@media(max-width:680px){
+  .post-goal-panel{padding:14px;}
+  .post-goal-panel .goal-summary-title{align-items:flex-start;}
+  .post-goal-tasks li>div:first-child{flex-wrap:wrap;gap:4px 12px;}
+  .post-goal-task-row{min-width:0;}
+  .post-goal-task-row progress{min-width:0;}
+  .goal-task-photo{min-height:36px;padding:6px 9px;}
+}
