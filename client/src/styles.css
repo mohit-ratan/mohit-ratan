@@ -2287,3 +2287,17 @@ button.cheer-count:hover{border-color:var(--accent);}
 .post-person-row .post-likes-person>span:last-child{margin-left:0;color:var(--heading);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .post-person-follow{flex-shrink:0;min-width:84px;}
 .post-person-follow:disabled{opacity:1;color:var(--text-muted);background:var(--surface-2);border-color:var(--border);cursor:default;}
+
+.feed-stories-row{max-width:620px;margin-inline:auto;}
+.feed-stories-row .stories-bar{padding:4px 2px 8px;}
+.feed-section-actions{display:flex;align-items:center;gap:14px;flex-shrink:0;}
+.feed-section-actions>span{font-size:11px;color:var(--text-muted);}
+.feed-section-actions .feed-share-post{min-height:40px;padding:9px 13px;font-size:12px;}
+.feed-card-actions .feed-reaction-button{min-width:32px;}
+@media(max-width:680px){
+  .feed-section-title{align-items:center;}
+  .feed-section-title h2{font-size:19px;}
+  .feed-section-actions{gap:8px;}
+  .feed-section-actions>span{display:none;}
+  .feed-section-actions .feed-share-post{min-height:44px;padding:9px 11px;}
+}

@@ -1,5 +1,4 @@
 import PostLikesModal from './PostLikesModal';
-import CheerSummary from './CheerSummary';
 import FeedVideo from './FeedVideo';
 import PostProgressBar from './PostProgressBar';
 import { CategoryIcon, ThemeIcon } from '../lib/icons';
@@ -28,6 +27,7 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
   const [likePending, setLikePending] = useState(false);
   const [cheerUpdate, setCheerUpdate] = useState(null);
   const cheers = cheerUpdate && cheerUpdate.source === post.cheers ? cheerUpdate.items : (post.cheers || []);
+  const cheerCount = cheers.reduce((total, item) => total + item.count, 0);
   const [myReaction, setMyReaction] = useState(post.myReaction || null);
   const [reactionPending, setReactionPending] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -123,12 +123,12 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
             ) : (
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-8.5-8.5"/><path d="M8 14s1.3 2 4 2 4-2 4-2"/><path d="M8.5 9h.01M14.5 9h.01M19 2v6M16 5h6"/></svg>
             )}
-            {myReaction ? 'Cheered' : 'Cheer'}
+            {cheerCount ? '' : 'Cheer'}
           </button>
           {pickerOpen && <CheerPicker onPick={pickReaction} current={myReaction} onRemove={() => pickReaction(myReaction)} />}
         </div>
+        {cheerCount > 0 && <button type="button" className="engagement-count" aria-label={`See ${cheerCount} people who cheered this post`} onClick={() => setPeopleList({ kind: 'cheers' })}>{cheerCount}</button>}
       </div>
-      <CheerSummary cheers={cheers} current={myReaction} onOpen={reaction => setPeopleList({ kind: 'cheers', reaction })} />
       {post.goalProgress?.target > 0 && (
         <button type="button" className={`feed-card-progress house-floor-${post.category}`} onClick={() => onOpen(post)}>
           <span><ThemeIcon name="target" /> {post.goalProgress.completed}/{post.goalProgress.target} task days</span>
