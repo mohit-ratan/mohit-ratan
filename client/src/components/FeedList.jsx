@@ -1,10 +1,11 @@
+import FeedVideo from './FeedVideo';
 import PostProgressBar from './PostProgressBar';
 import { CategoryIcon, ThemeIcon } from '../lib/icons';
 import { useEffect, useRef, useState } from 'react';
 import api, { mediaUrl } from '../api';
 import { CAT_MAP, timeAgo, truncate } from '../lib/format';
 import { pickLookRecipe } from '../lib/looks';
-import { HeartIcon, CommentIcon, VideoIcon } from '../lib/icons';
+import { HeartIcon, CommentIcon } from '../lib/icons';
 import { isMemeReaction, memeReaction } from '../lib/reactions';
 import ReactionPickerPanel from './ReactionPickerPanel';
 import Avatar from './Avatar';
@@ -83,17 +84,14 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
           </div>
         </div>
       </header>
-      <button type="button" className="feed-card-media" style={{ aspectRatio: ASPECT_RATIOS[post.aspectRatio] || ASPECT_RATIOS.square }} aria-label={`Open ${post.tag ? `#${post.tag}` : cat.label} post`} onClick={() => onOpen(post)}>
-        {isVideo ? (
-          <video src={mediaUrl(post.mediaUrl)} style={filter ? { filter } : undefined} muted playsInline preload="metadata" />
-        ) : isImage ? (
+      {isVideo ? <FeedVideo post={post} filter={filter} onOpen={() => onOpen(post)} /> : <button type="button" className="feed-card-media" style={{ aspectRatio: ASPECT_RATIOS[post.aspectRatio] || ASPECT_RATIOS.square }} aria-label={`Open ${post.tag ? `#${post.tag}` : cat.label} post`} onClick={() => onOpen(post)}>
+        {isImage ? (
           <img src={mediaUrl(post.mediaUrl)} alt={post.tag ? `Post for #${post.tag}` : 'Post'} loading="lazy" decoding="async" style={{ objectPosition: `${post.cropX ?? 50}% ${post.cropY ?? 50}%`, ...(!post.aiStyled && filter ? { filter } : null) }} />
         ) : (
           <div className={`text-card ${cat.id}`}><span className="reveal-text">{cat.label}</span></div>
         )}
-        {isVideo && <span className="tile-badge"><VideoIcon /></span>}
         {isImage && post.vibe && !post.aiStyled && <span className="vibe-chip"><ThemeIcon name="sparkle" /> {truncate(post.vibe, 34)}</span>}
-      </button>
+      </button>}
       <div className="feed-card-actions">
         <button type="button" className={`action-btn like-btn${showFilledHeart ? ' liked' : ''}`} aria-pressed={liked} aria-label={liked ? 'Unlike post' : 'Like post'} disabled={likePending} onClick={toggleLike}>
           <HeartIcon filled={showFilledHeart} />{likeCount > 0 ? likeCount : 'Like'}

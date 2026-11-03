@@ -20,7 +20,7 @@ test('only fully completed goals earn awards; unfinished goals and tags remain a
   let allowed = true;
   const sandbox = {
     module: { exports: {} }, console,
-    require: (name) => name === '../lib/goalStreak' ? require('../src/lib/goalStreak') : name === '../lib/trifecta' ? { checkAndAwardTrifecta: async () => false, trifectaStatus: async () => ({}), TRIFECTA_CATEGORIES: ['health','wealth','relationships'] } : name === '../lib/memberFeatures' ? { ensureMemberTables: async () => {}, recordCheckIn: async () => {} } : name === '../lib/taskCelebration' ? require('../src/lib/taskCelebration') : name === '../lib/access' ? { canViewPost: async () => true } : name === '../db' ? {
+    require: (name) => name === '../lib/postVideo' ? require('../src/lib/postVideo') : name === '../lib/goalStreak' ? require('../src/lib/goalStreak') : name === '../lib/trifecta' ? { checkAndAwardTrifecta: async () => false, trifectaStatus: async () => ({}), TRIFECTA_CATEGORIES: ['health','wealth','relationships'] } : name === '../lib/memberFeatures' ? { ensureMemberTables: async () => {}, recordCheckIn: async () => {} } : name === '../lib/taskCelebration' ? require('../src/lib/taskCelebration') : name === '../lib/access' ? { canViewPost: async () => true } : name === '../db' ? {
       query: async (sql) => {
         if (sql.includes('FROM goal_streaks')) return [[{ author_id: 'owner', tag: 'partial', state: streakState }]];
         if (sql.includes('FROM task_checkins')) return [[]];

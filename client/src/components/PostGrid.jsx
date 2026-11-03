@@ -23,7 +23,7 @@ function GridTile({ post, onOpen, onOpenAuthor, showAuthor }) {
         {!showAuthor && <span className="tile-cat-dot" style={{ background: `var(--${cat.id})` }} title={cat.label} />}
         {isVideo ? (
           <>
-            <video src={mediaUrl(post.mediaUrl)} style={filter ? { filter } : undefined} muted playsInline preload="metadata" />
+            <video poster={mediaUrl(post.videoCoverUrl) || undefined} src={mediaUrl(post.mediaUrl)} style={filter ? { filter } : undefined} muted playsInline preload="metadata" />
             <span className="tile-badge"><VideoIcon /></span>
           </>
         ) : isImage ? (

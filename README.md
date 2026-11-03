@@ -154,3 +154,17 @@ host's start command at `npm start`.
 - Don't commit a real `.env` file — `.env.example` is the template; the real
   one (with your JWT secret, DB password, and SMTP credentials) should stay
   local to each machine you deploy to.
+
+### Short video posts
+
+Posts accept photos up to 20 MB or source videos up to 100 MB. The composer
+lets members choose a 1–60 second clip and a cover frame. The server uses
+`ffmpeg-static` to trim and encode an H.264/AAC MP4 (up to 1280 pixels on its
+longest side) and a JPEG poster, storing both in the existing media bucket.
+Install production dependencies during deployment so the matching FFmpeg
+binary is available. `FFMPEG_PATH` may override the bundled binary.
+`src/db.js` adds the nullable `posts.video_cover_url` column on startup.
+Encoding has a three-minute timeout and allows two jobs per Node process.
+Feed playback is muted by default and pauses offscreen; browsers that block
+autoplay show a Play button. Reduced-motion users start playback manually.
+Stories keep their existing 20 MB behavior; goal-task check-ins require photos.

@@ -40,6 +40,12 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
     setMedia(next);
   }
 
+  const [mediaChoice, setMediaChoice] = useState('image');
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [videoStart, setVideoStart] = useState(0);
+  const [videoEnd, setVideoEnd] = useState(0);
+  const [videoCover, setVideoCover] = useState(0);
+  const videoRef = useRef(null);
   const [media, setMedia] = useState(null); // { file, originalFile, previewUrl, kind: 'image'|'video', styled }
   const [chosenCat, setChosenCat] = useState(initialGoalTask?.category || initialGoal?.category || CATEGORIES[0].id);
   const [visibility, setVisibility] = useState('friends');
@@ -88,12 +94,15 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
   function handleFileChange(e) {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 20 * 1024 * 1024) {
-      showToast('That file is over the 20 MB limit.', true);
+    const limit = isPost && file.type.startsWith('video/') ? 100 : 20;
+    if (file.size > limit * 1024 * 1024) {
+      showToast(`That file is over the ${limit} MB limit.`, true);
       e.target.value = '';
       return;
     }
     const fileKind = file.type.startsWith('video') ? 'video' : 'image';
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) { showToast('Choose a photo or video.', true); return; }
+    setVideoDuration(0); setVideoStart(0); setVideoEnd(0); setVideoCover(0);
     const nextMedia = {
       file,
       originalFile: file,
@@ -162,6 +171,9 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
       showToast('Attach a photo or video to post.', true);
       return;
     }
+    if (isPost && media.kind === 'video' && (!videoDuration || videoEnd - videoStart < 1 || videoEnd - videoStart > 60.05)) {
+      showToast('Choose a video clip between 1 and 60 seconds.', true); return;
+    }
     if (generating) {
       showToast('Your filter is still being applied. Please wait a moment.', true);
       return;
@@ -195,6 +207,11 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
         if (blob.size < media.file.size) uploadFile = new File([blob], 'status.jpg', { type: 'image/jpeg' });
       }
       form.append('media', uploadFile);
+      if (isPost && media.kind === 'video') {
+        form.append('videoStart', videoStart);
+        form.append('videoEnd', videoEnd);
+        form.append('videoCover', videoCover);
+      }
       // The crop is stored as a position, not baked into the photo, so it
       // can still be repositioned later from Edit post. GIFs keep their
       // default center crop since there's no reposition tool for them.
@@ -249,11 +266,24 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
           <div><span className="composer-eyebrow">PACKSOMEWORK · YOUR DAILY PROGRESS</span><h2 id="composer-title">{title}</h2></div>
           <button className="composer-close" type="button" aria-label="Close editor" disabled={submitting} onClick={onClose}><ThemeIcon name="close" /></button>
         </header>
+        {isPost && !media && <div className="composer-media-choice" aria-label="Post format">
+          <button type="button" className={`pill-btn${mediaChoice === 'image' ? ' primary' : ''}`} aria-pressed={mediaChoice === 'image'} onClick={() => setMediaChoice('image')}>Photo</button>
+          <button type="button" className={`pill-btn${mediaChoice === 'video' ? ' primary' : ''}`} aria-pressed={mediaChoice === 'video'} disabled={!!initialGoalTask} onClick={() => setMediaChoice('video')}>Short video</button>
+          <span>{mediaChoice === 'video' ? 'Choose up to 100 MB · trim to 60 seconds' : 'Photos up to 20 MB'}</span>
+        </div>}
         <div className="media-and-look-row">
           {media ? (
             <div className="modal-media-pane">
               {media.kind === 'video' ? (
-                <video src={media.previewUrl} controls style={{ filter: getRecipeById(chosenVibeId)?.filter }} />
+                <video ref={videoRef} src={media.previewUrl} controls playsInline preload="metadata" style={{ filter: getRecipeById(chosenVibeId)?.filter }}
+                  onLoadedMetadata={e => {
+                    const duration = e.currentTarget.duration;
+                    if (!Number.isFinite(duration) || duration < 1) { showToast('Choose a playable video at least one second long.', true); removeMedia(); return; }
+                    setVideoDuration(duration); setVideoEnd(Math.min(60, duration));
+                  }}
+                  onTimeUpdate={e => { if (isPost && videoEnd && e.currentTarget.currentTime >= videoEnd) { e.currentTarget.pause(); e.currentTarget.currentTime = videoStart; } }}
+                  onPlay={e => { if (isPost && e.currentTarget.currentTime < videoStart) e.currentTarget.currentTime = videoStart; }}
+                  onError={() => { showToast('This browser cannot preview that video. Try MP4.', true); removeMedia(); }} />
               ) : isPost && media.file.type !== 'image/gif' ? (
                 <PhotoCropper src={media.previewUrl} aspect={ASPECT_RATIO_NUMBERS[aspectRatio]} pan={pan} onPanChange={setPan} />
               ) : (
@@ -267,7 +297,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*,video/*"
+                accept={isPost ? `${mediaChoice}/*` : 'image/*,video/*'}
                 style={{ display: 'none' }}
                 onChange={handleFileChange}
               />
@@ -276,7 +306,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
                 <circle cx="8.5" cy="10.5" r="1.6" />
                 <path d="M21 15l-5-5-9 9" />
               </svg>
-              <span>Select a photo or video</span>
+              <span>{isPost ? `Select a ${mediaChoice === 'video' ? 'video' : 'photo'}` : 'Select a photo or video'}</span>
             </label>
           )}
 
@@ -302,6 +332,26 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
         <div className="modal-detail-pane">
           <div className="composer-panel-heading"><span className="composer-eyebrow">{isPost ? 'MAKE THIS MOMENT COUNT' : 'SHARE A MOMENT'}</span><h3>{isPost ? 'Your post & goals' : 'Your story'}</h3><p>{isPost ? 'Choose a category, connect a task, and track your progress.' : 'Add a tag and share a little of your day.'}</p></div>
           <fieldset disabled={submitting} className="modal-detail-scroll composer-fields">
+            {isPost && media?.kind === 'video' && videoDuration > 0 && <section className="video-clip-settings">
+              <h3>Your short video</h3><p>{(videoEnd - videoStart).toFixed(1)} seconds · saved as a mobile-friendly MP4</p>
+              <div className="video-trim-fields">
+                <label>Start (seconds)<input type="number" min="0" max={Math.max(0, videoDuration - 1)} step="0.1" value={videoStart} onChange={e => {
+                  const start = Math.min(Math.max(0, Number(e.target.value)), videoDuration - 1);
+                  const end = Math.min(videoDuration, Math.max(start + 1, Math.min(videoEnd, start + 60)));
+                  setVideoStart(start); setVideoEnd(end); setVideoCover(Math.min(end - .1, Math.max(start, videoCover)));
+                  if (videoRef.current) videoRef.current.currentTime = start;
+                }} /></label>
+                <label>End (seconds)<input type="number" min={videoStart + 1} max={Math.min(videoDuration, videoStart + 60)} step="0.1" value={videoEnd} onChange={e => {
+                  const end = Math.max(videoStart + 1, Math.min(Number(e.target.value), videoDuration, videoStart + 60));
+                  setVideoEnd(end); setVideoCover(Math.min(end - .1, Math.max(videoStart, videoCover)));
+                }} /></label>
+              </div>
+              <label>Cover frame · {videoCover.toFixed(1)}s<input type="range" min={videoStart} max={Math.max(videoStart, videoEnd - .1)} step="0.1" value={videoCover} onChange={e => {
+                setVideoCover(Number(e.target.value)); if (videoRef.current) { videoRef.current.pause(); videoRef.current.currentTime = Number(e.target.value); }
+              }} /></label>
+              <small>Move the slider to preview the frame shown before playback.</small>
+            </section>}
+
             <div className="composer-field-stack">
             {isPost && (
               <div className="cat-choice-row">
@@ -432,6 +482,10 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
             </div>
           </fieldset>
           <div className="modal-detail-footer">
+            {submitting && <div className="video-upload-status" role="status">
+              <span>{uploadPercent === null ? 'Preparing your upload…' : uploadPercent < 100 ? `Uploading ${uploadPercent}%` : media?.kind === 'video' ? 'Compressing video and creating your cover…' : 'Saving your post…'}</span>
+              <progress max="100" value={uploadPercent === null || uploadPercent === 100 ? undefined : uploadPercent} aria-label="Media upload progress" />
+            </div>}
             <span className="composer-share-note">{selectedTask ? `This photo adds 1 day toward “${selectedTask.text}”.` : 'A little progress, worth sharing.'}</span>
             <button
               className="pill-btn primary"
@@ -440,7 +494,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
               disabled={submitting || generating || !media || (isPost && existingTags === null)}
               onClick={handleSubmit}
             >
-              {submitting ? uploadPercent === null ? 'Preparing media…' : uploadPercent < 100 ? `Uploading ${uploadPercent}%…` : 'Saving…' : selectedTask ? 'Share photo & update progress →' : isPost ? 'Share post →' : 'Share to story →'}
+              {submitting ? uploadPercent === null ? 'Preparing media…' : uploadPercent < 100 ? `Uploading ${uploadPercent}%…` : media?.kind === 'video' ? 'Compressing & saving video…' : 'Saving…' : selectedTask ? 'Share photo & update progress →' : isPost ? 'Share post →' : 'Share to story →'}
             </button>
           </div>
         </div>

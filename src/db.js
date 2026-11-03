@@ -180,3 +180,9 @@ pool.query(`
 `).catch((err) => console.error('Could not ensure post_reactions table exists:', err));
 
 module.exports = pool;
+
+// Posters are generated from the selected frame of short video posts.
+pool.query(`SELECT COUNT(*) as cnt FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'posts' AND COLUMN_NAME = 'video_cover_url'`)
+  .then(([rows]) => { if (!rows[0].cnt) return pool.query('ALTER TABLE posts ADD COLUMN video_cover_url TEXT NULL'); })
+  .catch(err => console.error('Could not ensure posts.video_cover_url column exists:', err));

@@ -25,7 +25,7 @@ async function deleteAccount(req, res) {
     const removed = await transaction(async db => {
       const [users] = await db.query('SELECT password_hash, photo_url FROM users WHERE id = ? FOR UPDATE', [req.userId]);
       if (!users.length || !(await bcrypt.compare(password, users[0].password_hash))) return false;
-      const [media] = await db.query('SELECT media_url AS url FROM posts WHERE author_id = ? UNION SELECT media_url AS url FROM stories WHERE author_id = ?', [req.userId, req.userId]);
+      const [media] = await db.query('SELECT media_url AS url FROM posts WHERE author_id = ? UNION SELECT video_cover_url AS url FROM posts WHERE author_id = ? AND video_cover_url IS NOT NULL UNION SELECT media_url AS url FROM stories WHERE author_id = ?', [req.userId, req.userId, req.userId]);
       const [journalMedia] = await db.query('SELECT media_key AS url FROM journal_entries WHERE user_id=? AND media_key IS NOT NULL', [req.userId]);
       media.push(...journalMedia);
       if (users[0].photo_url) media.push({ url: users[0].photo_url });

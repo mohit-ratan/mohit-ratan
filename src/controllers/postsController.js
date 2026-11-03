@@ -1,3 +1,4 @@
+const { preparePostVideo } = require('../lib/postVideo');
 const { currentGoalStreak, checkInGoal, goalStreakFromDays, goalStreakAwards } = require('../lib/goalStreak');
 const { ensureMemberTables, recordCheckIn } = require('../lib/memberFeatures');
 const { v4: uuidv4 } = require('uuid');
@@ -46,6 +47,7 @@ function mapPost(row) {
     tag: row.tag,
     mediaUrl: row.media_url,
     mediaType: row.media_type,
+    videoCoverUrl: row.video_cover_url || null,
     aiStyled: !!row.ai_styled,
     visibility: row.visibility,
     aspectRatio: row.aspect_ratio,
@@ -336,8 +338,15 @@ async function create(req, res) {
 
     await ensureMemberTables();
     const id = uuidv4();
-    const mediaUrl = await uploadMedia(req.file.buffer, req.file.originalname, req.file.mimetype, 'posts');
     const mediaType = mediaTypeFromMime(req.file.mimetype);
+    if (mediaType === 'video' && req.body.goalTaskIndex !== undefined) return res.status(400).json({ error: 'Upload a photo to complete a task.' });
+    let video = null;
+    if (mediaType === 'video') {
+      try { video = await preparePostVideo(req.file, req.body); }
+      catch (err) { return res.status(400).json({ error: err.message }); }
+    }
+    const mediaUrl = await uploadMedia(video?.buffer || req.file.buffer, video ? 'clip.mp4' : req.file.originalname, video ? 'video/mp4' : req.file.mimetype, 'posts');
+    const videoCoverUrl = video ? await uploadMedia(video.cover, 'cover.jpg', 'image/jpeg', 'posts') : null;
     const cleanTag = (tag || '').replace(/^#/, '').toLowerCase().slice(0, 24);
     const visibility = req.body.visibility === 'public' ? 'public' : 'friends';
     const aspectRatio = ['square', 'portrait', 'landscape'].includes(req.body.aspectRatio) ? req.body.aspectRatio : 'square';
@@ -370,9 +379,9 @@ async function create(req, res) {
         }
         await preserveGoalPhotos(connection, req.userId, cleanTag, tasks);
         await connection.query(
-          `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled, visibility, aspect_ratio, crop_x, crop_y)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0, visibility, aspectRatio, cropX, cropY]
+          `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled, visibility, aspect_ratio, crop_x, crop_y, video_cover_url)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0, visibility, aspectRatio, cropX, cropY, videoCoverUrl]
         );
         const wasDone = target.done;
         const checkIn = recordTaskCheckIn(target, req.body.timeZone);
@@ -425,9 +434,9 @@ async function create(req, res) {
     }
 
     await pool.query(
-      `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled, visibility, aspect_ratio, crop_x, crop_y)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0, visibility, aspectRatio, cropX, cropY]
+      `INSERT INTO posts (id, author_id, category, vibe, tag, media_url, media_type, ai_styled, visibility, aspect_ratio, crop_x, crop_y, video_cover_url)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, req.userId, category, (vibe || '').slice(0, 60), cleanTag, mediaUrl, mediaType, aiStyled === 'true' ? 1 : 0, visibility, aspectRatio, cropX, cropY, videoCoverUrl]
     );
 
     // Optional goal metadata, only ever set the first time a tag is used
@@ -515,6 +524,7 @@ async function remove(req, res) {
     await pool.query('DELETE FROM posts WHERE id = ?', [post.id]);
     await deleteGoalIfOrphaned(req.userId, post.tag);
     await deleteMedia(post.media_url).catch(() => {});
+    if (post.video_cover_url) await deleteMedia(post.video_cover_url).catch(() => {});
 
     res.json({ ok: true });
   } catch (err) {

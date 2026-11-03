@@ -149,7 +149,7 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
           {isVideo ? (
             <>
               {post.vibe && <span className="vibe-chip"><ThemeIcon name="sparkle" /> {truncate(post.vibe, 34)}</span>}
-              <video src={mediaUrl(post.mediaUrl)} style={filter ? { filter } : undefined} controls autoPlay muted loop playsInline />
+              <video poster={mediaUrl(post.videoCoverUrl) || undefined} src={mediaUrl(post.mediaUrl)} style={filter ? { filter } : undefined} controls autoPlay muted loop playsInline />
             </>
           ) : isImage ? (
             <>

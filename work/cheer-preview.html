@@ -1,0 +1,58 @@
+<div id="psw-cheer-preview" class="viz-dotted-background">
+<style>
+#psw-cheer-preview{padding:24px 12px;font-family:'Work Sans',Arial,sans-serif;color:#342a25}
+#psw-cheer-preview *{box-sizing:border-box}
+#psw-cheer-preview .psw-post{max-width:500px;margin:auto;background:#fffaf6;border:1px solid #eedfd4;border-radius:22px;overflow:hidden}
+#psw-cheer-preview .psw-top{padding:20px 24px;background:#fff;border-bottom:1px solid #eedfd4;display:flex;gap:12px;align-items:center}
+#psw-cheer-preview .psw-avatar{display:grid;place-items:center;width:42px;height:42px;background:#ffebdb;border-radius:50%;color:#c7470c;font-family:Georgia,serif;font-size:22px}
+#psw-cheer-preview .psw-name{font-family:Georgia,serif;font-size:20px;color:#66381f}
+#psw-cheer-preview .psw-meta{font-size:12px;color:#77665b;margin-top:4px}
+#psw-cheer-preview .psw-moment{padding:24px;color:#66381f;font-family:Georgia,serif;font-size:25px;line-height:1.4}
+#psw-cheer-preview .psw-tag{font-family:Arial,sans-serif;font-size:12px;color:#c7470c;margin-top:12px}
+#psw-cheer-preview .psw-picker{margin:0 16px 16px;padding:20px;background:#fff;border:1px solid #eedfd4;border-radius:16px;box-shadow:0 6px 20px #66381f0d}
+#psw-cheer-preview h3{font-family:Georgia,serif;font-size:21px;color:#66381f;margin:0 0 16px;font-weight:500}
+#psw-cheer-preview .psw-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#psw-cheer-preview button{font:inherit}
+#psw-cheer-preview .psw-choice{background:#fff8f0;color:#66381f;border:1px solid #eedfd4;border-radius:12px;padding:14px 4px;font-size:12px;min-height:78px}
+#psw-cheer-preview .psw-choice .psw-emoji{display:block;font-size:26px;margin-bottom:8px}
+#psw-cheer-preview .psw-choice:hover{background:#ffebdb;border-color:#c7470c}
+#psw-cheer-preview .psw-choice[aria-pressed="true"]{background:#ffebdb;color:#c7470c;border-color:#c7470c}
+#psw-cheer-preview .psw-footer{padding:14px 20px;background:#fff;border-top:1px solid #eedfd4;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+#psw-cheer-preview .psw-action{display:flex;align-items:center;gap:7px;border:0;background:none;color:#77665b;font-size:13px;padding:9px 0}
+#psw-cheer-preview .psw-action svg{width:18px;height:18px}
+#psw-cheer-preview .psw-cheer{background:#ffebdb;color:#c7470c;padding:9px 13px;border-radius:10px}
+#psw-cheer-preview .psw-summary{padding:0 24px 18px;background:#fff;color:#77665b;font-size:12px;min-height:32px}
+</style>
+<div class="psw-post">
+  <div class="psw-top"><div class="psw-avatar">M</div><div><div class="psw-name">Mohit</div><div class="psw-meta">Today · Health</div></div></div>
+  <div class="psw-moment">Another day of showing up.<div class="psw-tag">#workout · 13 / 30 task days</div></div>
+  <div class="psw-picker"><h3>A little encouragement</h3><div class="psw-grid">
+    <button type="button" class="psw-choice cursor-interaction" data-cheer="On fire" aria-pressed="false"><span class="psw-emoji">🔥</span>On fire</button>
+    <button type="button" class="psw-choice cursor-interaction" data-cheer="Great effort" aria-pressed="false"><span class="psw-emoji">👏</span>Great effort</button>
+    <button type="button" class="psw-choice cursor-interaction" data-cheer="Keep going" aria-pressed="false"><span class="psw-emoji">💪</span>Keep going</button>
+    <button type="button" class="psw-choice cursor-interaction" data-cheer="Inspired me" aria-pressed="false"><span class="psw-emoji">🙌</span>Inspired me</button>
+    <button type="button" class="psw-choice cursor-interaction" data-cheer="Getting closer" aria-pressed="false"><span class="psw-emoji">🎯</span>Getting closer</button>
+    <button type="button" class="psw-choice cursor-interaction" data-cheer="Milestone!" aria-pressed="false"><span class="psw-emoji">🎉</span>Milestone!</button>
+  </div></div>
+  <div class="psw-footer"><button type="button" class="psw-action psw-like cursor-interaction" aria-pressed="false"><i data-lucide="heart" aria-hidden="true"></i><span>Like</span></button><span class="psw-action"><i data-lucide="message-circle" aria-hidden="true"></i>Comment</span><button type="button" class="psw-action psw-cheer cursor-interaction" aria-expanded="true"><i data-lucide="party-popper" aria-hidden="true"></i><span>Cheer</span></button></div>
+  <div class="psw-summary" aria-live="polite">👏 4 · 💪 2 · 🙌 1</div>
+</div>
+<script>
+(function(){
+ const root=document.getElementById('psw-cheer-preview');
+ let selected=null;
+ function render(){
+ root.querySelectorAll('[data-cheer]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.cheer===selected)));
+ root.querySelector('.psw-summary').textContent=selected?'👏 4 · 💪 2 · 🙌 1   ·   You: '+selected:'👏 4 · 💪 2 · 🙌 1';
+ }
+ function save(){if(window.openai?.setWidgetState)window.openai.setWidgetState({modelContent:{cheer:selected},privateContent:null}).catch(()=>{});}
+ root.querySelectorAll('[data-cheer]').forEach(b=>b.addEventListener('click',()=>{selected=selected===b.dataset.cheer?null:b.dataset.cheer;render();save();}));
+ const trigger=root.querySelector('.psw-cheer');
+ trigger.addEventListener('click',()=>{const picker=root.querySelector('.psw-picker');picker.hidden=!picker.hidden;trigger.setAttribute('aria-expanded',String(!picker.hidden));});
+ root.querySelector('.psw-like').addEventListener('click',function(){const liked=this.getAttribute('aria-pressed')!=='true';this.setAttribute('aria-pressed',String(liked));this.style.color=liked?'#c7470c':'#77665b';this.querySelector('span').textContent=liked?'Liked':'Like';});
+ const restore=state=>{const value=state?.modelContent?.cheer;selected=[...root.querySelectorAll('[data-cheer]')].some(b=>b.dataset.cheer===value)?value:null;render();};
+ restore(window.openai?.widgetState);
+ window.addEventListener('openai:set_globals',e=>{if(e.detail?.globals?.widgetState)restore(e.detail.globals.widgetState);});
+})();
+</script>
+</div>

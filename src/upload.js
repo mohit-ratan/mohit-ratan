@@ -14,10 +14,15 @@ const upload = multer({
 
 // Wraps upload.single() so file-size/type errors resolve to a clean 400
 // instead of falling through to the generic 500 error handler.
-function uploadSingle(field) {
+function uploadSingle(field, shortVideo = false) {
+  const selectedUpload = shortVideo ? multer({
+    storage: multer.memoryStorage(), limits: { fileSize: 100 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => /^image\/|^video\//.test(file.mimetype) ? cb(null, true) : cb(new Error('Only image or video files are allowed.')),
+  }) : upload;
   return (req, res, next) => {
-    upload.single(field)(req, res, (err) => {
+    selectedUpload.single(field)(req, res, (err) => {
       if (err) return res.status(400).json({ error: err.message || 'Could not process that file.' });
+      if (req.file && !req.file.mimetype.startsWith('video/') && req.file.size > 20 * 1024 * 1024) return res.status(400).json({ error: 'Photos must be 20 MB or smaller.' });
       next();
     });
   };

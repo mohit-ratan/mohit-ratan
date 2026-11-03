@@ -11,7 +11,7 @@ router.get('/search-tags', requireAuth, postsController.searchTags);
 router.get('/category-counts', requireAuth, postsController.categoryCounts);
 router.get('/achievements', requireAuth, postsController.achievements);
 router.get('/:id', requireAuth, postsController.get);
-router.post('/', requireAuth, uploadSingle('media'), postsController.create);
+router.post('/', requireAuth, uploadSingle('media', true), postsController.create);
 router.put('/:id', requireAuth, postsController.update);
 router.delete('/:id', requireAuth, postsController.remove);
 router.get('/:id/likes', requireAuth, postsController.listLikes);
