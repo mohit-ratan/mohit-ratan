@@ -523,6 +523,24 @@ async function remove(req, res) {
   }
 }
 
+async function listLikes(req, res) {
+  try {
+    if (!(await canViewPost(req.userId, req.params.id))) return res.status(404).json({ error: 'Post not found.' });
+    const offset = Math.max(0, Math.min(1000000, Math.floor(Number(req.query.offset) || 0)));
+    const [rows] = await pool.query(`
+      SELECT u.id, u.display_name, u.photo_url FROM post_likes pl
+      JOIN users u ON u.id = pl.user_id
+      WHERE pl.post_id = ? AND NOT EXISTS (
+        SELECT 1 FROM blocks b WHERE (b.blocker_id = ? AND b.blocked_id = u.id)
+          OR (b.blocked_id = ? AND b.blocker_id = u.id)
+      ) ORDER BY u.id LIMIT 51 OFFSET ?`, [req.params.id, req.userId, req.userId, offset]);
+    res.json({ users: rows.slice(0, 50).map(u => ({ id: u.id, displayName: u.display_name, photoUrl: u.photo_url })), hasMore: rows.length > 50 });
+  } catch (err) {
+    console.error('list likes error:', err);
+    res.status(500).json({ error: 'Could not load likes.' });
+  }
+}
+
 async function like(req, res) {
   try {
     if (!(await canViewPost(req.userId, req.params.id))) return res.status(404).json({ error: 'Post not found.' });
@@ -704,4 +722,4 @@ async function deleteComment(req, res) {
   }
 }
 
-module.exports = { list, get, trendingTags, searchTags, categoryCounts, achievements, create, update, remove, like, setPostReaction, listComments, addComment, updateComment, deleteComment, toggleCommentReaction };
+module.exports = { list, get, trendingTags, searchTags, categoryCounts, achievements, create, update, remove, listLikes, like, setPostReaction, listComments, addComment, updateComment, deleteComment, toggleCommentReaction };

@@ -1,3 +1,4 @@
+import PostLikesModal from './PostLikesModal';
 import { CategoryIcon, ThemeIcon } from '../lib/icons';
 import useDialog from '../hooks/useDialog';
 import { useEffect, useRef, useState } from 'react';
@@ -19,6 +20,7 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
   const showToast = useToast();
   const dialogRef = useDialog(onClose);
   const isMe = user?.id === post.authorId;
+  const [likesOpen, setLikesOpen] = useState(false);
   const [liked, setLiked] = useState(!!post.likedByMe);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
   const showFilledHeart = liked || (isMe && likeCount > 0);
@@ -195,7 +197,10 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
           </div>
           <div className="modal-like-row">
             <button className={`action-btn like-btn${showFilledHeart ? ' liked' : ''}`} aria-pressed={liked} aria-label={liked ? 'Unlike post' : 'Like post'} disabled={likePending} onClick={toggleLike}>
-              <HeartIcon filled={showFilledHeart} />{likeCount > 0 ? likeCount : 'Like'}
+              <HeartIcon filled={showFilledHeart} />
+            </button>
+            <button type="button" className="post-like-count" onClick={() => setLikesOpen(true)} aria-label={`See who liked this post: ${likeCount} likes`}>
+              {likeCount === 1 ? '1 like' : `${likeCount} likes`}
             </button>
             <span className="footer-time">{timeAgo(post.createdAt)}</span>
           </div>
@@ -296,6 +301,7 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
           }}
         />
       )}
+      {likesOpen && <PostLikesModal postId={post.id} onClose={() => setLikesOpen(false)} onOpenAuthor={onOpenAuthor} />}
       {photoTask && (
         <ComposerModal
           kind="post"
