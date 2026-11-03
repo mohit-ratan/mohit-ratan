@@ -33,7 +33,7 @@ export default function StoriesBar({ stories, onOpenAuthor, onAddStory }) {
   const others = groups.filter((g) => g.authorId !== user?.id);
 
   return (
-    <div className="stories-bar">
+    <div className="stories-bar" role="region" aria-label="Stories" tabIndex={0}>
       <div className="story-item">
         <button type="button" aria-label={mine ? "View your status" : "Add a status"}
           className={`story-ring ${mine ? 'has-story' : 'no-story'}`}

@@ -1,5 +1,5 @@
+import FeatureAnnouncement from '../components/FeatureAnnouncement';
 import CategoryNav from '../components/CategoryNav';
-import Avatar from '../components/Avatar';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../api';
@@ -230,6 +230,7 @@ export default function HomePage() {
       <div className="wrap">
         <main className="layout">
           <section className="feed-col">
+            <FeatureAnnouncement key={user.id} userId={user.id} onCreateVideo={() => setModal({ type: 'create', mediaChoice: 'video' })} />
             {loadingLinkedPost && <p role="status">Opening post…</p>}
             {linkedPostError && <div className="inline-error" role="alert">{linkedPostError} <button type="button" onClick={closeLinkedPost}>Dismiss</button></div>}
             {!seenTour ? <WelcomeTour onDone={markTourSeen} /> : hasGoals === false && <FirstGoalGuide onStart={goal => setModal({ type: 'create', goal })} />}
@@ -243,7 +244,6 @@ export default function HomePage() {
             </div>
             <CategoryNav activeCategory={category} counts={counts} onCategoryChange={c => updateFilters({ category: c, tag: null })} />
             <div className="card create-bar">
-              <Avatar id={user?.id} name={user?.displayName} photoUrl={user?.photoUrl} size={36} />
               <button className="create-bar-btn" type="button" onClick={() => setModal({ type: 'create' })}><CameraSmallIcon />Create post</button>
             </div>
             {tagFilter && (
@@ -291,7 +291,7 @@ export default function HomePage() {
       </div>
 
       {modal?.type === 'create' && (
-        <ComposerModal kind="post" initialGoal={modal.goal} onClose={() => setModal(null)} onCreated={refreshAfterChange} />
+        <ComposerModal kind="post" initialMediaChoice={modal.mediaChoice} initialGoal={modal.goal} onClose={() => setModal(null)} onCreated={refreshAfterChange} />
       )}
       {modal?.type === 'addStory' && (
         <ComposerModal kind="story" onClose={() => setModal(null)} onCreated={refreshAfterChange} />

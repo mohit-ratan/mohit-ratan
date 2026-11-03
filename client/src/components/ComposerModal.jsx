@@ -19,7 +19,7 @@ const VIBE_ITEMS = [{ id: '', emoji: '⚪', label: 'No look' }, ...LOOK_RECIPES]
 // One modal used for both "Create post" (kind="post") and "Add to your
 // story" (kind="story") — the two flows only differ by the category
 // picker and the endpoint/labels used.
-export default function ComposerModal({ kind, onClose, onCreated, initialGoalTask, initialGoal }) {
+export default function ComposerModal({ kind, onClose, onCreated, initialGoalTask, initialGoal, initialMediaChoice = 'image' }) {
   const { user } = useAuth();
   const celebrate = useCelebration();
   const showToast = useToast();
@@ -40,7 +40,7 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
     setMedia(next);
   }
 
-  const [mediaChoice, setMediaChoice] = useState('image');
+  const [mediaChoice, setMediaChoice] = useState(initialMediaChoice === 'video' && !initialGoalTask ? 'video' : 'image');
   const [videoDuration, setVideoDuration] = useState(0);
   const [videoStart, setVideoStart] = useState(0);
   const [videoEnd, setVideoEnd] = useState(0);

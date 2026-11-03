@@ -1,3 +1,4 @@
+import { POST_CHEERS, isMemeReaction, memeReaction } from '../lib/reactions';
 import { useEffect, useState } from 'react';
 import api from '../api';
 import useDialog from '../hooks/useDialog';
@@ -15,7 +16,9 @@ export default function PostLikesModal({ postId, onClose, onOpenAuthor, kind = '
     setActionError('');
     setFollowingIds(current => new Set(current).add(person.id));
     try {
-      const { data } = await api.post(`/api/follows/${person.id}`);
+      const { data } = person.followStatus === 'accepted' || person.followStatus === 'pending'
+        ? await api.delete(`/api/follows/${person.id}`)
+        : await api.post(`/api/follows/${person.id}`);
       setUsers(current => current.map(item => item.id === person.id ? { ...item, followStatus: data.status } : item));
     } catch (err) { setActionError(err.message); }
     finally { setFollowingIds(current => { const next = new Set(current); next.delete(person.id); return next; }); }
@@ -42,9 +45,9 @@ export default function PostLikesModal({ postId, onClose, onOpenAuthor, kind = '
       <div className="post-likes-list">
         {actionError && <p role="alert" className="auth-error">{actionError}</p>}
         {users.map(person => <div className="post-person-row" key={person.id}>
-          <button type="button" className="post-likes-person" onClick={() => { onClose(); onOpenAuthor?.(person.id); }}><Avatar id={person.id} name={person.displayName} photoUrl={person.photoUrl} size={40} /><span>{person.displayName}</span></button>
-          {person.id !== user?.id && <button type="button" className={`pill-btn post-person-follow${!person.followStatus || person.followStatus === 'none' ? ' primary' : ''}`} disabled={followingIds.has(person.id) || person.followStatus === 'accepted' || person.followStatus === 'pending'} onClick={() => follow(person)}>
-            {followingIds.has(person.id) ? 'Sending…' : person.followStatus === 'accepted' ? 'Following' : person.followStatus === 'pending' ? 'Requested' : 'Follow'}
+          <button type="button" className="post-likes-person" onClick={() => { onClose(); onOpenAuthor?.(person.id); }}><Avatar id={person.id} name={person.displayName} photoUrl={person.photoUrl} size={40} /><span className="post-person-copy"><span>{person.displayName}</span>{kind === 'cheers' && person.cheer && <small>{POST_CHEERS.find(item => item.key === person.cheer)?.label || (isMemeReaction(person.cheer) ? memeReaction(person.cheer)?.label : 'Cheered')} <span aria-hidden="true">{isMemeReaction(person.cheer) ? memeReaction(person.cheer)?.emoji : person.cheer}</span></small>}</span></button>
+          {person.id !== user?.id && <button type="button" className={`pill-btn post-person-follow${!person.followStatus || person.followStatus === 'none' ? ' primary' : ''}`} disabled={followingIds.has(person.id)} onClick={() => follow(person)}>
+            {followingIds.has(person.id) ? 'Sending…' : person.followStatus === 'accepted' ? 'Unfollow' : person.followStatus === 'pending' ? 'Cancel request' : 'Follow'}
           </button>}
         </div>)}
         {loading && <p role="status">Loading people…</p>}

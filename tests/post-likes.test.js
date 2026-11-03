@@ -61,3 +61,13 @@ test('cheer lists filter by selected cheer and reject unsupported kinds', async 
   await handler({ userId: 'viewer', params: { id: 'post', kind: 'other' }, query: {} }, res);
   assert.equal(res.code, 400);
 });
+
+test('cheer people include their own selected symbol and follow status', async () => {
+  const { handler, calls, res } = fixture(true, [{ id: 'viewer', display_name: 'Mohit', photo_url: null, cheer: '🔥' }, { id: 'friend', display_name: 'Friend', cheer: '👏', follow_status: 'accepted' }]);
+  await handler({ userId: 'viewer', params: { id: 'post', kind: 'cheers' }, query: {} }, res);
+  assert.match(calls[0].sql, /activity.reaction AS cheer/);
+  assert.equal(res.body.users[0].cheer, '🔥');
+  assert.equal(res.body.users[0].followStatus, 'me');
+  assert.equal(res.body.users[1].cheer, '👏');
+  assert.equal(res.body.users[1].followStatus, 'accepted');
+});

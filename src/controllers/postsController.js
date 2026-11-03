@@ -548,7 +548,7 @@ async function listPostPeople(req, res) {
     const reaction = kind === 'cheers' ? req.query.reaction : null;
     if (reaction && !ALLOWED_REACTIONS.has(reaction)) return res.status(400).json({ error: 'Not a valid cheer.' });
     const [rows] = await pool.query(`
-      SELECT DISTINCT u.id, u.display_name, u.photo_url,
+      SELECT DISTINCT u.id, u.display_name, u.photo_url, ${kind === 'cheers' ? 'activity.reaction' : 'NULL'} AS cheer,
         (SELECT f.status FROM follows f WHERE f.follower_id = ? AND f.followee_id = u.id LIMIT 1) AS follow_status
       FROM ${table} activity JOIN users u ON u.id = activity.${personColumn}
       WHERE activity.post_id = ? AND NOT EXISTS (
@@ -556,7 +556,7 @@ async function listPostPeople(req, res) {
           OR (b.blocked_id = ? AND b.blocker_id = u.id)
       ) ${reaction ? 'AND activity.reaction = ?' : ''}
       ORDER BY u.id LIMIT 51 OFFSET ?`, [req.userId, req.params.id, req.userId, req.userId, ...(reaction ? [reaction] : []), offset]);
-    res.json({ users: rows.slice(0, 50).map(u => ({ id: u.id, displayName: u.display_name, photoUrl: u.photo_url, followStatus: u.id === req.userId ? 'me' : (u.follow_status || 'none') })), hasMore: rows.length > 50 });
+    res.json({ users: rows.slice(0, 50).map(u => ({ id: u.id, displayName: u.display_name, photoUrl: u.photo_url, followStatus: u.id === req.userId ? 'me' : (u.follow_status || 'none'), ...(kind === 'cheers' ? { cheer: u.cheer } : {}) })), hasMore: rows.length > 50 });
   } catch (err) {
     console.error('list post people error:', err);
     res.status(500).json({ error: 'Could not load this list.' });

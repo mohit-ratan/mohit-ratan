@@ -7,7 +7,6 @@ import api, { mediaUrl } from '../api';
 import { CAT_MAP, timeAgo, truncate } from '../lib/format';
 import { pickLookRecipe } from '../lib/looks';
 import { HeartIcon, CommentIcon } from '../lib/icons';
-import { isMemeReaction, memeReaction } from '../lib/reactions';
 import CheerPicker from './CheerPicker';
 import Avatar from './Avatar';
 import { useAuth } from '../context/AuthContext';
@@ -118,11 +117,7 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
             aria-expanded={pickerOpen}
             onClick={(e) => { e.stopPropagation(); setPickerOpen((v) => !v); }}
           >
-            {myReaction ? (
-              <span className="feed-reaction-emoji">{isMemeReaction(myReaction) ? memeReaction(myReaction).emoji : myReaction}</span>
-            ) : (
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-8.5-8.5"/><path d="M8 14s1.3 2 4 2 4-2 4-2"/><path d="M8.5 9h.01M14.5 9h.01M19 2v6M16 5h6"/></svg>
-            )}
+            <ThemeIcon name="cheer" />
             {cheerCount ? '' : 'Cheer'}
           </button>
           {pickerOpen && <CheerPicker onPick={pickReaction} current={myReaction} onRemove={() => pickReaction(myReaction)} />}
