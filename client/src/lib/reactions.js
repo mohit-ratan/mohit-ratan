@@ -24,3 +24,13 @@ export function isMemeReaction(key) {
 export function memeReaction(key) {
   return MEME_BY_KEY[key];
 }
+
+// Post cheers encourage progress; comment stickers keep their existing choices.
+export const POST_CHEERS = [
+  { key: '🔥', label: 'On fire' },
+  { key: '👏', label: 'Great effort' },
+  { key: '💪', label: 'Keep going' },
+  { key: '🙌', label: 'Inspired me' },
+  { key: '🎯', label: 'Getting closer' },
+  { key: '🎉', label: 'Milestone!' },
+];

@@ -266,12 +266,13 @@ export default function ComposerModal({ kind, onClose, onCreated, initialGoalTas
           <div><span className="composer-eyebrow">PACKSOMEWORK · YOUR DAILY PROGRESS</span><h2 id="composer-title">{title}</h2></div>
           <button className="composer-close" type="button" aria-label="Close editor" disabled={submitting} onClick={onClose}><ThemeIcon name="close" /></button>
         </header>
+        <div className="media-and-look-row">
         {isPost && !media && <div className="composer-media-choice" aria-label="Post format">
           <button type="button" className={`pill-btn${mediaChoice === 'image' ? ' primary' : ''}`} aria-pressed={mediaChoice === 'image'} onClick={() => setMediaChoice('image')}>Photo</button>
           <button type="button" className={`pill-btn${mediaChoice === 'video' ? ' primary' : ''}`} aria-pressed={mediaChoice === 'video'} disabled={!!initialGoalTask} onClick={() => setMediaChoice('video')}>Short video</button>
           <span>{mediaChoice === 'video' ? 'Choose up to 100 MB · trim to 60 seconds' : 'Photos up to 20 MB'}</span>
         </div>}
-        <div className="media-and-look-row">
+
           {media ? (
             <div className="modal-media-pane">
               {media.kind === 'video' ? (

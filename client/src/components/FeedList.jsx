@@ -7,7 +7,7 @@ import { CAT_MAP, timeAgo, truncate } from '../lib/format';
 import { pickLookRecipe } from '../lib/looks';
 import { HeartIcon, CommentIcon } from '../lib/icons';
 import { isMemeReaction, memeReaction } from '../lib/reactions';
-import ReactionPickerPanel from './ReactionPickerPanel';
+import CheerPicker from './CheerPicker';
 import Avatar from './Avatar';
 import { useAuth } from '../context/AuthContext';
 
@@ -33,8 +33,10 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
     function handleClickOutside(e) {
       if (pickerRef.current && !pickerRef.current.contains(e.target)) setPickerOpen(false);
     }
+    const escape = e => { if (e.key === 'Escape') { setPickerOpen(false); pickerRef.current?.querySelector('button')?.focus(); } };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', escape);
+    return () => { document.removeEventListener('mousedown', handleClickOutside); document.removeEventListener('keydown', escape); };
   }, [pickerOpen]);
 
   async function toggleLike(e) {
@@ -104,7 +106,7 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
             type="button"
             className={`action-btn feed-reaction-button${myReaction ? ' reacted' : ''}`}
             disabled={reactionPending}
-            aria-label={myReaction ? 'Change your reaction' : 'Add a reaction'}
+            aria-label={myReaction ? 'Change your cheer' : 'Send a cheer'}
             aria-expanded={pickerOpen}
             onClick={(e) => { e.stopPropagation(); setPickerOpen((v) => !v); }}
           >
@@ -113,9 +115,9 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
             ) : (
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-8.5-8.5"/><path d="M8 14s1.3 2 4 2 4-2 4-2"/><path d="M8.5 9h.01M14.5 9h.01M19 2v6M16 5h6"/></svg>
             )}
-            {myReaction ? 'Reacted' : 'React'}
+            {myReaction ? 'Cheered' : 'Cheer'}
           </button>
-          {pickerOpen && <ReactionPickerPanel onPick={pickReaction} current={myReaction} onRemove={() => pickReaction(myReaction)} />}
+          {pickerOpen && <CheerPicker onPick={pickReaction} current={myReaction} onRemove={() => pickReaction(myReaction)} />}
         </div>
       </div>
       {post.goalProgress?.target > 0 && (

@@ -2230,3 +2230,30 @@ svg.fire-award-icon{display:inline-block;vertical-align:middle;width:38px;height
 
 .video-upload-status{display:flex;flex-direction:column;gap:8px;color:var(--text-muted);font-size:12px;}
 .video-upload-status progress{width:100%;height:6px;accent-color:var(--accent);}
+
+/* The media chooser belongs inside the left composer column. */
+.composer-workspace .composer-media-choice{flex-shrink:0;padding:0 0 12px;border-bottom:1px solid var(--border);background:transparent;}
+.cheer-picker{position:absolute;bottom:calc(100% + 10px);right:0;z-index:20;width:340px;max-width:calc(100vw - 48px);padding:18px;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow-m);}
+.cheer-picker h3{margin:0 0 14px;font:500 20px var(--font-display);color:var(--heading);}
+.cheer-picker-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.cheer-picker-grid button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:80px;padding:10px 4px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--heading);font:500 11px var(--font-body);cursor:pointer;}
+.cheer-picker-grid button>span{font-size:25px;line-height:1.2;}
+.cheer-picker-grid button:hover,.cheer-picker-grid button[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);}
+.cheer-picker button:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+.cheer-remove{padding:12px 0 0;border:0;background:none;color:var(--text-muted);font:inherit;font-size:12px;cursor:pointer;}
+@media(max-width:760px){
+  .composer-workspace .composer-media-choice{padding-bottom:8px;gap:8px;}
+  .composer-workspace .composer-media-choice>span{flex-basis:100%;font-size:11px;}
+  .composer-workspace .media-and-look-row{overflow-y:auto;}
+  .composer-workspace .modal-media-pane{flex:1 0 100px;}
+  .composer-workspace .vibe-rail{min-height:48px;}
+}
+@media(min-width:681px){.cheer-picker{left:0;right:auto;}}
+@media(max-width:680px){
+  .feed-card-actions{position:relative;}
+  .feed-reaction-trigger-wrap{position:static;}
+  .cheer-picker{left:12px;right:12px;width:auto;max-width:none;}
+}
+@media(max-width:680px){
+  .cheer-picker{position:fixed;left:12px;right:12px;bottom:calc(82px + env(safe-area-inset-bottom));width:auto;max-width:420px;margin-inline:auto;z-index:1100;}
+}
