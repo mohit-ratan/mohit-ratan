@@ -21,6 +21,7 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
   const isMe = user?.id === post.authorId;
   const [liked, setLiked] = useState(!!post.likedByMe);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
+  const showFilledHeart = liked || (isMe && likeCount > 0);
   const liking = useRef(false);
   const commenting = useRef(false);
   const [likePending, setLikePending] = useState(false);
@@ -193,8 +194,8 @@ export default function PostDetailModal({ post, onClose, onChanged, onDeleted, o
             <button className="modal-close-btn" type="button" aria-label="Close" onClick={onClose}><ThemeIcon name="close" /></button>
           </div>
           <div className="modal-like-row">
-            <button className={`action-btn like-btn${liked ? ' liked' : ''}`} disabled={likePending} onClick={toggleLike}>
-              <HeartIcon filled={liked} />{likeCount > 0 ? likeCount : 'Like'}
+            <button className={`action-btn like-btn${showFilledHeart ? ' liked' : ''}`} aria-pressed={liked} aria-label={liked ? 'Unlike post' : 'Like post'} disabled={likePending} onClick={toggleLike}>
+              <HeartIcon filled={showFilledHeart} />{likeCount > 0 ? likeCount : 'Like'}
             </button>
             <span className="footer-time">{timeAgo(post.createdAt)}</span>
           </div>

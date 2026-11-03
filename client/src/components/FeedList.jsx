@@ -8,16 +8,19 @@ import { HeartIcon, CommentIcon, VideoIcon } from '../lib/icons';
 import { isMemeReaction, memeReaction } from '../lib/reactions';
 import ReactionPickerPanel from './ReactionPickerPanel';
 import Avatar from './Avatar';
+import { useAuth } from '../context/AuthContext';
 
 const ASPECT_RATIOS = { square: '1 / 1', portrait: '4 / 5', landscape: '16 / 9' };
 
 function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
+  const { user } = useAuth();
   const cat = CAT_MAP[post.category] || CAT_MAP.health;
   const isVideo = post.mediaUrl && post.mediaType === 'video';
   const isImage = post.mediaUrl && post.mediaType !== 'video';
   const filter = post.vibe ? pickLookRecipe(post.vibe, post.category).filter : undefined;
   const [liked, setLiked] = useState(!!post.likedByMe);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
+  const showFilledHeart = liked || (user?.id === post.authorId && likeCount > 0);
   const [likePending, setLikePending] = useState(false);
   const [myReaction, setMyReaction] = useState(post.myReaction || null);
   const [reactionPending, setReactionPending] = useState(false);
@@ -92,8 +95,8 @@ function FeedCard({ post, onOpen, onOpenAuthor, onOpenTag }) {
         {isImage && post.vibe && !post.aiStyled && <span className="vibe-chip"><ThemeIcon name="sparkle" /> {truncate(post.vibe, 34)}</span>}
       </button>
       <div className="feed-card-actions">
-        <button type="button" className={`action-btn like-btn${liked ? ' liked' : ''}`} disabled={likePending} onClick={toggleLike}>
-          <HeartIcon filled={liked} />{likeCount > 0 ? likeCount : 'Like'}
+        <button type="button" className={`action-btn like-btn${showFilledHeart ? ' liked' : ''}`} aria-pressed={liked} aria-label={liked ? 'Unlike post' : 'Like post'} disabled={likePending} onClick={toggleLike}>
+          <HeartIcon filled={showFilledHeart} />{likeCount > 0 ? likeCount : 'Like'}
         </button>
         <button type="button" className="action-btn" onClick={() => onOpen(post)}>
           <CommentIcon />{post.commentCount > 0 ? post.commentCount : 'Comment'}

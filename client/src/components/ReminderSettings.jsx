@@ -1,0 +1,9 @@
+import { useState } from 'react';
+import api from '../api';
+
+export default function ReminderSettings({ initial }) {
+  const [prefs,setPrefs]=useState(initial),[busy,setBusy]=useState(false),[notice,setNotice]=useState(''),[error,setError]=useState('');
+  const zones=typeof Intl.supportedValuesOf==='function'?Intl.supportedValuesOf('timeZone'):['UTC','Asia/Kolkata','America/New_York','Europe/London'];
+  async function save(e){e.preventDefault();setBusy(true);setError('');setNotice('');try{await api.put('/api/member/preferences',prefs);setNotice(prefs.enabled?'Reminder saved. We’ll email when a task still needs a check-in.':'Task reminders are off.');}catch(err){setError(err.message);}finally{setBusy(false);}}
+  return <section className="daily-panel" id="reminders"><span className="house-eyebrow">AT YOUR PACE</span><h2>Your daily nudge</h2><p>An optional email when you have an unfinished task without a photo check-in today.</p><form className="daily-reminder-form" onSubmit={save}><label className="daily-checkbox"><input type="checkbox" checked={prefs.enabled} onChange={e=>setPrefs({...prefs,enabled:e.target.checked})} /> Send me a task reminder</label><label>Time<input type="time" required value={prefs.time} onChange={e=>setPrefs({...prefs,time:e.target.value})} /></label><label>Timezone<select value={prefs.timeZone} onChange={e=>setPrefs({...prefs,timeZone:e.target.value})}>{[...new Set(['UTC',prefs.timeZone,...zones])].map(zone=><option key={zone}>{zone}</option>)}</select></label><button className="house-enter-btn" disabled={busy}>{busy?'Saving…':'Save preferences'}</button></form>{notice&&<p role="status">{notice}</p>}{error&&<p role="alert" className="auth-error">{error}</p>}<small>Emails are checked every five minutes. You can turn them off here at any time.</small></section>;
+}

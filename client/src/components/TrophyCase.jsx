@@ -14,7 +14,10 @@ export default function TrophyCase({ trophies, authorId, trifecta, streakAwards 
 
   return (
     <div className="card trophy-case">
-      <div className="trophy-case-title">🏆 Trophy Case · {total}</div>
+      <div className="trophy-case-header">
+        <h2 className="trophy-case-title">Trophy Case</h2>
+        <span className="trophy-case-count">{total} earned</span>
+      </div>
       <div className="trophy-grid">
         {trifecta?.earned && (
           <Link
@@ -53,6 +56,7 @@ export default function TrophyCase({ trophies, authorId, trifecta, streakAwards 
               title={`#${a.tag} — ${cat.label}`}
             >
               <span className="trophy-badge-icon">🏆</span>
+              <span className="trophy-badge-label">Goal completed</span>
               <span className="trophy-badge-tag">#{a.tag}</span>
             </Link>
           );

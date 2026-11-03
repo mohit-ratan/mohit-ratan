@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -331,17 +331,11 @@ export default function ProfilePage() {
                     <div><dd>{trophies.length + streakAwards.length + (trifecta?.earned ? 1 : 0)}</dd><dt>Awards earned</dt></div>
                     <div><dd>{streak}<span> days</span></dd><dt>Current streak{isMe && freezesRemaining > 0 && <small className="streak-freeze-inline"> · 🧊 {freezesRemaining} freeze{freezesRemaining === 1 ? '' : 's'} left</small>}</dt></div>
                   </dl>
-                  {canView && (
-                    <button type="button" className="profile-house-link" onClick={() => navigate(`/profile/${authorId}/achievements`)}>
-                      <span className="profile-house-icon" aria-hidden="true">🏆</span><span><strong>Achievements</strong><small>Goals, progress & earned awards</small></span><span aria-hidden="true">↗</span>
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
             {isMe && <FollowRequests />}
             {isMe && <BlockedAccounts />}
-            {isMe && <p><Link to="/account">Account & help →</Link> · <Link to="/privacy">Privacy information</Link></p>}
             {canView ? (
               <>
                 <TrophyCase streakAwards={streakAwards} trophies={trophies} authorId={authorId} trifecta={trifecta} />

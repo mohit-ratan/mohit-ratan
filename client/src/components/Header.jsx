@@ -408,6 +408,20 @@ export default function Header({
                 >
                   View profile
                 </button>
+                <button
+                  type="button"
+                  className="me-menu-item"
+                  onClick={() => { setMenuOpen(false); navigate('/account'); }}
+                >
+                  Account settings & help
+                </button>
+                <button
+                  type="button"
+                  className="me-menu-item"
+                  onClick={() => { setMenuOpen(false); navigate('/privacy'); }}
+                >
+                  Privacy
+                </button>
                 <button type="button" className="me-menu-item danger" onClick={handleLogout}>
                   Log out
                 </button>
