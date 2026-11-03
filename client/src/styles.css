@@ -2152,3 +2152,17 @@ svg.fire-award-icon{display:inline-block;vertical-align:middle;width:38px;height
   .feed-section-title h2{min-width:0;overflow-wrap:anywhere;}
   .feed-section-title>span{flex-shrink:0;}
 }
+
+/* Keep the desktop sidebar available while browsing the feed. */
+@media(min-width:901px){
+  .side-col{
+    max-height:calc(100dvh - 112px);
+    overflow-y:auto;
+    overscroll-behavior-y:contain;
+    scrollbar-width:thin;
+    scrollbar-color:var(--border) transparent;
+    padding:2px 6px 8px 2px;
+  }
+  .side-col>*{flex-shrink:0;}
+  .side-col .follow-list{max-height:none;overflow-y:visible;}
+}
