@@ -30,14 +30,16 @@
 [data-festival="deepavali"] body::after {
   content: '';
   position: fixed;
-  width: 340px;
-  height: 340px;
-  background: url('/festival/rangoli.svg') center / contain no-repeat;
+  inset: 0;
+  /* Crop the artwork inside a viewport-sized box. Moving the box itself
+     offscreen creates horizontal overflow in mobile browsers. */
+  background: url('/festival/rangoli.svg') no-repeat;
+  background-size: 340px 340px;
   pointer-events: none;
   z-index: -1;
 }
-[data-festival="deepavali"] body::before { top: 180px; left: -170px; opacity: .55; }
-[data-festival="deepavali"] body::after { bottom: -100px; right: -110px; opacity: .55; }
+[data-festival="deepavali"] body::before { background-position: left -170px top 180px; opacity: .55; }
+[data-festival="deepavali"] body::after { background-position: right -110px bottom -100px; opacity: .55; }
 
 [data-festival="deepavali"] .site-header {
   background: linear-gradient(110deg, #362037, #5b2b43 65%, #713b45);
@@ -181,8 +183,11 @@
 }
 @media (max-width: 680px) {
   [data-festival="deepavali"] body::before { display: none; }
-  [data-festival="deepavali"] body::after { width: 260px; height: 260px; }
-  [data-festival="deepavali"] .intro-nav { padding-top: 42px; }
+  [data-festival="deepavali"] body::after { background-size: 260px 260px; }
+  [data-festival="deepavali"] :is(.site-header, .intro-nav) { width: 100%; min-width: 0; }
+  [data-festival="deepavali"] .intro-nav { padding-top: 42px; flex-wrap: wrap; }
+  [data-festival="deepavali"] .header-inner > .search-box { min-width: 0; }
+  [data-festival="deepavali"] .header-inner > .header-actions { flex-wrap: wrap; max-width: 100%; }
   [data-festival="deepavali"] :is(.brand, .intro-brand)::after { width: 26px; height: 32px; }
   [data-festival="deepavali"] .intro-final { background-size: 46px, 46px, auto; background-position: 4% 94%, 96% 94%, center; }
 }
