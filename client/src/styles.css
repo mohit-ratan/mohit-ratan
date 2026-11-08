@@ -272,7 +272,9 @@
     align-items:start;
   }
   @media (max-width:900px){
-    .layout{grid-template-columns:1fr;}
+    /* Let long feed content scroll inside its card instead of widening
+       the page beyond the header and its festival ribbon. */
+    .layout{grid-template-columns:minmax(0,1fr);}
     .side-col{order:2;}
     .feed-col{order:1;}
   }
