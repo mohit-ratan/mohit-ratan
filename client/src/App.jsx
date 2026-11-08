@@ -15,6 +15,7 @@ import JournalPage from './pages/JournalPage';
 import TodayPage from './pages/TodayPage';
 import AwardsGalleryPage from './pages/AwardsGalleryPage';
 import FollowingProgressPage from './pages/FollowingProgressPage';
+import DeepavaliTheme from './components/DeepavaliTheme';
 
 // Load the achievements gallery only when its route is opened.
 const AchievementsPage = lazy(() => import('./pages/AchievementsPage'));
@@ -45,6 +46,7 @@ function HomeEntry() {
 export default function App() {
   return (
     <>
+    <DeepavaliTheme />
     <Routes>
       <Route path="/journal" element={<RequireAuth><JournalPage /></RequireAuth>} />
       <Route path="/today" element={<RequireAuth><TodayPage /></RequireAuth>} />
