@@ -8,15 +8,16 @@
   --heading: #642f49;
   --text-muted: #79606b;
   --text-faint: #826f73;
-  --accent: #83364f;
-  --accent-deep: #5c233a;
-  --accent-hover: #64263f;
-  --accent-soft: #f4e2df;
+  --accent: #ae4515;
+  --accent-deep: #7c3010;
+  --accent-hover: #90370f;
+  --accent-soft: #ffebce;
   --shadow-s: 0 2px 8px #65354a0a, 0 0 0 3px #fff8e950;
   --shadow-m: 0 8px 30px #65354a12;
 }
 
 [data-festival="deepavali"] body {
+  isolation: isolate;
   background-color: var(--bg);
   background-image: radial-gradient(ellipse at 0 0, #e8b85a35, transparent 45%),
     radial-gradient(ellipse at 100% 70%, #ab5f7920, transparent 45%),
@@ -31,17 +32,12 @@
   position: fixed;
   width: 340px;
   height: 340px;
-  border-radius: 50%;
-  border: 1px solid #b8873f35;
-  outline: 1px solid #b8873f26;
-  outline-offset: 14px;
-  background: repeating-conic-gradient(from 22.5deg, #b8873f18 0deg 1deg, transparent 1deg 22.5deg),
-    radial-gradient(circle, transparent 35%, #b8873f18 35% 36%, transparent 36% 56%, #b8873f26 56% 57%, transparent 57%);
+  background: url('/festival/rangoli.svg') center / contain no-repeat;
   pointer-events: none;
   z-index: -1;
 }
-[data-festival="deepavali"] body::before { top: 160px; left: -220px; }
-[data-festival="deepavali"] body::after { bottom: -150px; right: -180px; }
+[data-festival="deepavali"] body::before { top: 180px; left: -170px; opacity: .55; }
+[data-festival="deepavali"] body::after { bottom: -100px; right: -110px; opacity: .55; }
 
 [data-festival="deepavali"] .site-header {
   background: linear-gradient(110deg, #362037, #5b2b43 65%, #713b45);
@@ -54,6 +50,24 @@
 [data-festival="deepavali"] .brand-tag { color: #e9cfa5; }
 [data-festival="deepavali"] :is(.site-header, .intro-nav) {
   position: relative;
+  padding-top: 28px;
+}
+[data-festival="deepavali"] :is(.site-header, .intro-nav)::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 30px;
+  background: url('/festival/toran.svg') center top / 140px 30px repeat-x;
+  pointer-events: none;
+}
+[data-festival="deepavali"] :is(.brand, .intro-brand)::after {
+  content: '';
+  display: inline-block;
+  width: 38px;
+  height: 42px;
+  flex-shrink: 0;
+  background: url('/festival/diya.svg') center / contain no-repeat;
+  filter: drop-shadow(0 0 6px #ffbc3a65);
 }
 [data-festival="deepavali"] .site-header { position: sticky; }
 [data-festival="deepavali"] :is(.site-header, .intro-nav)::after {
@@ -88,16 +102,18 @@
 }
 [data-festival="deepavali"] .side-card h4 {
   padding-bottom: 10px;
+  padding-right: 32px;
   border-bottom: 1px solid #dfcba8;
+  background: url('/festival/diya.svg') right top / 28px 28px no-repeat;
 }
 [data-festival="deepavali"] :is(.pill-btn.primary, .intro-page .intro-button) {
   color: #fff9e8;
-  background: linear-gradient(115deg, #703049, #97415b);
-  border-color: #703049;
-  box-shadow: 0 3px 10px #70304920;
+  background: linear-gradient(115deg, #a73c12, #c45a14);
+  border-color: #a73c12;
+  box-shadow: 0 3px 10px #b9532425;
 }
 [data-festival="deepavali"] :is(.pill-btn.primary, .intro-page .intro-button):hover {
-  background: #64263f;
+  background: #90370f;
 }
 [data-festival="deepavali"] :is(.story-ring.unseen, .story-ring.has-story) {
   background: conic-gradient(#d5a345, #f7de95, #9d445e, #d5a345);
@@ -139,6 +155,17 @@
 [data-festival="deepavali"] .intro-example-art {
   background: linear-gradient(155deg, #46263f, #954f5a 60%, #e6b56c);
 }
+[data-festival="deepavali"] .intro-example-art::after {
+  content: '';
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  width: 115px;
+  height: 115px;
+  background: url('/festival/diya.svg') center / contain no-repeat;
+  filter: drop-shadow(0 0 18px #ffc64d55);
+  pointer-events: none;
+}
 [data-festival="deepavali"] .intro-sun {
   background: #ffe0a0;
   box-shadow: 0 0 0 18px #ffe0a015, 0 0 55px #ffd98c80;
@@ -147,10 +174,15 @@
 [data-festival="deepavali"] .intro-hill-back { background: #a86165; }
 [data-festival="deepavali"] .intro-hill-front { background: #512c44; }
 [data-festival="deepavali"] .intro-final {
-  background: radial-gradient(ellipse at 50% 100%, #a5713826, transparent 65%);
+  background: url('/festival/diya.svg') 12% 70% / 100px no-repeat,
+    url('/festival/diya.svg') 88% 70% / 100px no-repeat,
+    radial-gradient(ellipse at 50% 100%, #e5a33b35, transparent 65%);
   border-top: 1px solid #dfcba8;
 }
 @media (max-width: 680px) {
   [data-festival="deepavali"] body::before { display: none; }
   [data-festival="deepavali"] body::after { width: 260px; height: 260px; }
+  [data-festival="deepavali"] .intro-nav { padding-top: 42px; }
+  [data-festival="deepavali"] :is(.brand, .intro-brand)::after { width: 26px; height: 32px; }
+  [data-festival="deepavali"] .intro-final { background-size: 46px, 46px, auto; background-position: 4% 94%, 96% 94%, center; }
 }

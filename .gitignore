@@ -16,6 +16,7 @@ public/assets/*.js
 public/assets/*.css
 public/robots.txt
 public/sitemap.xml
+public/festival/
 
 # Legacy local-disk upload path — uploads now go to Cloudflare R2 (see
 # src/lib/storage.js) since this directory doesn't survive every host's
