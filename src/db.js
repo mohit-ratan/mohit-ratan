@@ -89,21 +89,8 @@ pool.query(`
   ) ENGINE=InnoDB
 `).catch((err) => console.error('Could not ensure blocks table exists:', err));
 
-pool.query(`
-  CREATE TABLE IF NOT EXISTS notifications (
-    id VARCHAR(36) PRIMARY KEY,
-    recipient_id VARCHAR(36) NOT NULL,
-    actor_id VARCHAR(36) NOT NULL,
-    type ENUM('like','comment','follow_accepted') NOT NULL,
-    post_id VARCHAR(36) DEFAULT NULL,
-    read_at DATETIME DEFAULT NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
-    INDEX idx_notifications_recipient (recipient_id, created_at)
-  ) ENGINE=InnoDB
-`).catch((err) => console.error('Could not ensure notifications table exists:', err));
+require('./lib/notificationSchema').ensureNotificationTable(pool)
+  .catch((err) => console.error('Could not ensure notifications table and types:', err));
 
 pool.query(`
   CREATE TABLE IF NOT EXISTS accountability_partners (
@@ -117,14 +104,6 @@ pool.query(`
     FOREIGN KEY (partner_id) REFERENCES users(id) ON DELETE CASCADE
   ) ENGINE=InnoDB
 `).catch((err) => console.error('Could not ensure accountability_partners table exists:', err));
-
-pool.query(
-  "ALTER TABLE notifications MODIFY COLUMN type ENUM('like','comment','follow_accepted','partner_request','partner_accepted','partner_missed') NOT NULL"
-).catch((err) => console.error('Could not extend notifications.type enum:', err));
-
-pool.query(
-  "ALTER TABLE notifications MODIFY COLUMN type ENUM('like','comment','follow_accepted','partner_request','partner_accepted','partner_missed','reaction') NOT NULL"
-).catch((err) => console.error('Could not extend notifications.type enum with reaction:', err));
 
 pool.query(`
   CREATE TABLE IF NOT EXISTS special_awards (
