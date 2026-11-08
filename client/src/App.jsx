@@ -16,6 +16,7 @@ import TodayPage from './pages/TodayPage';
 import AwardsGalleryPage from './pages/AwardsGalleryPage';
 import FollowingProgressPage from './pages/FollowingProgressPage';
 import DeepavaliTheme from './components/DeepavaliTheme';
+import './deepavali.css';
 
 // Load the achievements gallery only when its route is opened.
 const AchievementsPage = lazy(() => import('./pages/AchievementsPage'));

@@ -1,0 +1,156 @@
+/* Every festival treatment is scoped to the date-controlled root attribute. */
+:root[data-festival="deepavali"] {
+  --bg: #faf1df;
+  --surface: #fffcf5;
+  --surface-2: #f6e8ce;
+  --border: #dfcba8;
+  --text: #402b36;
+  --heading: #642f49;
+  --text-muted: #79606b;
+  --text-faint: #826f73;
+  --accent: #83364f;
+  --accent-deep: #5c233a;
+  --accent-hover: #64263f;
+  --accent-soft: #f4e2df;
+  --shadow-s: 0 2px 8px #65354a0a, 0 0 0 3px #fff8e950;
+  --shadow-m: 0 8px 30px #65354a12;
+}
+
+[data-festival="deepavali"] body {
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse at 0 0, #e8b85a35, transparent 45%),
+    radial-gradient(ellipse at 100% 70%, #ab5f7920, transparent 45%),
+    radial-gradient(#b9893d26 .8px, transparent .8px);
+  background-size: auto, auto, 24px 24px;
+}
+
+/* Rangoli rosettes sit in the margins and never intercept interactions. */
+[data-festival="deepavali"] body::before,
+[data-festival="deepavali"] body::after {
+  content: '';
+  position: fixed;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  border: 1px solid #b8873f35;
+  outline: 1px solid #b8873f26;
+  outline-offset: 14px;
+  background: repeating-conic-gradient(from 22.5deg, #b8873f18 0deg 1deg, transparent 1deg 22.5deg),
+    radial-gradient(circle, transparent 35%, #b8873f18 35% 36%, transparent 36% 56%, #b8873f26 56% 57%, transparent 57%);
+  pointer-events: none;
+  z-index: -1;
+}
+[data-festival="deepavali"] body::before { top: 160px; left: -220px; }
+[data-festival="deepavali"] body::after { bottom: -150px; right: -180px; }
+
+[data-festival="deepavali"] .site-header {
+  background: linear-gradient(110deg, #362037, #5b2b43 65%, #713b45);
+  border-bottom: 2px solid #d3ac63;
+  box-shadow: 0 4px 24px #43233620;
+}
+[data-festival="deepavali"] .brand-mark {
+  background-image: linear-gradient(100deg, #fff0bd, #dfad58);
+}
+[data-festival="deepavali"] .brand-tag { color: #e9cfa5; }
+[data-festival="deepavali"] :is(.site-header, .intro-nav) {
+  position: relative;
+}
+[data-festival="deepavali"] .site-header { position: sticky; }
+[data-festival="deepavali"] :is(.site-header, .intro-nav)::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -5px;
+  height: 9px;
+  background: radial-gradient(ellipse at center, #fff2bc 0 2px, #e5af5660 3px, transparent 5px) 12px 0 / 40px 9px repeat-x;
+  filter: drop-shadow(0 2px 4px #e9ad4c70);
+  pointer-events: none;
+}
+[data-festival="deepavali"] .site-header :is(.header-link-btn, .bell-btn) {
+  background: #ffffff08;
+  color: #f8e6bd;
+  border-color: #d7ae6355;
+}
+[data-festival="deepavali"] .site-header .cat-pill {
+  background: #ffffff08;
+  color: #f5dfbb;
+  border-color: #d7ae6355;
+}
+[data-festival="deepavali"] .site-header .cat-pill.active {
+  color: #452637;
+  background: #f3d99e;
+  border-color: #f3d99e;
+}
+[data-festival="deepavali"] :is(.card, .intro-preview, .intro-area, .intro-house-section) {
+  border-color: #ddc69d;
+  box-shadow: var(--shadow-m), inset 0 1px 0 #ffffff;
+}
+[data-festival="deepavali"] .side-card h4 {
+  padding-bottom: 10px;
+  border-bottom: 1px solid #dfcba8;
+}
+[data-festival="deepavali"] :is(.pill-btn.primary, .intro-page .intro-button) {
+  color: #fff9e8;
+  background: linear-gradient(115deg, #703049, #97415b);
+  border-color: #703049;
+  box-shadow: 0 3px 10px #70304920;
+}
+[data-festival="deepavali"] :is(.pill-btn.primary, .intro-page .intro-button):hover {
+  background: #64263f;
+}
+[data-festival="deepavali"] :is(.story-ring.unseen, .story-ring.has-story) {
+  background: conic-gradient(#d5a345, #f7de95, #9d445e, #d5a345);
+  box-shadow: 0 0 0 3px #e6bf6d25;
+}
+[data-festival="deepavali"] .mobile-nav {
+  background: #41263b;
+  border-top: 1px solid #d3ac63;
+}
+[data-festival="deepavali"] .mobile-nav a { color: #dfcbbd; }
+[data-festival="deepavali"] .mobile-nav a.active { color: #ffe0a0; background: #ffffff0d; }
+
+/* The public pages share the same plum, brass, and warm ivory system. */
+[data-festival="deepavali"] .intro-page {
+  color: var(--text);
+  background: transparent;
+}
+[data-festival="deepavali"] .intro-nav {
+  max-width: none;
+  background: linear-gradient(110deg, #362037, #5b2b43 65%, #713b45);
+  color: #ffebc1;
+  border-bottom: 2px solid #d3ac63;
+}
+[data-festival="deepavali"] .intro-nav .intro-button {
+  background: #f3d99e;
+  color: #452637;
+}
+[data-festival="deepavali"] .intro-nav .intro-button:hover { background: #ffe9b7; }
+[data-festival="deepavali"] .intro-hero h1 { color: #49273e; }
+[data-festival="deepavali"] .intro-hero h1 em { color: #9b6430; }
+[data-festival="deepavali"] .intro-page :is(.intro-eyebrow, .intro-text-link) { color: #83364f; }
+[data-festival="deepavali"] .intro-preview-top {
+  background: #49273e;
+  color: #f6dfaa;
+  padding: 10px 14px;
+  border-radius: 8px;
+}
+[data-festival="deepavali"] .intro-preview-top > span:last-child { color: #f6dfaa; }
+[data-festival="deepavali"] .intro-example-art {
+  background: linear-gradient(155deg, #46263f, #954f5a 60%, #e6b56c);
+}
+[data-festival="deepavali"] .intro-sun {
+  background: #ffe0a0;
+  box-shadow: 0 0 0 18px #ffe0a015, 0 0 55px #ffd98c80;
+}
+[data-festival="deepavali"] .intro-example-art > span { color: #fff0ce; }
+[data-festival="deepavali"] .intro-hill-back { background: #a86165; }
+[data-festival="deepavali"] .intro-hill-front { background: #512c44; }
+[data-festival="deepavali"] .intro-final {
+  background: radial-gradient(ellipse at 50% 100%, #a5713826, transparent 65%);
+  border-top: 1px solid #dfcba8;
+}
+@media (max-width: 680px) {
+  [data-festival="deepavali"] body::before { display: none; }
+  [data-festival="deepavali"] body::after { width: 260px; height: 260px; }
+}
