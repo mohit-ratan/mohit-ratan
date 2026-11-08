@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 
-// A one-day celebration in India time, rather than a recurring annual theme.
+// A week of celebration in India time, rather than a recurring annual theme.
 const START = Date.parse('2026-11-08T00:00:00+05:30');
-const END = Date.parse('2026-11-09T00:00:00+05:30');
+const END = Date.parse('2026-11-15T00:00:00+05:30');
 export function isDeepavaliDay(now = Date.now()) {
   return now >= START && now < END;
 }
